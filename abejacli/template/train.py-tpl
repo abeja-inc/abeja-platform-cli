@@ -1,0 +1,45 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+#
+# Examples are available.
+# - https://github.com/abeja-inc/platform-template-image-classification
+# - https://github.com/abeja-inc/platform-template-object-detection
+# - https://github.com/abeja-inc/platform-template-image-segmentation
+# - https://github.com/abeja-inc/platform-template-tabledata-lightgbm
+# - https://github.com/abeja-inc/platform-template-tabledata-sklearn
+
+
+import os
+
+
+ABEJA_TRAINING_RESULT_DIR = os.environ.get('ABEJA_TRAINING_RESULT_DIR', '.')
+
+
+def handler(context):
+    print('Start train handler.')
+    if not isinstance(context, dict):
+        message = 'Error: Support only "abeja/all-cpu:19.04" or "abeja/all-gpu:19.04".'
+        print(message)
+        raise Exception(message)
+
+    """Your specified datasets are available.
+    dataset_alias:
+      key: alias
+      value: dataset ID
+    """
+    dataset_alias: dict = context['datasets']
+    # TODO: Write your code below.
+    pass
+    # TODO: Save your model/graph/network/result files under "ABEJA_TRAINING_RESULT_DIR".
+    pass
+
+
+if __name__ == '__main__':
+    # FIXME: Delete this for production use.
+    """
+    How to run on your local machine.
+    $ DATASET_ID='xxx' ABEJA_ORGANIZATION_ID='xxx' ABEJA_PLATFORM_USER_ID='user-xxx' ABEJA_PLATFORM_PERSONAL_ACCESS_TOKEN='xxx' python train.py
+    """
+    context = dict()
+    context['datasets'] = {"data": os.environ.get('DATASET_ID')}
+    handler(context)
