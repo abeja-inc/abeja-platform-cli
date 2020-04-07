@@ -1,0 +1,93 @@
+default: &default
+  working_directory: ~/abeja-platform-cli
+  docker:
+    - image: circleci/python:3.6
+
+test_step: &test_step
+  - checkout
+  - run:
+      name: Install Dependencies
+      command: |
+        pip install --user pipenv
+        pipenv --python ${ABEJA_CLI_PYTHON_VERSION} install --dev
+  - run:
+      name: Test
+      command: |
+        case "${CIRCLE_BRANCH}" in
+        "master")
+          export PLATFORM_ORG="$ORGANIZATION_NAME_PROD"
+          export ORGANIZATION_NAME="$ORGANIZATION_NAME_PROD"
+          export PLATFORM_USER_ID="$PLATFORM_USER_ID_PROD"
+          export PLATFORM_USER_TOKEN="$PLATFORM_USER_TOKEN_PROD"
+          export DATALAKE_CHANNEL_ID="$DATALAKE_CHANNEL_ID_PROD"
+          export DATALAKE_BUCKET_ID="$DATALAKE_BUCKET_ID_PROD"
+          export TRIGGER_INPUT_DATAMART_ID="$TRIGGER_INPUT_DATAMART_ID_PROD"
+          export TRIGGER_OUTPUT_DATAMART_ID="$TRIGGER_OUTPUT_DATAMART_ID_PROD"
+          export ABEJA_API_URL='https://api.abeja.io'
+          ;;
+        *)
+          export PLATFORM_ORG="$ORGANIZATION_NAME_DEV"
+          export ORGANIZATION_NAME="$ORGANIZATION_NAME_DEV"
+          export PLATFORM_USER_ID="$PLATFORM_USER_ID_DEV"
+          export PLATFORM_USER_TOKEN="$PLATFORM_USER_TOKEN_DEV"
+          export DATALAKE_CHANNEL_ID="$DATALAKE_CHANNEL_ID_DEV"
+          export DATALAKE_BUCKET_ID="$DATALAKE_BUCKET_ID_DEV"
+          export TRIGGER_INPUT_DATAMART_ID="$TRIGGER_INPUT_DATAMART_ID_DEV"
+          export TRIGGER_OUTPUT_DATAMART_ID="$TRIGGER_OUTPUT_DATAMART_ID_DEV"
+          export ABEJA_API_URL='https://api.dev.abeja.io'
+          ;;
+        esac
+        export SAMPLE_MODEL_PATH='https://s3-us-west-2.amazonaws.com/abeja-platform-config-dev'
+        make test
+        make prepare_ci
+        make integration_test
+
+version: 2
+jobs:
+  codetest35:
+    <<: *default
+    docker:
+      - image: circleci/python:3.5
+    environment:
+      - ABEJA_CLI_PYTHON_VERSION: "3.5"
+      - PIPENV_SKIP_LOCK: "1"
+    steps: *test_step
+  codetest36:
+    <<: *default
+    environment:
+      - ABEJA_CLI_PYTHON_VERSION: "3.6"
+    steps: *test_step
+  build:
+    <<: *default
+    steps:
+      - checkout
+      - run:
+          name: Install Dependencies
+          command: |
+            sudo apt-get update
+            sudo apt-get install ruby-full
+            # package_cloud requires this
+            sudo gem install rake
+            sudo gem install package_cloud
+            # python
+            pip install --user pipenv
+            pipenv --python 3.6 install --dev
+      - run:
+          name: Deploy
+          command: |
+            make release
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - codetest35
+      - codetest36
+      - build:
+          filters:
+            branches:
+              only:
+                - master
+          requires:
+            - codetest35
+            - codetest36
