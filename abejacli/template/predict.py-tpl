@@ -1,0 +1,97 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+#
+# Examples are available.
+# - https://github.com/abeja-inc/platform-template-image-classification
+# - https://github.com/abeja-inc/platform-template-object-detection
+# - https://github.com/abeja-inc/platform-template-image-segmentation
+# - https://github.com/abeja-inc/platform-template-tabledata-lightgbm
+# - https://github.com/abeja-inc/platform-template-tabledata-sklearn
+
+
+import http
+import json
+import os
+import traceback
+
+ABEJA_TRAINING_RESULT_DIR = os.environ.get('ABEJA_TRAINING_RESULT_DIR', '.')
+TRAINING_JOB_DATASETS = json.loads(os.environ.get('TRAINING_JOB_DATASETS', '{}'))
+
+
+def handler(request, context):
+    print('Start predict handler.')
+    if 'http_method' not in request:
+        message = 'Error: Support only "abeja/all-cpu:19.04" or "abeja/all-gpu:19.04".'
+        print(message)
+        return {
+            'status_code': http.HTTPStatus.BAD_REQUEST,
+            'content_type': 'application/json; charset=utf8',
+            'content': {'message': message}
+        }
+
+    try:
+        """Requesting data is comming like this.
+        data: binary
+        """
+        data = request.read()
+        # TODO: Write your code below.
+        """
+        If you specify the model, your model is available under "ABEJA_TRAINING_RESULT_DIR". If your trained 
+        model is developed on ABEJA Platform, the datasets the model is developed are avaiable on 
+        "TRAINING_JOB_DATASETS".
+        """
+        pass
+        # TODO: Return the result. Any format is OK. e.g. str, int, list, dict, etc...
+        rtn = {'message': 'Your return.'}
+        return {
+            'status_code': http.HTTPStatus.OK,
+            'content_type': 'application/json; charset=utf8',
+            'content': rtn
+        }
+    except Exception as e:
+        print(str(e))
+        print(traceback.format_exc())
+        return {
+            'status_code': http.HTTPStatus.INTERNAL_SERVER_ERROR,
+            'content_type': 'application/json; charset=utf8',
+            'content': {'message': str(e)}
+        }
+
+
+if __name__ == '__main__':
+    # FIXME: Delete this for production use.
+    """
+    How to run on your local machine.
+    $ INPUT_FILE='xxx' ABEJA_ORGANIZATION_ID='xxx' ABEJA_PLATFORM_USER_ID='user-xxx' ABEJA_PLATFORM_PERSONAL_ACCESS_TOKEN='xxx' python predict.py
+    """
+    from collections import Mapping
+
+    class Request(Mapping):
+        def __init__(self, filepath: str):
+            self.__dict = {
+                'http_method': 'dummy',
+                'contents': open(filepath, 'rb')
+            }
+
+        def __getitem__(self, key):
+            return self.__dict[key]
+
+        def __iter__(self):
+            return iter(self.__dict)
+
+        def __len__(self):
+            return len(self.__dict)
+
+        def read(self, size: int = -1) -> bytes:
+            contents = self.__dict.get('contents')
+            if not contents:
+                raise ValueError('no body')
+            return contents.read(size)  # type: ignore
+
+        def close(self):
+            contents = self.__dict.get('contents')
+            contents.close()  # type: ignore
+
+    request = Request(filepath=os.environ.get('INPUT_FILE'))
+    context = None
+    handler(request, context)

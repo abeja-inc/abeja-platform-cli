@@ -1,0 +1,20 @@
+{
+  "aaa": [
+    { "message": "welcome to abeja platform!" }
+  ],
+  "models": [
+    { "model_id": "m111", "title": "json-server1", "author": "typicode" },
+    { "model_id": "m222", "title": "test-server", "author": "muranushi" }
+  ],
+  "instances": [
+    { "instance_id": "i111", "model_id": "m111", "body": "some comment1", "postId": 1 },
+    { "instance_id": "i222", "model_id": "m222", "body": "test", "postId": 2 },
+    { "instance_id": "i112", "model_id": "m111", "body": "some comment2", "postId": 1 }
+  ],
+  "runs": [
+    { "run_id": "r111", "model_id": "m111", "instance_id": "i111", "body": "some comment1", "postId": 1 },
+    { "run_id": "r222", "model_id": "m222", "instance_id": "i222", "body": "some comment2", "postId": 2 },
+    { "run_id": "r112", "model_id": "m111", "instance_id": "i112", "body": "some comment2", "postId": 1 },
+    { "run_id": "r113", "model_id": "m111", "instance_id": "i111", "body": "some comment1", "postId": 1 }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "/models/:mid": "/models?model_id=:mid",
+  "/models/:mid/instances": "/instances?model_id=:mid",
+  "/models/:mid/instances/:iid": "/instances?model_id=:mid&instance_id=:iid",
+  "/models/:mid/instances/:iid/runs": "/runs?model_id=:mid&instance_id=:iid",
+  "/models/:mid/instances/:iid/runs/:rid": "/runs?model_id=:mid&instance_id=:iid&run_id=:rid"
+}
