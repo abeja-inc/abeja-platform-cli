@@ -1,2 +1,2 @@
-# 1.0.0.rc0
-- test deploy
+# 1.0.0
+- initial release
