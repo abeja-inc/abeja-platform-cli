@@ -24,10 +24,10 @@ from abejacli.run import (_create_deployment, _create_endpoint, _create_model,
                           _download_deployment_version, _delete_deployment_version)
 from backports import tempfile
 
-TRIGGER_INPUT_DATAMART_ID = os.environ.get(
-    'TRIGGER_INPUT_DATAMART_ID', '1332934178129')
-TRIGGER_OUTPUT_DATAMART_ID = os.environ.get(
-    'TRIGGER_OUTPUT_DATAMART_ID', '1241204926735')
+TRIGGER_INPUT_DATALAKE_ID = os.environ.get(
+    'TRIGGER_INPUT_DATALAKE_ID', '1332934178129')
+TRIGGER_OUTPUT_DATALAKE_ID = os.environ.get(
+    'TRIGGER_OUTPUT_DATALAKE_ID', '1241204926735')
 DATALAKE_CHANNEL_ID = os.environ.get('DATALAKE_CHANNEL_ID', '1282495226152')
 DATALAKE_BUCKET_ID = os.environ.get('DATALAKE_BUCKET_ID', '1995386829827')
 
@@ -181,10 +181,10 @@ class AbejaCliTest(unittest.TestCase):
         deployment_id = r['deployment_id']
 
         # create-trigger
-        input_service_name = 'datamart-rds'
-        input_service_id = TRIGGER_INPUT_DATAMART_ID
-        output_service_name = 'datamart-rds'
-        output_service_id = TRIGGER_OUTPUT_DATAMART_ID
+        input_service_name = 'datalake'
+        input_service_id = TRIGGER_INPUT_DATALAKE_ID
+        output_service_name = 'datalake'
+        output_service_id = TRIGGER_OUTPUT_DATALAKE_ID
         environment = {'DEBUG': 'x'}
         retry_count = 5
 
