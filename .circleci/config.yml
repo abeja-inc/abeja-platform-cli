@@ -8,8 +8,7 @@ test_step: &test_step
   - run:
       name: Install Dependencies
       command: |
-        pip install --user pipenv
-        pipenv --python ${ABEJA_CLI_PYTHON_VERSION} install --dev
+        pip install --user poetry
   - run:
       name: Test
       command: |
@@ -50,28 +49,35 @@ jobs:
       - image: circleci/python:3.5
     environment:
       - ABEJA_CLI_PYTHON_VERSION: "3.5"
-      - PIPENV_SKIP_LOCK: "1"
     steps: *test_step
   codetest36:
     <<: *default
     environment:
       - ABEJA_CLI_PYTHON_VERSION: "3.6"
     steps: *test_step
-  build:
+  release-rc-package:
     <<: *default
     steps:
       - checkout
       - run:
           name: Install Dependencies
           command: |
-            sudo apt-get update
-            sudo apt-get install ruby-full
-            # package_cloud requires this
-            sudo gem install rake
-            sudo gem install package_cloud
-            # python
-            pip install --user pipenv
-            pipenv --python 3.6 install --dev
+            pip install --user poetry
+            poetry install
+      - run:
+          name: Deploy-Rc
+          command: |
+            poetry version $(PYTHONPATH=./ python tools/add_rc_version.py)
+            make release
+  release-package:
+    <<: *default
+    steps:
+      - checkout
+      - run:
+          name: Install Dependencies
+          command: |
+            pip install --user poetry
+            poetry install
       - run:
           name: Deploy
           command: |
@@ -83,7 +89,15 @@ workflows:
     jobs:
       - codetest35
       - codetest36
-      - build:
+      - release-rc-package:
+        filters:
+          branches:
+            only:
+              - /^release\/.*/
+        requires:
+          - codetest35
+          - codetest36
+      - release-package:
           filters:
             branches:
               only:
