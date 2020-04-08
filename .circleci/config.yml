@@ -70,7 +70,20 @@ jobs:
           name: Deploy
           command: |
             make release
-
+  release_rc_package:
+    <<: *default
+    steps:
+      - checkout
+      - run:
+          name: Install Dependencies
+          command: |
+            pip install --user poetry
+            poetry install
+      - run:
+          name: Deploy_RC
+          command: |
+            poetry version $(PYTHONPATH=./ python tools/add_rc_version.py)
+            make release
 workflows:
   version: 2
   build_and_test:
@@ -82,6 +95,14 @@ workflows:
             branches:
               only:
                 - master
+          requires:
+            - codetest35
+            - codetest36
+      - release_rc_package:
+          filters:
+            branches:
+              only:
+                - /^release\/.*/
           requires:
             - codetest35
             - codetest36
