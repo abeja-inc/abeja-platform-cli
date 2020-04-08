@@ -3,7 +3,6 @@ from abejacli.config import ABEJA_PLATFORM_USER_ID, ABEJA_PLATFORM_TOKEN, PLATFO
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 
-from functools import wraps
 from unittest.mock import patch
 
 
@@ -51,7 +50,6 @@ def _test_generate_user_session(json_content_type=True):
 
 
 def session_decorator(func):
-    @wraps(func)
     def wrapper(*args, **kwargs):
         with patch('abejacli.session.generate_retry_session') as mock_generate_retry_session, \
                 patch('abejacli.session.generate_user_session') as mock_generate_user_session:
