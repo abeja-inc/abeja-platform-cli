@@ -82,7 +82,7 @@ jobs:
       - run:
           name: Deploy_RC
           command: |
-            poetry version $(PYTHONPATH=./ python tools/add_rc_version.py)
+            poetry version $(PYTHONPATH=./ poetry run python tools/add_rc_version.py)
             make release
 workflows:
   version: 2
