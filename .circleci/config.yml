@@ -51,7 +51,6 @@ jobs:
       - image: circleci/python:3.5
     environment:
       - ABEJA_CLI_PYTHON_VERSION: "3.5"
-      - PIPENV_SKIP_LOCK: "1"
     steps: *test_step
   codetest36:
     <<: *default
@@ -65,14 +64,8 @@ jobs:
       - run:
           name: Install Dependencies
           command: |
-            sudo apt-get update
-            sudo apt-get install ruby-full
-            # package_cloud requires this
-            sudo gem install rake
-            sudo gem install package_cloud
-            # python
-            pip install --user pipenv
-            pipenv --python 3.6 install --dev
+            pip install --user poetry
+            poetry install
       - run:
           name: Deploy
           command: |
