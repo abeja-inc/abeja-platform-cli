@@ -9,6 +9,8 @@ test_step: &test_step
       name: Install Dependencies
       command: |
         pip install --user poetry
+        poetry env use ${ABEJA_CLI_PYTHON_VERSION}
+        poetry install
   - run:
       name: Test
       command: |
