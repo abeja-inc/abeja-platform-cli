@@ -11,6 +11,9 @@ from requests.packages.urllib3.util.retry import Retry
 
 def generate_retry_session():
     session = requests.Session()
+    session.headers.update({
+        'User-Agent': 'abeja-platform-cli/{}'.format(VERSION)
+    })
     retries = Retry(total=5,
                     backoff_factor=1,
                     method_whitelist=('GET', 'POST', 'PUT', 'DELETE', 'PATCH'),
