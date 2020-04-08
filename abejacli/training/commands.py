@@ -164,8 +164,8 @@ def create_notebook(notebook_type, instance_type, image, datalakes, buckets, dat
 
 @training.command(name='start-notebook')
 @click.option('-n', '--notebook_id', '--notebook-id', 'notebook_id', type=str, help='notebook id', required=True)
-@click.option('-t', '--notebook-type', type=str, default='notebook', required=False,
-              help='Jupyter type. Choose from "notebook" or "lab". Default is "notebook".')
+@click.option('-t', '--notebook-type', type=str, required=False,
+              help='Jupyter type. Choose from "notebook" or "lab".')
 @click.option('--instance-type', type=str, required=False,
               help='Instance Type of the machine where notebook is started. '
                    'By default, cpu-1 and gpu-1 is used for all-cpu and all-gpu images respectively.')
@@ -187,9 +187,10 @@ def start_notebook(notebook_id, notebook_type, instance_type, image, datalakes, 
             raise InvalidConfigException('need to specify image')
 
         payload = {
-            'image': image,
-            'notebook_type': notebook_type
+            'image': image
         }
+        if notebook_type is not None:
+            payload['notebook_type'] = notebook_type
         if instance_type is not None:
             payload['instance_type'] = instance_type
         if datalakes:
