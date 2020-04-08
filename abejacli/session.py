@@ -1,3 +1,4 @@
+import os
 import shutil
 from json import JSONDecodeError
 
@@ -9,8 +10,18 @@ from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 
 
+IS_TEST_REQUEST = bool(os.environ.get('IS_TEST_REQUEST', 'False') == 'True')
+
+
 def generate_retry_session():
     session = requests.Session()
+    session.headers.update({
+        'User-Agent': 'abeja-platform-cli/{}'.format(VERSION)
+    })
+    if IS_TEST_REQUEST:
+        session.headers.update({
+            'User-Agent': 'abeja-system-test'
+        })
     retries = Retry(total=5,
                     backoff_factor=1,
                     method_whitelist=('GET', 'POST', 'PUT', 'DELETE', 'PATCH'),
@@ -25,6 +36,10 @@ def generate_user_session(json_content_type=True):
     session.headers.update({
         'User-Agent': 'abeja-platform-cli/{}'.format(VERSION)
     })
+    if IS_TEST_REQUEST:
+        session.headers.update({
+            'User-Agent': 'abeja-system-test'
+        })
     if ABEJA_PLATFORM_USER_ID and ABEJA_PLATFORM_TOKEN:
         session.auth = (ABEJA_PLATFORM_USER_ID, ABEJA_PLATFORM_TOKEN)
     elif PLATFORM_AUTH_TOKEN:
