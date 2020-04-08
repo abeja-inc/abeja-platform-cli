@@ -228,7 +228,6 @@ def test_start_notebook(
         ORGANIZATION_ENDPOINT, config_data['name'], notebook_id)
 
     def match_request_text(request):
-        print(request.text)
         return json.loads(request.text) == expected_payload
 
     req_mock.register_uri(
@@ -238,7 +237,6 @@ def test_start_notebook(
 
     r = runner.invoke(start_notebook, cmd)
     assert req_mock.called
-    print(r.output)
     assert r.exit_code == 0
 
 
