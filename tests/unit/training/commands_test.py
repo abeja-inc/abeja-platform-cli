@@ -166,56 +166,49 @@ def test_create_notebook(
         (['-n', '9876543210987'],
          {},
          {
-             'training_notebook_id': '9876543210987',
-             'notebook_type': 'notebook'
+            'image': 'abeja-inc/all-cpu:18.10'
         }),
         (['-n', '9876543210987', '--instance-type', 'gpu-1'],
          {},
          {
-             'training_notebook_id': '9876543210987',
-             'notebook_type': 'notebook',
-             'instance_type': 'gpu-1'
+            'image': 'abeja-inc/all-cpu:18.10',
+            'instance_type': 'gpu-1'
         }),
         (['-n', '9876543210987', '--image', 'abeja-inc/all-gpu:19.10'],
          {},
          {
-            'training_notebook_id': '9876543210987',
             'image': 'abeja-inc/all-gpu:19.10'
         }),
         (['-n', '9876543210987', '-t', 'lab'],
          {},
          {
-             'training_notebook_id': '9876543210987',
-             'notebook_type': 'lab'
+            'image': 'abeja-inc/all-cpu:18.10',
+            'notebook_type': 'lab'
         }),
         (['-n', '9876543210987', '--datalake', '1234567890123'],
          {},
          {
-             'training_notebook_id': '9876543210987',
-             'notebook_type': 'notebook',
-             'datalakes': ['1234567890123']
+            'image': 'abeja-inc/all-cpu:18.10',
+            'datalakes': ['1234567890123']
         }),
         (['-n', '9876543210987', '--bucket', '1234567890123'],
          {},
          {
-             'training_notebook_id': '9876543210987',
-             'notebook_type': 'notebook',
-             'buckets': ['1234567890123']
+            'image': 'abeja-inc/all-cpu:18.10',
+            'buckets': ['1234567890123']
         }),
         (['-n', '9876543210987', '--datalake', '1234567890123', '--bucket', '1234567890123'],
          {},
          {
-             'training_notebook_id': '9876543210987',
-             'notebook_type': 'notebook',
-             'datalakes': ['1234567890123'],
-             'buckets': ['1234567890123']
+            'image': 'abeja-inc/all-cpu:18.10',
+            'datalakes': ['1234567890123'],
+            'buckets': ['1234567890123']
         }),
         (['-n', '9876543210987', '--dataset', 'train:1600000000000'],
          {},
          {
-             'training_notebook_id': '9876543210987',
-             'notebook_type': 'notebook',
-             'datasets': {'train': '1600000000000'}
+            'image': 'abeja-inc/all-cpu:18.10',
+            'datasets': {'train': '1600000000000'}
         })
     ]
 )
@@ -234,12 +227,18 @@ def test_start_notebook(
     url = "{}/training/definitions/{}/notebooks/{}/start".format(
         ORGANIZATION_ENDPOINT, config_data['name'], notebook_id)
 
+    def match_request_text(request):
+        print(request.text)
+        return json.loads(request.text) == expected_payload
+
     req_mock.register_uri(
         'POST', url,
-        json=expected_payload)
+        json=expected_payload,
+        additional_matcher=match_request_text)
 
     r = runner.invoke(start_notebook, cmd)
     assert req_mock.called
+    print(r.output)
     assert r.exit_code == 0
 
 
