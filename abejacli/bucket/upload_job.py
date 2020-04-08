@@ -82,6 +82,7 @@ def upload_job(bucket_id, upload_file: UploadBucketFile, report_queue, options):
     except Exception as e:
         options = {
             'source': file_path,
+            'destination': file_id,
             'metadata': metadata,
             'error': 'Failed to upload {} to bucket_id {} (Reason: {})'.format(
                 file_path, bucket_id, e)

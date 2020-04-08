@@ -161,3 +161,6 @@ class UploadWorkerTest(TestCase):
         self.assertEqual(args[0][0], RAISE_ERROR)
         self.assertEqual(args[0][2], 0)
         self.assertEqual(args[0][3]['source'], UPLOAD_FILE_PATH)
+        self.assertNotIn('destination', args[0][3])
+        self.assertIn('metadata', args[0][3])
+        self.assertIsNotNone(args[0][3]['error'])
