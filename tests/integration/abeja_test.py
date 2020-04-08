@@ -23,6 +23,8 @@ from abejacli.run import (_create_deployment, _create_endpoint, _create_model,
                           _create_deployment_version, _describe_deployment_versions,
                           _download_deployment_version, _delete_deployment_version)
 from backports import tempfile
+from tests import session_decorator
+
 
 TRIGGER_INPUT_DATALAKE_ID = os.environ.get(
     'TRIGGER_INPUT_DATALAKE_ID', '1332934178129')
@@ -34,6 +36,7 @@ DATALAKE_BUCKET_ID = os.environ.get('DATALAKE_BUCKET_ID', '1995386829827')
 
 class AbejaCliTest(unittest.TestCase):
 
+    @session_decorator
     def test_model_deploy(self):
         # create
         # create-model
@@ -149,6 +152,7 @@ class AbejaCliTest(unittest.TestCase):
         r = _delete_model(model_id)
         self.assertIn(model_id, r['message'], "Response (r): {}".format(r))
 
+    @session_decorator
     def test_trigger(self):
         # create
         # create-model
@@ -281,6 +285,7 @@ class AbejaCliTest(unittest.TestCase):
 #    r = _delete_run(deployment_id, run_id)
 #    self.assertIn(run_id, r['message'])
 
+    @session_decorator
     def test_datalake(self):
 
         with tempfile.TemporaryDirectory() as dir_name:
@@ -328,6 +333,7 @@ class AbejaCliTest(unittest.TestCase):
                 # check if all uploaded files are downloaded
                 self.assertTrue(upload_file_id in download_sources)
 
+    @session_decorator
     def test_bucket(self):
 
         with tempfile.TemporaryDirectory() as dir_name:
@@ -366,6 +372,7 @@ class AbejaCliTest(unittest.TestCase):
                 upload_file_id = "/{}".format(upload_file_id)
                 self.assertTrue(upload_file_id in download_sources)
 
+    @session_decorator
     def test_deployment_deploy(self):
         # create
         # create-deployment
