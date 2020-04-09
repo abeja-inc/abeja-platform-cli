@@ -1,4 +1,3 @@
-import shutil
 from json import JSONDecodeError
 
 import requests
