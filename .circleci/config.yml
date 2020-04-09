@@ -8,8 +8,9 @@ test_step: &test_step
   - run:
       name: Install Dependencies
       command: |
-        pip install --user pipenv
-        pipenv --python ${ABEJA_CLI_PYTHON_VERSION} install --dev
+        pip install --user poetry
+        poetry env use ${ABEJA_CLI_PYTHON_VERSION}
+        poetry install
   - run:
       name: Test
       command: |
@@ -50,44 +51,58 @@ jobs:
       - image: circleci/python:3.5
     environment:
       - ABEJA_CLI_PYTHON_VERSION: "3.5"
-      - PIPENV_SKIP_LOCK: "1"
     steps: *test_step
   codetest36:
     <<: *default
     environment:
       - ABEJA_CLI_PYTHON_VERSION: "3.6"
     steps: *test_step
-  build:
+  release_package:
     <<: *default
     steps:
       - checkout
       - run:
           name: Install Dependencies
           command: |
-            sudo apt-get update
-            sudo apt-get install ruby-full
-            # package_cloud requires this
-            sudo gem install rake
-            sudo gem install package_cloud
-            # python
-            pip install --user pipenv
-            pipenv --python 3.6 install --dev
+            pip install --user poetry
+            poetry install
       - run:
           name: Deploy
           command: |
             make release
-
+  release_rc_package:
+    <<: *default
+    steps:
+      - checkout
+      - run:
+          name: Install Dependencies
+          command: |
+            pip install --user poetry
+            poetry install
+      - run:
+          name: Deploy_RC
+          command: |
+            poetry version $(PYTHONPATH=./ poetry run python tools/add_rc_version.py)
+            make release
 workflows:
   version: 2
   build_and_test:
     jobs:
       - codetest35
       - codetest36
-      - build:
+      - release_package:
           filters:
             branches:
               only:
                 - master
+          requires:
+            - codetest35
+            - codetest36
+      - release_rc_package:
+          filters:
+            branches:
+              only:
+                - /^release\/.*/
           requires:
             - codetest35
             - codetest36

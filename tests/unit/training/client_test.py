@@ -18,7 +18,6 @@ def test_describe_training_version():
             "mnist": "1111111111111"
         },
         "image": "abeja-inc/deepgpu:0.1.0",
-        "source_code_base64": "",
         "user_parameters": {}
     }
     with requests_mock.Mocker() as mock:
