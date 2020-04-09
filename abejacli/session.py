@@ -161,14 +161,3 @@ def _error_message(e, r):
     logger.debug('{} {}'.format("request.body     =>", str(r.request.body)))
     logger.debug('{} {}'.format("response.headers =>", str(r.headers)))
     logger.error('{} {}'.format("response.body    =>", str(r.text)))
-
-
-def download_to_file(name, url):
-    file_name = url.split("/")[-1]
-    file_path = '{}/{}'.format(name, file_name)
-
-    res = requests.get(url, stream=True)
-    if res.status_code == 200:
-        with open(file_path, 'wb') as file:
-            res.raw.decode_content = True
-            shutil.copyfileobj(res.raw, file)
