@@ -1,3 +1,6 @@
+# 1.0.2
+- Release to pypi with poetry (#7)
+
 # 1.0.1
 - Pass `destination` for retrying bucket upload file (#4)
 - Change `User-Agent` when test (#3)
