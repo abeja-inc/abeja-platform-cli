@@ -13,7 +13,7 @@ dist: clean
 	poetry build -f wheel
 
 test: lint
-	poetry run pytest tests/unit --cov=abejacli tests/unit
+	poetry run pytest -v --cov=abejacli tests/unit
 
 prepare_ci:
 	mkdir -p ~/.abeja

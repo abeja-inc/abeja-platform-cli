@@ -2,7 +2,7 @@
 from click.testing import CliRunner
 import pytest
 import requests_mock
-
+from urllib.parse import urlparse
 from abejacli.config import ORGANIZATION_ENDPOINT
 from abejacli.run import describe_datalake_channels
 
@@ -51,10 +51,15 @@ def req_mock(request):
 # Channels
 
 def test_describe_channels(req_mock, runner):
-    url = "{}/channels?limit=1000&filter_archived=exclude_archived".format(ORGANIZATION_ENDPOINT)
+    url = "{}/channels?limit=100&filter_archived=exclude_archived".format(ORGANIZATION_ENDPOINT)
 
+    expected_params = {
+        "filter_archived": ["exclude_archived"],
+        "limit": ["1000"]
+    }
     def match_request_url(request):
-        return request.url == url
+        assert request.qs == expected_params
+        return request.path == urlparse(url).path
 
     req_mock.register_uri(
         'GET', url,
@@ -69,8 +74,13 @@ def test_describe_channels(req_mock, runner):
 def test_describe_channels_include_archived(req_mock, runner):
     url = "{}/channels?limit=1000&filter_archived=include_archived".format(ORGANIZATION_ENDPOINT)
 
+    expected_params = {
+        "filter_archived": ["include_archived"],
+        "limit": ["1000"]
+    }
     def match_request_url(request):
-        return request.url == url
+        assert request.qs == expected_params
+        return request.path == urlparse(url).path
 
     req_mock.register_uri(
         'GET', url,

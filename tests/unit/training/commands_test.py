@@ -1,6 +1,6 @@
 import json
 from unittest.mock import MagicMock, patch
-
+from urllib.parse import urlparse
 from click.testing import CliRunner
 import pytest
 import requests_mock
@@ -793,9 +793,12 @@ def test_train_local_environment(mock_train_local, mock_get_organization_id, run
 
 def test_describe_job_definitions(req_mock, runner):
     url = "{}/training/definitions?filter_archived=exclude_archived".format(ORGANIZATION_ENDPOINT)
-
+    expected_params = {
+        "filter_archived": ["exclude_archived"],
+    }
     def match_request_url(request):
-        return request.url == url
+        assert request.qs == expected_params
+        return request.path == urlparse(url).path
 
     req_mock.register_uri(
         'GET', url,
@@ -827,8 +830,12 @@ def test_describe_job_definition(req_mock, runner):
 def test_describe_job_definitions_include_archived(req_mock, runner):
     url = "{}/training/definitions?filter_archived=include_archived".format(ORGANIZATION_ENDPOINT)
 
+    expected_params = {
+        "filter_archived": ["include_archived"],
+    }
     def match_request_url(request):
-        return request.url == url
+        assert request.qs == expected_params
+        return request.path == urlparse(url).path
 
     req_mock.register_uri(
         'GET', url,
@@ -847,8 +854,12 @@ def test_describe_job_definition_versions(req_mock, runner):
     url = "{}/training/definitions/{}/versions?filter_archived=exclude_archived".format(
         ORGANIZATION_ENDPOINT, test_job_name)
 
+    expected_params = {
+        "filter_archived": ["exclude_archived"]
+    }
     def match_request_url(request):
-        return request.url == url
+        assert request.qs == expected_params
+        return request.path == urlparse(url).path
 
     req_mock.register_uri(
         'GET', url,
@@ -871,8 +882,12 @@ def test_describe_job_definition_versions_from_config(req_mock, runner):
     url = "{}/training/definitions/{}/versions?filter_archived=exclude_archived".format(
         ORGANIZATION_ENDPOINT, config_data["name"])
 
+    expected_params = {
+        "filter_archived": ["exclude_archived"],
+    }
     def match_request_url(request):
-        return request.url == url
+        assert request.qs == expected_params
+        return request.path == urlparse(url).path
 
     req_mock.register_uri(
         'GET', url,
@@ -896,8 +911,12 @@ def test_describe_job_definition_versions_option_overwrites_config(req_mock, run
     url = "{}/training/definitions/{}/versions?filter_archived=exclude_archived".format(
         ORGANIZATION_ENDPOINT, testing_name)
 
+    expected_params = {
+        "filter_archived": ["exclude_archived"],
+    }
     def match_request_url(request):
-        return request.url == url
+        assert request.qs == expected_params
+        return request.path == urlparse(url).path
 
     req_mock.register_uri(
         'GET', url,
@@ -914,8 +933,12 @@ def test_describe_job_definition_versions_include_archived(req_mock, runner):
     url = "{}/training/definitions/{}/versions?filter_archived=include_archived".format(
         ORGANIZATION_ENDPOINT, test_job_name)
 
+    expected_params = {
+        "filter_archived": ["include_archived"],
+    }
     def match_request_url(request):
-        return request.url == url
+        assert request.qs == expected_params
+        return request.path == urlparse(url).path
 
     req_mock.register_uri(
         'GET', url,
@@ -934,8 +957,12 @@ def test_describe_training_models(req_mock, runner):
     url = "{}/training/definitions/{}/models?filter_archived=exclude_archived".format(
         ORGANIZATION_ENDPOINT, test_job_name)
 
+    expected_params = {
+        "filter_archived": ["exclude_archived"],
+    }
     def match_request_url(request):
-        return request.url == url
+        assert request.qs == expected_params
+        return request.path == urlparse(url).path
 
     req_mock.register_uri(
         'GET', url,
@@ -958,8 +985,12 @@ def test_describe_training_models_from_config(req_mock, runner):
     url = "{}/training/definitions/{}/models?filter_archived=exclude_archived".format(
         ORGANIZATION_ENDPOINT, config_data["name"])
 
+    expected_params = {
+        "filter_archived": ["exclude_archived"],
+    }
     def match_request_url(request):
-        return request.url == url
+        assert request.qs == expected_params
+        return request.path == urlparse(url).path
 
     req_mock.register_uri(
         'GET', url,
@@ -983,8 +1014,12 @@ def test_describe_training_models_option_overwrites_config(req_mock, runner):
     url = "{}/training/definitions/{}/models?filter_archived=exclude_archived".format(
         ORGANIZATION_ENDPOINT, testing_name)
 
+    expected_params = {
+        "filter_archived": ["exclude_archived"],
+    }
     def match_request_url(request):
-        return request.url == url
+        assert request.qs == expected_params
+        return request.path == urlparse(url).path
 
     req_mock.register_uri(
         'GET', url,
@@ -1001,8 +1036,12 @@ def test_describe_training_models_include_archived(req_mock, runner):
     url = "{}/training/definitions/{}/models?filter_archived=include_archived".format(
         ORGANIZATION_ENDPOINT, test_job_name)
 
+    expected_params = {
+        "filter_archived": ["include_archived"],
+    }
     def match_request_url(request):
-        return request.url == url
+        assert request.qs == expected_params
+        return request.path == urlparse(url).path
 
     req_mock.register_uri(
         'GET', url,
@@ -1021,8 +1060,12 @@ def test_describe_jobs(req_mock, runner):
     url = "{}/training/definitions/{}/jobs?filter_archived=exclude_archived".format(
         ORGANIZATION_ENDPOINT, test_job_name)
 
+    expected_params = {
+        "filter_archived": ["exclude_archived"],
+    }
     def match_request_url(request):
-        return request.url == url
+        assert request.qs == expected_params
+        return request.path == urlparse(url).path
 
     req_mock.register_uri(
         'GET', url,
@@ -1045,8 +1088,12 @@ def test_describe_jobs_from_config(req_mock, runner):
     url = "{}/training/definitions/{}/jobs?filter_archived=exclude_archived".format(
         ORGANIZATION_ENDPOINT, config_data["name"])
 
+    expected_params = {
+        "filter_archived": ["exclude_archived"],
+    }
     def match_request_url(request):
-        return request.url == url
+        assert request.qs == expected_params
+        return request.path == urlparse(url).path
 
     req_mock.register_uri(
         'GET', url,
@@ -1070,8 +1117,12 @@ def test_describe_jobs_option_overwrites_config(req_mock, runner):
     url = "{}/training/definitions/{}/jobs?filter_archived=exclude_archived".format(
         ORGANIZATION_ENDPOINT, testing_name)
 
+    expected_params = {
+        "filter_archived": ["exclude_archived"],
+    }
     def match_request_url(request):
-        return request.url == url
+        assert request.qs == expected_params
+        return request.path == urlparse(url).path
 
     req_mock.register_uri(
         'GET', url,
@@ -1088,8 +1139,12 @@ def test_describe_jobs_include_archived(req_mock, runner):
     url = "{}/training/definitions/{}/jobs?filter_archived=include_archived".format(
         ORGANIZATION_ENDPOINT, test_job_name)
 
+    expected_params = {
+        "filter_archived": ["include_archived"],
+    }
     def match_request_url(request):
-        return request.url == url
+        assert request.qs == expected_params
+        return request.path == urlparse(url).path
 
     req_mock.register_uri(
         'GET', url,
