@@ -12,25 +12,6 @@ class ModelDeploymentTest(TestCase):
     def setUp(self):
         self.runner = CliRunner()
 
-    def _create_model_deployment(self, mock, model_id, extra_cmd):
-        cmd = [
-            '--model_id', model_id,
-        ] + extra_cmd
-
-        url = '{}/models/{}/deployments'.format(
-            ORGANIZATION_ENDPOINT, model_id)
-        mock.register_uri('POST', url, json={'dummy': 'dummy'})
-
-        ret = self.runner.invoke(create_deployment, cmd)
-        self.assertTrue(mock.called)
-        self.assertEqual(ret.exit_code, 0)
-
-        req = mock.request_history[0]
-        self.assertEqual(req.method, 'POST')
-        self.assertEqual(req.url, url)
-
-        return req
-
     def _create_deployment(self, mock, extra_cmd):
         cmd = extra_cmd
 
@@ -46,33 +27,6 @@ class ModelDeploymentTest(TestCase):
         self.assertEqual(req.url, url)
 
         return req
-
-    @requests_mock.Mocker()
-    def test_create_model_deployment(self, mock):
-        deployment_name = 'Test deployment'
-        model_id = '1214196787286'
-
-        req = self._create_model_deployment(mock, model_id, [
-            '--name', deployment_name,
-        ])
-
-        self.assertEqual(req.json(), {
-            'name': deployment_name,
-        })
-
-    @requests_mock.Mocker()
-    def test_create_model_deployment_with_env(self, mock):
-        req = self._create_model_deployment(mock, '1214196787286', [
-            '--name', 'Test deployment',
-            '--environment', 'USER_ID:1234567890123',
-            '--environment', 'ACCESS_KEY:373be7309f0146c0d283440e500843d8',
-        ])
-
-        req_json = req.json()
-        self.assertEqual(req_json['default_environment'], {
-            'USER_ID': '1234567890123',
-            'ACCESS_KEY': '373be7309f0146c0d283440e500843d8',
-        })
 
     @requests_mock.Mocker()
     def test_create_deployment(self, mock):

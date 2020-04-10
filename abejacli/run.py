@@ -31,7 +31,7 @@ from abejacli.common import __try_get_organization_id
 from abejacli.config import (DEFAULT_EXCLUDE_FILES,
                              ERROR_EXITCODE, ORGANIZATION_ENDPOINT,
                              ROOT_DIRECTORY, RUN_DEFAULT_RETRY_COUNT,
-                             SAMPLE_MODEL_PATH, SUCCESS_EXITCODE,
+                             SUCCESS_EXITCODE,
                              TRIGGER_DEFAULT_RETRY_COUNT, WEB_API_ENDPOINT)
 from abejacli.configuration import __ensure_configuration_exists
 from abejacli.configuration.config import Config, ConfigSet
@@ -51,7 +51,7 @@ from abejacli.model.docker_handler import (LOCAL_MODEL_TYPE_KEY,
 from abejacli.model.local_server_manager import LocalServerManager
 from abejacli.model.runtime_utils import get_runtime_command, format_container_log
 from abejacli.session import (api_delete, api_get, api_get_data, api_patch,
-                              api_post, download_to_file)
+                              api_post)
 from abejacli.training.commands import training
 from abejacli.registry.commands import registry
 from abejacli.startapp.commands import startapp
@@ -259,289 +259,22 @@ def initialize_configuragtion(ctx, name: str, assume_yes: bool):
 
 
 # ---------------------------------------------------
-# models
-# ---------------------------------------------------
-@model.command(name='create-model', help='Create model')
-@click.option('-n', '--name', 'name', type=str, help='Model name', required=True)
-@click.option('-d', '--description', 'description', type=str, help='Model description', required=True)
-@click.option('-i', '--init_project', '--init-project', 'init_project', is_flag=True,
-              help='Set if want to init project')
-def create_model(name, description, init_project):
-    __print_feature_deprecation('We will renew the terminology of "model" completely. New "model" '
-                                'means machine learning model/graph/network file. '
-                                'For this, you need to create a training_job_definition '
-                                'to manage your "model" file. All models are stored under '
-                                'training_job_definition. Please use "create_job_definition()" '
-                                'instead.')
-    try:
-        r = _create_model(name, description, init_project)
-    except:
-        sys.exit(ERROR_EXITCODE)
-
-    click.echo(json_output_formatter(r))
-
-
-def _init_project(name):
-    if not os.path.exists(name):
-        os.makedirs(name)
-    download_to_file(name, "{}/cli/main.py".format(SAMPLE_MODEL_PATH))
-
-
-def _create_model(name, description, init_project=False):
-    parameter = {
-        'name': name,
-        'description': description,
-    }
-    json_data = json.dumps(parameter)
-
-    # create directory & sample code download
-    if init_project:
-        _init_project(name)
-
-    url = "{}/models".format(ORGANIZATION_ENDPOINT)
-    r = api_post(url, json_data)
-
-    return r
-
-
-@model.command(name='describe-models', help='Get to model or endpoint model')
-@click.option('-m', '--model_id', '--model-id', 'model_id', type=str, help='Model identifier', default='all',
-              required=False)
-def describe_models(model_id):
-    __print_feature_deprecation('We will renew the terminology of "model" completely. New "model" '
-                                'means machine learning model/graph/network file. '
-                                'For this, All models are stored under training_job_definition. '
-                                'If you want to see the list of "model", '
-                                'please use "describe_training_models()" instead.')
-    try:
-        r = _describe_models(model_id)
-    except:
-        sys.exit(ERROR_EXITCODE)
-    click.echo(json_output_formatter(r))
-
-
-def _describe_models(model_id):
-    url = '{}/models'.format(ORGANIZATION_ENDPOINT)
-    if model_id != "all":
-        url = '{}/{}'.format(url, model_id)
-    r = api_get(url)
-
-    return r
-
-
-@model.command(name='delete-model', help='Delete model')
-@click.option('-m', '--model_id', '--model-id', 'model_id', type=str, help='Model identifier', required=True)
-def delete_model(model_id):
-    __print_feature_deprecation('We will renew the terminology of "model" completely. New "model" '
-                                'means machine learning model/graph/network file. '
-                                'New spec does not allow you to delete your "model" file. '
-                                'But you can archive/unarchive your "model" file instead.'
-                                'If you want to archive your "model" file, '
-                                'please use "archive_training_model()". '
-                                'If you want to unarchive your "model" file, '
-                                'please use "unarchive_training_model()".')
-    try:
-        r = _delete_model(model_id)
-    except:
-        sys.exit(ERROR_EXITCODE)
-
-    click.echo(json_output_formatter(r))
-
-
-def _delete_model(model_id):
-    url = '{}/models/{}'.format(ORGANIZATION_ENDPOINT, model_id)
-    r = api_delete(url)
-
-    return r
-
-
-# ---------------------------------------------------
-# models versions
-# ---------------------------------------------------
-@model.command(name='create-version', help='Create version & upload application')
-@click.pass_context
-@click.option('-m', '--model_id', '--model-id', 'model_id', type=str, help='Model identifier', required=True)
-@click.option('-v', '--version', 'version', type=str, help='Model version code', required=True)
-@click.option('-i', '--image', 'image', type=str, help='Base-image name. ex) abeja-inc/all-cpu:19.10', required=True)
-@click.option('-h', '--handler', 'handler', type=str, help='Path to handler in the model archive.')
-@click.option('-j', '--job_definition_name', '--job-definition-name', 'job_definition_name', type=str,
-              help='Training job definition name', required=False)
-@click.option('-t', '--training_job_id', '--training-job-id', 'training_job_id', type=str, help='Training Job id',
-              required=False)
-def create_version(ctx, model_id, version, image, handler, job_definition_name, training_job_id):
-    __print_feature_deprecation('We will renew the terminology of "model" completely. New "model" '
-                                'means machine learning model/graph/network file. '
-                                'In the new spec, serving/prediction/inference code will be '
-                                'managed under "deployment". '
-                                'And "model" file will be specified when new deployment is created. '
-                                'Please use "create_deployment_version()" instead.')
-    try:
-        r = _create_version(ctx, model_id, version, image,
-                            handler, job_definition_name, training_job_id)
-    except:
-        sys.exit(ERROR_EXITCODE)
-
-    click.echo(json_output_formatter(r))
-
-
-def _create_version(ctx, model_id, version, image, handler=None, job_definition_name=None, training_job_id=None):
-    parameter = {
-        'image': image,
-        'version': version
-    }
-    if handler:
-        parameter['handler'] = handler
-    if job_definition_name:
-        parameter['job_definition_name'] = job_definition_name
-    if training_job_id:
-        parameter['training_job_id'] = training_job_id
-    json_data = json.dumps(parameter)
-
-    url = '{}/models/{}/versions'.format(ORGANIZATION_ENDPOINT, model_id)
-    r = api_post(url, json_data)
-    result = {
-        'version': r['version'],
-        'version_id': r['version_id']
-    }
-
-    upload_url = r['upload_url']
-    name = _get_model_name(model_id)
-    try:
-        temp_file = version_archive(name, DEFAULT_EXCLUDE_FILES)
-        # TODO:  Confirm what is this doing?  Should we use it's result?
-        _version_upload(upload_url, temp_file.name)
-    finally:
-        if os.path.exists(temp_file.name):
-            temp_file.close()
-            os.unlink(temp_file.name)
-    return result
-
-
-def _get_model_name(model_id):
-    url = '{}/models/{}'.format(ORGANIZATION_ENDPOINT, model_id)
-    r = api_get(url)
-    return r['name']
-
-
-def _version_upload(upload_url, tar_name):
-    with open(tar_name, "rb") as file:
-        result = requests.put(upload_url, data=file)
-
-    return result
-
-
-@model.command(name='describe-versions', help='Get to version or version list')
-@click.option('-m', '--model_id', '--model-id', 'model_id', type=str, help='Model identifier', required=True)
-@click.option('-v', '--version_id', '--version-id', 'version_id', type=str, help='Version identifier', default='all',
-              required=False)
-def describe_versions(model_id, version_id):
-    __print_feature_deprecation('We will renew the terminology of "model" completely. New "model" '
-                                'means machine learning model/graph/network file. '
-                                'In the new spec, serving/prediction/inference code will be '
-                                'managed under "deployment". '
-                                'And "model" file will be specified when new deployment is created. '
-                                'Please use "describe_deployment_versions()" instead.')
-    try:
-        r = _describe_versions(model_id, version_id)
-    except:
-        sys.exit(ERROR_EXITCODE)
-
-    click.echo(json_output_formatter(r))
-
-
-def _describe_versions(model_id, version_id):
-    url = '{}/models/{}/versions'.format(ORGANIZATION_ENDPOINT, model_id)
-    if version_id != "all":
-        url = '{}/{}'.format(url, version_id)
-
-    r = api_get(url)
-    return r
-
-
-@model.command(name='download-version', help='Download version')
-@click.option('-m', '--model_id', '--model-id', 'model_id', type=str, help='Model identifier', required=True)
-@click.option('-v', '--version_id', '--version-id', 'version_id', type=str, help='Version identifier', required=True)
-def download_version(model_id, version_id):
-    __print_feature_deprecation('We will renew the terminology of "model" completely. New "model" '
-                                'means machine learning model/graph/network file. '
-                                'In the new spec, serving/prediction/inference code will be '
-                                'managed under "deployment". '
-                                'And "model" file will be specified when new deployment is created. '
-                                'Please use "download_deployment_version()" instead.')
-    try:
-        r = _download_version(model_id, version_id)
-    except:
-        sys.exit(ERROR_EXITCODE)
-
-    click.echo('Downloaded a file {}.'.format(r))
-
-
-def _download_version(model_id, version_id):
-    url = '{}/models/{}/versions/{}/source'.format(
-        ORGANIZATION_ENDPOINT, model_id, version_id)
-    r = api_get(url)
-    download_uri = r['download_uri']
-    file_name = os.path.basename(download_uri[:download_uri.find('?')])
-    _, ext = os.path.splitext(file_name)
-    target_file_name = '{}_{}{}'.format(model_id, version_id, ext)
-    urllib.request.urlretrieve(
-        download_uri, target_file_name, progress_status)
-
-    cf = get_compressed_file(target_file_name)
-    if cf is not None:
-        n, _ = os.path.splitext(target_file_name)
-        os.rename(target_file_name, '{}{}'.format(n, cf.extension_name))
-
-    return target_file_name
-
-
-@model.command(name='delete-version', help='Delete version')
-@click.option('-m', '--model_id', '--model-id', 'model_id', type=str, help='Model identifier', required=True)
-@click.option('-v', '--version_id', '--version-id', 'version_id', type=str, help='Version identifier', required=True)
-def delete_version(model_id, version_id):
-    __print_feature_deprecation('We will renew the terminology of "model" completely. New "model" '
-                                'means machine learning model/graph/network file. '
-                                'In the new spec, serving/prediction/inference code will be '
-                                'managed under "deployment". '
-                                'And "model" file will be specified when new deployment is created. '
-                                'Please use "delete_deployment_version()" instead.')
-    try:
-        r = _delete_version(model_id, version_id)
-    except:
-        sys.exit(ERROR_EXITCODE)
-
-    click.echo(json_output_formatter(r))
-
-
-def _delete_version(model_id, version_id):
-    url = '{}/models/{}/versions/{}'.format(
-        ORGANIZATION_ENDPOINT, model_id, version_id)
-    r = api_delete(url)
-
-    return r
-
-
-# ---------------------------------------------------
 # deployments
 # ---------------------------------------------------
 @model.command(name='create-deployment', help='Deploy a specific model')
 @click.option('-n', '--name', 'name', type=str, help='Deployment name', required=True)
-@click.option('-m', '--model_id', '--model-id', 'model_id', type=str, help='Model identifier', required=False,
-              default=None)
 @click.option('-e', '--environment', type=ENVIRONMENT_STR, help='Default environment variable', default=None,
               required=False, multiple=True)
 @click.option('-d', '--description', type=str, help='Description', required=False, default=None)
-def create_deployment(name, model_id, environment, description):
-    __print_feature_renewal('New spec does not require "model_id" on "create_deployment()", '
-                            'Please not to specify "model_id" here.')
+def create_deployment(name, environment, description):
     try:
-        r = _create_deployment(name, model_id, environment, description)
+        r = _create_deployment(name, environment, description)
     except:
         sys.exit(ERROR_EXITCODE)
     click.echo(json_output_formatter(r))
 
 
-def _create_deployment(name, model_id=None, environment=None, description=None):
+def _create_deployment(name, environment=None, description=None):
     parameter = {'name': name}
     if environment:
         parameter.update({'default_environment': dict(environment)})
@@ -550,11 +283,7 @@ def _create_deployment(name, model_id=None, environment=None, description=None):
 
     json_data = json.dumps(parameter)
 
-    if model_id:
-        url = "{}/models/{}/deployments".format(
-            ORGANIZATION_ENDPOINT, model_id)
-    else:
-        url = "{}/deployments".format(ORGANIZATION_ENDPOINT)
+    url = "{}/deployments".format(ORGANIZATION_ENDPOINT)
     r = api_post(url, json_data)
 
     return r
@@ -613,8 +342,6 @@ def _delete_deployment(deployment_id):
 @click.option('--user-parameters', '--user_parameters', type=ENVIRONMENT_STR, help='Environment variable',
               default=None, required=False, multiple=True)
 def create_deployment_version(ctx, deployment_id, version, image, handler, user_parameters):
-    __print_feature_new('New spec requires you to store a deployment code under deployment. '
-                        'Please not to use "create_version()" anymore.')
     try:
         r = _create_deployment_version(
             ctx, deployment_id, version, image, handler, user_parameters)
@@ -662,14 +389,19 @@ def _get_deployment_name(deployment_id):
     return r['name']
 
 
+def _version_upload(upload_url, tar_name):
+    with open(tar_name, "rb") as file:
+        result = requests.put(upload_url, data=file)
+
+    return result
+
+
 @model.command(name='describe-deployment-versions', help='Get to version or version list')
 @click.option('-d', '--deployment_id', '--deployment-id', 'deployment_id', type=str, help='Deployment identifier',
               required=True)
 @click.option('-v', '--version_id', '--version-id', 'version_id', type=str, help='Version identifier', default='all',
               required=False)
 def describe_deployment_versions(deployment_id, version_id):
-    __print_feature_new('New spec requires you to store a deployment code under deployment. '
-                        'Please not to use "describe_versions()" anymore.')
     try:
         r = _describe_deployment_versions(deployment_id, version_id)
     except:
@@ -693,8 +425,6 @@ def _describe_deployment_versions(deployment_id, version_id):
               required=True)
 @click.option('-v', '--version-id', '--version_id', 'version_id', type=str, help='Version identifier', required=True)
 def download_deployment_version(deployment_id, version_id):
-    __print_feature_new('New spec requires you to store a deployment code under deployment. '
-                        'Please not to use "download_version()" anymore.')
     try:
         r = _download_deployment_version(deployment_id, version_id)
     except:
@@ -727,8 +457,6 @@ def _download_deployment_version(deployment_id, version_id):
               required=True)
 @click.option('-v', '--version_id', '--version-id', 'version_id', type=str, help='Version identifier', required=True)
 def delete_deployment_version(deployment_id, version_id):
-    __print_feature_new('New spec requires you to store a deployment code under deployment. '
-                        'Please not to use "delete_version()" anymore.')
     try:
         r = _delete_deployment_version(deployment_id, version_id)
     except:
@@ -775,10 +503,6 @@ def _delete_deployment_version(deployment_id, version_id):
 def create_service(
         deployment_id, version_id, environment, instance_type,
         disable_autoscale, instance_number, min_instance_number, max_instance_number, record_channel_id, model_id):
-    __print_feature_renewal(
-        'New spec allows you to specify "model_id" on "create_service()", '
-        'If you want to use your training model, please specify "model_id" here.\n'
-    )
     # TODO: When min_instance_number is supported in model-api,
     # remove hidden option of min-intance-number and this caution
     if min_instance_number:
@@ -1102,8 +826,6 @@ def _check_endpoint_image(deployment_id, service_id, type, image_path):
               required=False, multiple=True)
 def submit_run(deployment_id, version_id, input_operator, input_target,
                output_operator, output_target, retry_count, environment, model_id):
-    __print_feature_renewal('New spec allows you to specify "model_id" on "submit_run()", '
-                            'If you want to use your training model, please specify "model_id" here.')
     if output_operator is None and output_target:
         raise click.BadArgumentUsage('Error: Missing option "--output_operator", '
                                      'when option "--output_target" is given.')
@@ -1187,8 +909,6 @@ def _describe_runs(deployment_id, run_id):
               required=False, multiple=True)
 def create_trigger(deployment_id, version_id, input_service_name, input_service_id,
                    output_service_name, output_service_id, retry_count, environment, model_id):
-    __print_feature_renewal('New spec allows you to specify "model_id" on "create_trigger()", '
-                            'If you want to use your training model, please specify "model_id" here.')
     if output_service_name is None and output_service_id:
         raise click.BadArgumentUsage('Error: Missing option "--output_service_name", '
                                      'when option "--output_service_id" is given.')
