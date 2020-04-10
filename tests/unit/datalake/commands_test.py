@@ -58,6 +58,7 @@ def test_describe_channels(req_mock, runner):
         "filter_archived": ["exclude_archived"],
         "limit": ["1000"]
     }
+
     def match_request_url(request):
         assert request.qs == expected_params
         return request.path == urlparse(url).path
@@ -81,6 +82,7 @@ def test_describe_channels_include_archived(req_mock, runner):
         "filter_archived": ["include_archived"],
         "limit": ["1000"]
     }
+
     def match_request_url(request):
         assert request.qs == expected_params
         return request.path == urlparse(url).path
@@ -105,6 +107,7 @@ def test_describe_channels_limits_offset(req_mock, runner):
         "limit": ["333"],
         'offset': ['444']
     }
+
     def match_request_url(request):
         assert request.qs == expected_params
         return request.path == urlparse(url).path
