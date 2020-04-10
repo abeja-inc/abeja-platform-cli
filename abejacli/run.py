@@ -1374,7 +1374,7 @@ def _describe_channels(channel_id, storage_type, include_archived=None, limit=No
 @click.option('--include-archived', 'include_archived', is_flag=True,
               help="Includes archived Channels.")
 @click.option('-l', '--limit', 'limit', type=int,
-              help='Number of pagings', default=None, required=False)
+              help='Number of pagings (default: 100)', default=None, required=False)
 @click.option('-o', '--offset', 'offset', type=int,
               help='Paging start index', default=None, required=False)
 def describe_datalake_channels(channel_id, include_archived, limit, offset):

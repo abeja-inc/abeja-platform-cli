@@ -88,7 +88,7 @@ def create_job_definition():
 @click.option('--include-archived', 'include_archived', is_flag=True,
               help="Includes archived job definitions.")
 @click.option('-l', '--limit', 'limit', type=int,
-              help='Number of pagings (default: 1000)', default=None, required=False)
+              help='Number of pagings', default=None, required=False)
 @click.option('-o', '--offset', 'offset', type=int,
               help='Paging start index', default=None, required=False)
 def describe_job_definitions(job_definition_name, include_archived, limit, offset):
