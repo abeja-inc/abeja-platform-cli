@@ -20,7 +20,7 @@ from abejacli.config import (ABEJA_PLATFORM_TOKEN, ABEJA_PLATFORM_USER_ID,
 from abejacli.exceptions import ConfigFileNotFoundError, InvalidConfigException, ResourceNotFound
 from abejacli.docker.commands.run import build_volumes
 from abejacli.logger import get_logger
-from abejacli.session import api_get, api_post, api_patch
+from abejacli.session import api_get, api_post, api_patch, api_get_data
 from abejacli.training import TrainingConfig, CONFIGFILE_NAME, read_training_config, is_valid_image_and_handler_pair
 from abejacli.training.jobs import TrainingJobDebugRun
 from abejacli.training.jobs import TrainingJobLocalContainerRun
@@ -88,14 +88,14 @@ def create_job_definition():
 @click.option('--include-archived', 'include_archived', is_flag=True,
               help="Includes archived job definitions.")
 def describe_job_definitions(job_definition_name, include_archived):
+    params = {}
     if job_definition_name is None:
         url = "{}/training/definitions".format(ORGANIZATION_ENDPOINT)
-        url = '{}?filter_archived=include_archived'.format(
-            url) if include_archived else '{}?filter_archived=exclude_archived'.format(url)
+        params["filter_archived"] = 'include_archived' if include_archived else 'exclude_archived'
     else:
         url = "{}/training/definitions/{}".format(ORGANIZATION_ENDPOINT, job_definition_name)
     try:
-        r = api_get(url)
+        r = api_get_data(url, params)
     except Exception as e:
         logger.error('create job definition aborted:{}'.format(e))
         click.echo('create job definition aborted.')
@@ -504,9 +504,9 @@ def describe_jobs(job_definition_name, include_archived):
         name = config_data['name']
     try:
         url = "{}/training/definitions/{}/jobs".format(ORGANIZATION_ENDPOINT, name)
-        url = '{}?filter_archived=include_archived'.format(
-            url) if include_archived else '{}?filter_archived=exclude_archived'.format(url)
-        r = api_get(url)
+        params = {}
+        params["filter_archived"] = 'include_archived' if include_archived else 'exclude_archived'
+        r = api_get_data(url, params)
     except InvalidConfigException as e:
         logger.error('invalid training configuration file: {}'.format(e))
         click.echo('invalid training configuration file.')
@@ -712,9 +712,9 @@ def _describe_training_models(job_definition_name, model_id, include_archived=No
         r = api_get(url)
         return r
 
-    url = '{}?filter_archived=include_archived'.format(
-        url) if include_archived else '{}?filter_archived=exclude_archived'.format(url)
-    r = api_get(url)
+    params = {}
+    params["filter_archived"] = 'include_archived' if include_archived else 'exclude_archived'
+    r = api_get_data(url, params)
     return r
 
 

@@ -1348,9 +1348,9 @@ def _describe_channels(channel_id, storage_type, include_archived=None):
     if channel_id == 'all':
         url = "{}/channels?limit={}".format(
             ORGANIZATION_ENDPOINT, channel_limit)
-        url = '{}&filter_archived=include_archived'.format(
-            url) if include_archived else '{}&filter_archived=exclude_archived'.format(url)
-        r = api_get(url)
+        params = {}
+        params["filter_archived"] = 'include_archived' if include_archived else 'exclude_archived'
+        r = api_get_data(url, params)
         filtered_channels = list(
             filter(lambda x: x['storage_type'] == storage_type, r['channels']))
         response = {
