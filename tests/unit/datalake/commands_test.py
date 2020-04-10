@@ -5,7 +5,7 @@ import requests_mock
 from urllib.parse import urlparse
 from abejacli.config import ORGANIZATION_ENDPOINT
 from abejacli.run import describe_datalake_channels
-
+import re
 TEST_CONFIG_USER_ID = '12345'
 TEST_CONFIG_TOKEN = 'ntoken12345'
 TEST_CONFIG_ORG_NAME = 'test-inc'
@@ -51,8 +51,9 @@ def req_mock(request):
 # Channels
 
 def test_describe_channels(req_mock, runner):
-    url = "{}/channels?limit=100&filter_archived=exclude_archived".format(ORGANIZATION_ENDPOINT)
-
+    url = "{}/channels".format(ORGANIZATION_ENDPOINT)
+    re_url = r"^{}.+".format(url)
+    matcher = re.compile(re_url)
     expected_params = {
         "filter_archived": ["exclude_archived"],
         "limit": ["1000"]
@@ -62,7 +63,7 @@ def test_describe_channels(req_mock, runner):
         return request.path == urlparse(url).path
 
     req_mock.register_uri(
-        'GET', url,
+        'GET', matcher,
         json=MOCK_DATALAKE_CHANNELS_RESPONSE,
         additional_matcher=match_request_url)
 
@@ -72,7 +73,9 @@ def test_describe_channels(req_mock, runner):
 
 
 def test_describe_channels_include_archived(req_mock, runner):
-    url = "{}/channels?limit=1000&filter_archived=include_archived".format(ORGANIZATION_ENDPOINT)
+    url = "{}/channels".format(ORGANIZATION_ENDPOINT)
+    re_url = r"^{}.+".format(url)
+    matcher = re.compile(re_url)
 
     expected_params = {
         "filter_archived": ["include_archived"],
@@ -83,13 +86,36 @@ def test_describe_channels_include_archived(req_mock, runner):
         return request.path == urlparse(url).path
 
     req_mock.register_uri(
-        'GET', url,
+        'GET', matcher,
         json=MOCK_DATALAKE_CHANNELS_RESPONSE,
         additional_matcher=match_request_url)
 
     cmd = ['--include-archived']
     r = runner.invoke(describe_datalake_channels, cmd)
-    print(r.output)
+    assert not r.exception
+
+
+def test_describe_channels_limits_offset(req_mock, runner):
+    url = "{}/channels".format(ORGANIZATION_ENDPOINT)
+    re_url = r"^{}.+".format(url)
+    matcher = re.compile(re_url)
+
+    expected_params = {
+        "filter_archived": ["exclude_archived"],
+        "limit": ["333"],
+        'offset': ['444']
+    }
+    def match_request_url(request):
+        assert request.qs == expected_params
+        return request.path == urlparse(url).path
+
+    req_mock.register_uri(
+        'GET', matcher,
+        json=MOCK_DATALAKE_CHANNELS_RESPONSE,
+        additional_matcher=match_request_url)
+
+    cmd = ['--limit', '333', '--offset', '444']
+    r = runner.invoke(describe_datalake_channels, cmd)
     assert not r.exception
 
 
