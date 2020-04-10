@@ -1,4 +1,4 @@
-NAME=abejacli
+NUM_TEST_PROCESS ?= auto
 
 .PHONY: build install clean dist uninstall test prepare_ci integration_test lint fmt release
 
@@ -13,7 +13,7 @@ dist: clean
 	poetry build -f wheel
 
 test: lint
-	poetry run pytest -v --cov=abejacli tests/unit
+	poetry run pytest -v -n ${NUM_TEST_PROCESS} --cov=abejacli tests/unit
 
 prepare_ci:
 	mkdir -p ~/.abeja
