@@ -87,11 +87,19 @@ def create_job_definition():
               required=False, default=None)
 @click.option('--include-archived', 'include_archived', is_flag=True,
               help="Includes archived job definitions.")
-def describe_job_definitions(job_definition_name, include_archived):
+@click.option('-l', '--limit', 'limit', type=int,
+              help='Number of pagings (default: 1000)', default=None, required=False)
+@click.option('-o', '--offset', 'offset', type=int,
+              help='Paging start index', default=None, required=False)
+def describe_job_definitions(job_definition_name, include_archived, limit, offset):
     params = {}
     if job_definition_name is None:
         url = "{}/training/definitions".format(ORGANIZATION_ENDPOINT)
         params["filter_archived"] = 'include_archived' if include_archived else 'exclude_archived'
+        if limit:
+            params['limit'] = limit
+        if offset:
+            params["offset"] = offset
     else:
         url = "{}/training/definitions/{}".format(ORGANIZATION_ENDPOINT, job_definition_name)
     try:
@@ -490,7 +498,11 @@ def create_training_job(version, environment, params, instance_type, description
               required=False, default=None)
 @click.option('--include-archived', 'include_archived', is_flag=True,
               help="Includes archived training jobs .")
-def describe_jobs(job_definition_name, include_archived):
+@click.option('-l', '--limit', 'limit', type=int,
+              help='Number of pagings', default=None, required=False)
+@click.option('-o', '--offset', 'offset', type=int,
+              help='Paging start index', default=None, required=False)
+def describe_jobs(job_definition_name, include_archived, limit, offset):
     if job_definition_name:
         name = job_definition_name
     else:
@@ -506,6 +518,10 @@ def describe_jobs(job_definition_name, include_archived):
         url = "{}/training/definitions/{}/jobs".format(ORGANIZATION_ENDPOINT, name)
         params = {}
         params["filter_archived"] = 'include_archived' if include_archived else 'exclude_archived'
+        if limit:
+            params['limit'] = limit
+        if offset:
+            params["offset"] = offset
         r = api_get_data(url, params)
     except InvalidConfigException as e:
         logger.error('invalid training configuration file: {}'.format(e))
