@@ -13,7 +13,7 @@ dist: clean
 	poetry build -f wheel
 
 test: lint
-	poetry run pytest tests/unit --cov=abejacli tests/unit
+	poetry run pytest -v --cov=abejacli tests/unit
 
 prepare_ci:
 	mkdir -p ~/.abeja
@@ -27,7 +27,7 @@ lint:
 
 fmt:
 	poetry run autopep8 -i -r abejacli tests --max-line-length=120 --exclude=abejacli/template/*
-	poetry run autoflake -i -r abejacli tests --remove-all-unused-imports --remove-unused-variables --exclude=abejacli/template/*
+	poetry run autoflake -i -r abejacli tests --remove-all-unused-imports --remove-unused-variables
 
 release: dist
 	poetry publish -u ${TWINE_USERNAME} -p ${TWINE_PASSWORD}

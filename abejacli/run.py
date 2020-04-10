@@ -1342,15 +1342,15 @@ def __create_datalake_channel(name, description):
     return api_post(url, json_data)
 
 
-def _describe_channels(channel_id, storage_type, include_archived=None):
-    # TODO: need to iterate over all channels with has_next attr
-    channel_limit = 1000
+def _describe_channels(channel_id, storage_type, include_archived=None, limit=None, offset=None):
     if channel_id == 'all':
-        url = "{}/channels?limit={}".format(
-            ORGANIZATION_ENDPOINT, channel_limit)
-        url = '{}&filter_archived=include_archived'.format(
-            url) if include_archived else '{}&filter_archived=exclude_archived'.format(url)
-        r = api_get(url)
+        url = "{}/channels".format(ORGANIZATION_ENDPOINT)
+        params = {}
+        params["filter_archived"] = 'include_archived' if include_archived else 'exclude_archived'
+        params['limit'] = limit or 1000
+        if offset:
+            params["offset"] = offset
+        r = api_get_data(url, params)
         filtered_channels = list(
             filter(lambda x: x['storage_type'] == storage_type, r['channels']))
         response = {
@@ -1373,10 +1373,16 @@ def _describe_channels(channel_id, storage_type, include_archived=None):
               required=False)
 @click.option('--include-archived', 'include_archived', is_flag=True,
               help="Includes archived Channels.")
-def describe_datalake_channels(channel_id, include_archived):
+@click.option('-l', '--limit', 'limit', type=int,
+              help='Number of pagings (default: 100)', default=None, required=False)
+@click.option('-o', '--offset', 'offset', type=int,
+              help='Paging start index', default=None, required=False)
+def describe_datalake_channels(channel_id, include_archived, limit, offset):
     try:
-        r = _describe_channels(channel_id, 'datalake', include_archived)
-    except:
+        r = _describe_channels(channel_id, 'datalake', include_archived, limit=limit, offset=offset)
+    except Exception as e:
+        logger.error('describe-channels aborted:{}'.format(e))
+        click.echo('describe-channels aborted.')
         sys.exit(ERROR_EXITCODE)
     click.echo(json_output_formatter(r))
 
