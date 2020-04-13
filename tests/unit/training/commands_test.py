@@ -14,6 +14,7 @@ from abejacli.training.commands import debug_local, train_local
 from abejacli.training.commands import create_notebook
 from abejacli.training.commands import start_notebook
 from abejacli.training.commands import create_training_version
+from abejacli.training.commands import create_training_version_from_git
 from abejacli.training.commands import create_training_job
 from abejacli.training.commands import update_training_version
 from abejacli.training.commands import _get_latest_training_version
@@ -381,6 +382,127 @@ def test_create_training_version(
         args = mock.call_args[0]
         assert args[0] == url
         assert args[1] == expected_payload
+    assert not r.exception
+
+
+@pytest.mark.parametrize(
+    'cmd,additional_config,expected_payload',
+    [
+        (['--git-url', 'https://github.com/abeja-inc/platform-template-image-classification.git',
+          '--description', 'dummy description'],
+         {},
+         {
+             'git_url': 'https://github.com/abeja-inc/platform-template-image-classification.git',
+             'description': 'dummy description'
+         }),
+        (['--git-url', 'https://github.com/abeja-inc/platform-template-image-classification.git',
+          '--git-branch', 'develop',
+          '--description', 'dummy description'],
+         {},
+         {
+             'git_url': 'https://github.com/abeja-inc/platform-template-image-classification.git',
+             'git_branch': 'develop',
+             'description': 'dummy description'
+         }),
+        (['--git-url', 'https://github.com/abeja-inc/platform-template-image-classification.git',
+          '--description', 'dummy description', '--environment', 'BATCH_SIZE:32'],
+         {},
+         {
+             'git_url': 'https://github.com/abeja-inc/platform-template-image-classification.git',
+             'description': 'dummy description',
+             'environment': {'BATCH_SIZE': '32'}
+         }),
+        (['--git-url', 'https://github.com/abeja-inc/platform-template-image-classification.git',
+          '--description', 'dummy description'],
+         {
+             'datasets': {'train': '1600000000000'},
+             'params': {'key9': 'value9'}
+         },
+         {
+             'git_url': 'https://github.com/abeja-inc/platform-template-image-classification.git',
+             'description': 'dummy description',
+             'environment': {'key9': 'value9'}
+         }),
+        (['--git-url', 'https://github.com/abeja-inc/platform-template-image-classification.git',
+          '--description', 'dummy description'],
+         {
+             'datasets': {'train': '1600000000000'},
+             'environment': {'key1': 'value1', 'key2': 'value2'}
+         },
+         {
+             'git_url': 'https://github.com/abeja-inc/platform-template-image-classification.git',
+             'description': 'dummy description',
+             'environment': {'key1': 'value1', 'key2': 'value2'}
+         }),
+        (['--git-url', 'https://github.com/abeja-inc/platform-template-image-classification.git',
+          '--description', 'dummy description'],
+         {
+             'datasets': {'train': '1600000000000'},
+             'environment': {'key1': 'value1', 'key2': 'value2'},
+             'params': {'key9': 'value9'}
+         },
+         {
+             'git_url': 'https://github.com/abeja-inc/platform-template-image-classification.git',
+             'description': 'dummy description', 'environment': {'key1': 'value1', 'key2': 'value2'}
+         }),
+        (['--git-url', 'https://github.com/abeja-inc/platform-template-image-classification.git',
+          '--datalake', '1234567890123'],
+         {},
+         {
+             'git_url': 'https://github.com/abeja-inc/platform-template-image-classification.git',
+             'datalakes': ['1234567890123']
+         }),
+        (['--git-url', 'https://github.com/abeja-inc/platform-template-image-classification.git',
+          '--bucket', '2345678901234'],
+         {},
+         {
+             'git_url': 'https://github.com/abeja-inc/platform-template-image-classification.git',
+             'buckets': ['2345678901234']
+         }),
+        (['--git-url', 'https://github.com/abeja-inc/platform-template-image-classification.git',
+          '--datalake', '1234567890123', '--bucket', '2345678901234'],
+         {},
+         {
+             'git_url': 'https://github.com/abeja-inc/platform-template-image-classification.git',
+             'datalakes': ['1234567890123'],
+             'buckets': ['2345678901234']
+         })
+    ]
+)
+@patch('abejacli.training.commands.version_archive', MagicMock(return_value=None))
+@patch('abejacli.training.commands.CONFIG', TEST_CONFIG)
+def test_create_training_version_from_git(
+        req_mock, runner, cmd, additional_config, expected_payload):
+    config_data = {
+        'name': 'training-1',
+        'handler': 'train:handler',
+        'image': 'abeja-inc/all-cpu:18.10'
+    }
+    config_data = {**config_data, **additional_config}
+    with open(CONFIGFILE_NAME, 'w') as configfile:
+        yaml.dump(config_data, configfile)
+
+    url = "{}/training/definitions/{}/git/versions".format(
+        ORGANIZATION_ENDPOINT, config_data['name'])
+
+    def match_request_text(request):
+        return json.loads(request.text) == expected_payload
+
+    req_mock.register_uri(
+        'POST', url,
+        json=expected_payload,
+        additional_matcher=match_request_text)
+
+    expected_payload = {**expected_payload, **{'handler': config_data['handler'], 'image': config_data['image']}}
+
+    def match_request_text(request):
+        return json.loads(request.text) == expected_payload
+
+    req_mock.register_uri(
+        'POST', url,
+        json=expected_payload,
+        additional_matcher=match_request_text)
+    r = runner.invoke(create_training_version_from_git, cmd)
     assert not r.exception
 
 

@@ -319,6 +319,72 @@ def _create_training_version(url: str, payload: Dict[str, str], archive):
         return api_post(url, files=files)
 
 
+@training.command(name='create-version-from-git')
+@click.option('--git-url', type=str, required=True,
+              help='GitHub URL, which must start with "https://".')
+@click.option('--git-branch', type=str, required=False,
+              help='GitHub branch. Default "master"')
+@click.option('-d', '--description', type=str, required=False,
+              help='Description for the training job, which must be less than or equal to 256 characters.')
+@click.option('-e', '--environment', type=ENVIRONMENT_STR, default=None, required=False, multiple=True,
+              help='Environment variables, ex. BATCH_SIZE:32')
+@click.option('--datalake', '--datalakes', 'datalakes', type=str, default=None, required=False, multiple=True,
+              help='[Alpha stage option] Datalake channel ID for premount.')
+@click.option('--bucket', '--buckets', 'buckets', type=str, default=None, required=False, multiple=True,
+              help='[Alpha stage option] Datalake bucket ID for premount.')
+def create_training_version_from_git(git_url, git_branch, description, environment, datalakes, buckets):
+    try:
+        params = dict(training_config.read(training_config.create_version_schema))
+
+        handler = params.get('handler')
+        image = params.get('image')
+        if not handler or not image:
+            raise InvalidConfigException('need to specify handler and image both')
+
+        # FIXME: For "20.02" trial.
+        if not is_valid_image_and_handler_pair(image, handler):
+            raise InvalidConfigException('handler must be "file:method" format.')
+
+        payload = {
+            'git_url': git_url,
+            'handler': handler,
+            'image': image
+        }
+
+        if git_branch is not None:
+            payload['git_branch'] = git_branch
+
+        if description is not None:
+            payload['description'] = description
+
+        environment = {**params.get('environment', {}), **dict(environment)}
+        if environment:
+            payload['environment'] = environment
+
+        if datalakes:
+            payload['datalakes'] = list(datalakes)
+        if buckets:
+            payload['buckets'] = list(buckets)
+
+        url = "{}/training/definitions/{}/git/versions".format(
+            ORGANIZATION_ENDPOINT, params['name'])
+
+        r = api_post(url, json.dumps(payload))
+    except ConfigFileNotFoundError:
+        logger.error('training configuration file does not exists.')
+        click.echo('training configuration file does not exists.')
+        sys.exit(ERROR_EXITCODE)
+    except InvalidConfigException as e:
+        logger.error('invalid training configuration file: {}'.format(e))
+        click.echo('invalid training configuration file.')
+        sys.exit(ERROR_EXITCODE)
+    except Exception as e:
+        logger.error('create training version aborted: {}'.format(e))
+        click.echo('create training version aborted.')
+        sys.exit(ERROR_EXITCODE)
+    click.echo(json_output_formatter(r))
+
+
 @training.command(name='update-version')
 @click.option('-v', '--version', type=str, required=False,
               help='Job definition version. By default, latest version is used')
