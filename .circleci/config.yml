@@ -112,6 +112,7 @@ workflows:
           filters:
             branches:
               only:
+                - trigger-system-test
                 - /^release\/.*/
           requires:
             - codetest35
