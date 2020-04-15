@@ -8,7 +8,7 @@ from abejacli.fs_utils import (FileSpecFormatError, InvalidPathException,
                                TARFile, TGZFile, UploadFileSpec, ZIPFile,
                                generate_upload_file_iter, generate_upload_bucket_iter,
                                get_compressed_file)
-from nose.tools import assert_equals, assert_raises
+from nose.tools import assert_raises
 from pyfakefs.fake_filesystem_unittest import Patcher
 
 HIDDEN_FILE = '/dummy/.IgnoreMe'
@@ -63,14 +63,14 @@ class GenerateUploadFileIterTest(TestCase):
         file_iter = generate_upload_file_iter([dir_path], recursive=False)
         with assert_raises(InvalidPathException) as context:
             list(file_iter)
-        assert_equals(context.exception.path, dir_path)
+        assert context.exception.path == dir_path
 
     def test_iter_dir_with_invalid_path(self):
         invalid_path = '/invalid'
         file_iter = generate_upload_file_iter([invalid_path])
         with assert_raises(InvalidPathException) as context:
             list(file_iter)
-        assert_equals(context.exception.path, invalid_path)
+        assert context.exception.path == invalid_path
 
     def tearDown(self):
         self.patcher.tearDown()

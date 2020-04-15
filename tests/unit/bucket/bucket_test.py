@@ -5,7 +5,7 @@ import requests_mock
 from abejacli.config import ORGANIZATION_ENDPOINT, DATALAKE_ITEMS_PER_PAGE
 from abejacli.bucket import (generate_bucket_file_iter_by_id,
                              generate_bucket_file_iter)
-from nose.tools import assert_equals, assert_list_equal, assert_raises
+from nose.tools import assert_list_equal, assert_raises
 
 FILE = {
   "expires": "2017-11-21T02:18:16+00:00",
@@ -79,7 +79,7 @@ class GenerateFilePeriodIterTest(TestCase):
         mock.register_uri('GET', url, json=res)
 
         it = generate_bucket_file_iter(bucket_id)
-        assert_equals(0, len(list(it)))
+        assert 0 == len(list(it))
 
     @requests_mock.Mocker()
     def test_iter_file_period_pagination(self, mock):

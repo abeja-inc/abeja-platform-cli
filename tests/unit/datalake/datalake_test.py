@@ -5,7 +5,7 @@ import requests_mock
 from abejacli.config import ABEJA_API_URL, DATALAKE_ITEMS_PER_PAGE
 from abejacli.datalake import (generate_channel_file_iter_by_id,
                                generate_channel_file_iter_by_period)
-from nose.tools import assert_equals, assert_list_equal, assert_raises
+from nose.tools import assert_list_equal, assert_raises
 
 FILE = {
   "url_expires_on": "2017-11-21T02:18:16+00:00",
@@ -103,7 +103,7 @@ class GenerateFilePeriodIterTest(TestCase):
         mock.register_uri('GET', url, json=res)
 
         it = generate_channel_file_iter_by_period(channel_id, start, end)
-        assert_equals(0, len(list(it)))
+        assert 0 == len(list(it))
 
     @requests_mock.Mocker()
     def test_iter_file_period_pagination(self, mock):

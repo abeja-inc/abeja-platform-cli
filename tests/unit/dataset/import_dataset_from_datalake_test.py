@@ -162,4 +162,4 @@ class DatasetImportFromDatalakeTest(TestCase):
             'dataset_id': DATASET_ID,
             'channel_id': CHANNEL_ID
         }
-        self.assertEquals(expected, result)
+        self.assertEqual(expected, result)
