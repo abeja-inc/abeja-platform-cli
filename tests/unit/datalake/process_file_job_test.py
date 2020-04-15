@@ -5,7 +5,6 @@ from abejacli.datalake.process_file_job import (FINISH_REPORT,
                                                 INITIALIZE_REPORT,
                                                 PROGRESS_REPORT,
                                                 handle_command)
-from nose.tools import assert_is_none, assert_is_not_none
 
 try:
     from unittest.mock import patch
@@ -39,7 +38,7 @@ class ProcessFileJobTest(TestCase):
                        INITIALIZE_REPORT, publisher_id, 0, initialize_options)
         tqdm_mock.assert_called_with(**expected_tqdm_options)
         index = publisher_container.index(publisher_id)
-        assert_is_not_none(container[index])
+        assert container[index] is not None
 
         # assert tqdm is updated with expected args
         handle_command(container, publisher_container,
@@ -57,7 +56,7 @@ class ProcessFileJobTest(TestCase):
                        FINISH_REPORT, publisher_id, 0, None)
         assert tqdm_instance.refresh.call_count == 1
         assert tqdm_instance.close.call_count == 1
-        assert_is_none(container[index])
+        assert container[index] is None
 
     # @patch('abejacli.report_worker.handle_command')
     # @patch('tqdm.tqdm')

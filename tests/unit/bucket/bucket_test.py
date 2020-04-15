@@ -5,7 +5,6 @@ import requests_mock
 from abejacli.config import ORGANIZATION_ENDPOINT, DATALAKE_ITEMS_PER_PAGE
 from abejacli.bucket import (generate_bucket_file_iter_by_id,
                              generate_bucket_file_iter)
-from nose.tools import assert_list_equal, assert_raises
 
 FILE = {
   "expires": "2017-11-21T02:18:16+00:00",
@@ -65,7 +64,7 @@ class GenerateFilePeriodIterTest(TestCase):
         mock.register_uri('GET', url, json=res2)
 
         it = generate_bucket_file_iter(bucket_id)
-        assert_list_equal(FILES, list(it))
+        assert FILES == list(it)
 
     @requests_mock.Mocker()
     def test_iter_file_period_empty(self, mock):
@@ -109,7 +108,7 @@ class GenerateFilePeriodIterTest(TestCase):
         mock.register_uri('GET', third_page_url, json=third_res)
 
         it = generate_bucket_file_iter(bucket_id)
-        assert_list_equal(FILES, list(it))
+        assert FILES == list(it)
 
 
 class GenerateFileIdIterTest(TestCase):
@@ -123,7 +122,7 @@ class GenerateFileIdIterTest(TestCase):
 
         file_ids = [file_id]
         it = generate_bucket_file_iter_by_id(bucket_id, *file_ids)
-        assert_list_equal([FILE], list(it))
+        assert [FILE] == list(it)
 
     @requests_mock.Mocker()
     def test_iter_file_id_not_found(self, mock):
@@ -133,6 +132,6 @@ class GenerateFileIdIterTest(TestCase):
         mock.register_uri('GET', url, json=FILE, status_code=404)
 
         file_ids = [file_id]
-        with assert_raises(requests.HTTPError):
+        with self.assertRaises(requests.HTTPError):
             it = generate_bucket_file_iter_by_id(bucket_id, *file_ids)
             list(it)
