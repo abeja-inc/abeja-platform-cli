@@ -38,6 +38,9 @@ yaml = YAML()
 
 
 def get_tmp_training_file_name():
+    """Putting temporary file in /tmp dir.
+    Hopefully want to use tempfile but can't close tempfile, so using tmp dir
+    """
     filename = '{}.yaml'.format(uuid.uuid4())
     return os.path.join('/tmp', filename)
 
