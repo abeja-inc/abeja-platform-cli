@@ -11,7 +11,7 @@ import os
 
 from abejacli.config import ORGANIZATION_ENDPOINT
 from abejacli.exceptions import ResourceNotFound
-from abejacli.training import CONFIGFILE_NAME
+import abejacli.training
 from abejacli.training.commands import debug_local, train_local
 from abejacli.training.commands import create_notebook
 from abejacli.training.commands import start_notebook
@@ -25,7 +25,6 @@ from abejacli.training.commands import describe_training_versions
 from abejacli.training.commands import describe_jobs
 from abejacli.training.commands import describe_training_models
 
-
 TEST_CONFIG_USER_ID = '12345'
 TEST_CONFIG_TOKEN = 'ntoken12345'
 TEST_CONFIG_ORG_NAME = 'test-inc'
@@ -36,6 +35,7 @@ TEST_CONFIG = {
 }
 
 yaml = YAML()
+
 
 def get_tmp_training_file_name():
     filename = '{}.yaml'.format(uuid.uuid4())
@@ -64,13 +64,14 @@ def test_get_latest_training_version(m):
 
 
 @patch('abejacli.training.commands.CONFIG', TEST_CONFIG)
+@patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
 def test_update_training_version(req_mock, runner):
     config_data = {
         'name': 'training-1',
         'handler': 'train:handler',
         'image': 'abeja-inc/all-cpu:18.10'
     }
-    with open(CONFIGFILE_NAME, 'w') as configfile:
+    with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
         yaml.dump(config_data, configfile)
 
     url = "{}/training/definitions/{}/versions/{}".format(
@@ -146,6 +147,7 @@ def test_update_training_version(req_mock, runner):
     ]
 )
 @patch('abejacli.training.commands.CONFIG', TEST_CONFIG)
+@patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
 def test_create_notebook(
         req_mock, runner, cmd, additional_config, expected_payload):
     config_data = {
@@ -153,7 +155,7 @@ def test_create_notebook(
         'image': 'abeja-inc/all-cpu:18.10'
     }
     config_data = {**config_data, **additional_config}
-    with open(CONFIGFILE_NAME, 'w') as configfile:
+    with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
         yaml.dump(config_data, configfile)
 
     url = "{}/training/definitions/{}/notebooks".format(
@@ -221,6 +223,7 @@ def test_create_notebook(
     ]
 )
 @patch('abejacli.training.commands.CONFIG', TEST_CONFIG)
+@patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
 def test_start_notebook(
         req_mock, runner, cmd, additional_config, expected_payload):
     notebook_id = '9876543210987'
@@ -229,7 +232,7 @@ def test_start_notebook(
         'image': 'abeja-inc/all-cpu:18.10'
     }
     config_data = {**config_data, **additional_config}
-    with open(CONFIGFILE_NAME, 'w') as configfile:
+    with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
         yaml.dump(config_data, configfile)
 
     url = "{}/training/definitions/{}/notebooks/{}/start".format(
@@ -304,6 +307,7 @@ def test_start_notebook(
 )
 @patch('abejacli.training.commands.version_archive', MagicMock(return_value=None))
 @patch('abejacli.training.commands.CONFIG', TEST_CONFIG)
+@patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
 def test_create_training_version(
         req_mock, runner, cmd, additional_config, expected_payload):
     config_data = {
@@ -312,7 +316,7 @@ def test_create_training_version(
         'image': 'abeja-inc/all-cpu:18.10'
     }
     config_data = {**config_data, **additional_config}
-    with open(CONFIGFILE_NAME, 'w') as configfile:
+    with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
         yaml.dump(config_data, configfile)
 
     url = "{}/training/definitions/{}/versions".format(
@@ -343,7 +347,7 @@ def test_create_training_version(
         'image': 'abeja-inc/all-cpu:18.10'
     }
     config_data = {**config_data, **additional_config}
-    with open(CONFIGFILE_NAME, 'w') as configfile:
+    with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
         yaml.dump(config_data, configfile)
 
     url = "{}/training/definitions/{}/versions".format(
@@ -367,7 +371,7 @@ def test_create_training_version(
         'image': 'abeja-inc/all-cpu:20.02a'
     }
     config_data = {**config_data, **additional_config}
-    with open(CONFIGFILE_NAME, 'w') as configfile:
+    with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
         yaml.dump(config_data, configfile)
 
     url = "{}/training/definitions/{}/versions".format(
@@ -635,6 +639,7 @@ def test_create_training_version_from_git(
     ]
 )
 @patch('abejacli.training.commands.CONFIG', TEST_CONFIG)
+@patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
 def test_create_training_job(req_mock, runner, cmd, additional_config, expected_payload):
     config_data = {
         'name': 'training-1',
@@ -642,7 +647,7 @@ def test_create_training_job(req_mock, runner, cmd, additional_config, expected_
         'image': 'abeja-inc/all-cpu:18.10'
     }
     config_data = {**config_data, **additional_config}
-    with open(CONFIGFILE_NAME, 'w') as configfile:
+    with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
         yaml.dump(config_data, configfile)
 
     url = "{}/training/definitions/{}/versions/{}/jobs".format(
@@ -678,6 +683,7 @@ def test_create_training_job(req_mock, runner, cmd, additional_config, expected_
     ]
 )
 @patch('abejacli.training.commands.CONFIG', TEST_CONFIG)
+@patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
 @patch('abejacli.training.commands.TrainingJobDebugRun')
 def test_debug_local_params(
         mock_debug_job, runner, cmd, additional_config,
@@ -692,7 +698,7 @@ def test_debug_local_params(
         'ignores': ['.gitignore']
     }
     config_data = {**config_data, **additional_config}
-    with open(CONFIGFILE_NAME, 'w') as configfile:
+    with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
         yaml.dump(config_data, configfile)
 
     default_cmd = [
@@ -700,7 +706,7 @@ def test_debug_local_params(
         '--organization_id', '1122334455667',
         '--volume', '/tmp:/data',
         '--volume', '/usr/bin/hoge:/hoge',
-        '--config', CONFIGFILE_NAME,
+        '--config', abejacli.training.CONFIGFILE_NAME,
     ]
     r = runner.invoke(debug_local, default_cmd + cmd)
 
@@ -716,6 +722,7 @@ def test_debug_local_params(
 
 
 @patch('abejacli.training.commands.CONFIG', TEST_CONFIG)
+@patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
 @patch('abejacli.training.commands.TrainingJobDebugRun')
 def test_debug_local(mock_debug_job, runner):
     mock_job = MagicMock()
@@ -732,7 +739,7 @@ def test_debug_local(mock_debug_job, runner):
         'datasets': {'dataset_name1': 'value1'},
         'ignores': ['.gitignore']
     }
-    with open(CONFIGFILE_NAME, 'w') as configfile:
+    with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
         yaml.dump(config_data, configfile)
 
     cmd = [
@@ -743,7 +750,7 @@ def test_debug_local(mock_debug_job, runner):
         '--environment', 'MAX_ITEMS:',
         '--volume', '/tmp:/data',
         '--volume', '/usr/bin/hoge:/hoge',
-        '--config', CONFIGFILE_NAME,
+        '--config', abejacli.training.CONFIGFILE_NAME,
     ]
     r = runner.invoke(debug_local, cmd)
 
@@ -783,6 +790,7 @@ def test_debug_local(mock_debug_job, runner):
 
 
 @patch('abejacli.training.commands.CONFIG', TEST_CONFIG)
+@patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
 @patch('abejacli.training.commands.TrainingJobDebugRun')
 def test_debug_local_with_default_params(mock_debug_job, runner):
     mock_job = MagicMock()
@@ -800,12 +808,12 @@ def test_debug_local_with_default_params(mock_debug_job, runner):
         'datasets': {'dataset_name1': 'value1'},
         'ignores': ['.gitignore']
     }
-    with open(CONFIGFILE_NAME, 'w') as configfile:
+    with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
         yaml.dump(config_data, configfile)
 
     r = runner.invoke(debug_local, [
         '--organization_id', '1122334455667',
-        '--config', CONFIGFILE_NAME
+        '--config', abejacli.training.CONFIGFILE_NAME
     ])
 
     assert r.exit_code == 0
@@ -820,6 +828,7 @@ def test_debug_local_with_default_params(mock_debug_job, runner):
 
 
 @patch('abejacli.training.commands.CONFIG', TEST_CONFIG)
+@patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
 @patch('abejacli.common.get_organization_id')
 @patch('abejacli.training.commands.TrainingJobDebugRun')
 def test_debug_local_debug_without_organization_id(
@@ -838,7 +847,7 @@ def test_debug_local_debug_without_organization_id(
         'datasets': {'dataset_name1': 'value1'},
         'ignores': ['.gitignore']
     }
-    with open(CONFIGFILE_NAME, 'w') as configfile:
+    with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
         yaml.dump(config_data, configfile)
 
     cmd = [
@@ -846,7 +855,7 @@ def test_debug_local_debug_without_organization_id(
         # '--organization_id', '1122334455667',
         '--environment', 'USER_ID:1234567890123',
         '--environment', 'ACCESS_KEY:373be7309f0146c0d283440e500843d8',
-        '--config', CONFIGFILE_NAME,
+        '--config', abejacli.training.CONFIGFILE_NAME,
     ]
     r = runner.invoke(debug_local, cmd)
 
@@ -859,6 +868,7 @@ def test_debug_local_debug_without_organization_id(
 
 
 @patch('abejacli.common.get_organization_id')
+@patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
 @patch('abejacli.training.commands.TrainingJobLocalContainerRun')
 def test_train_local_environment(mock_train_local, mock_get_organization_id, runner, req_mock):
     mock_job = MagicMock()
@@ -875,7 +885,7 @@ def test_train_local_environment(mock_train_local, mock_get_organization_id, run
         'datasets': {'dataset_name1': 'value1'},
         'ignores': ['.gitignore']
     }
-    with open(CONFIGFILE_NAME, 'w') as configfile:
+    with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
         yaml.dump(config_data, configfile)
 
     version_info = {
@@ -900,7 +910,7 @@ def test_train_local_environment(mock_train_local, mock_get_organization_id, run
         '--version', '1',
         '--environment', 'USER_ID:1234567890123',
         '--environment', 'param3:value333',
-        '--config', CONFIGFILE_NAME,
+        '--config', abejacli.training.CONFIGFILE_NAME,
     ]
 
     r = runner.invoke(train_local, cmd)
@@ -1037,13 +1047,14 @@ def test_describe_job_definition_versions(req_mock, runner):
     assert not r.exception
 
 
+@patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
 def test_describe_job_definition_versions_from_config(req_mock, runner):
     config_data = {
         'name': 'training-1',
         'handler': 'train:handler',
         'image': 'abeja-inc/all-cpu:18.10'
     }
-    with open(CONFIGFILE_NAME, 'w') as configfile:
+    with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
         yaml.dump(config_data, configfile)
     url = "{}/training/definitions/{}/versions".format(
         ORGANIZATION_ENDPOINT, config_data["name"])
@@ -1068,6 +1079,7 @@ def test_describe_job_definition_versions_from_config(req_mock, runner):
     assert not r.exception
 
 
+@patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
 def test_describe_job_definition_versions_option_overwrites_config(req_mock, runner):
     testing_name = 'dummy-name'
     config_data = {
@@ -1075,7 +1087,7 @@ def test_describe_job_definition_versions_option_overwrites_config(req_mock, run
         'handler': 'train:handler',
         'image': 'abeja-inc/all-cpu:18.10'
     }
-    with open(CONFIGFILE_NAME, 'w') as configfile:
+    with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
         yaml.dump(config_data, configfile)
     url = "{}/training/definitions/{}/versions".format(
         ORGANIZATION_ENDPOINT, testing_name)
@@ -1152,13 +1164,14 @@ def test_describe_training_models(req_mock, runner):
     assert not r.exception
 
 
+@patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
 def test_describe_training_models_from_config(req_mock, runner):
     config_data = {
         'name': 'training-1',
         'handler': 'train:handler',
         'image': 'abeja-inc/all-cpu:18.10'
     }
-    with open(CONFIGFILE_NAME, 'w') as configfile:
+    with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
         yaml.dump(config_data, configfile)
     url = "{}/training/definitions/{}/models".format(
         ORGANIZATION_ENDPOINT, config_data["name"])
@@ -1183,6 +1196,7 @@ def test_describe_training_models_from_config(req_mock, runner):
     assert not r.exception
 
 
+@patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
 def test_describe_training_models_option_overwrites_config(req_mock, runner):
     testing_name = 'dummy-name'
     config_data = {
@@ -1190,7 +1204,7 @@ def test_describe_training_models_option_overwrites_config(req_mock, runner):
         'handler': 'train:handler',
         'image': 'abeja-inc/all-cpu:18.10'
     }
-    with open(CONFIGFILE_NAME, 'w') as configfile:
+    with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
         yaml.dump(config_data, configfile)
     url = "{}/training/definitions/{}/models".format(
         ORGANIZATION_ENDPOINT, testing_name)
@@ -1294,13 +1308,14 @@ def test_describe_jobs_limit_offset(req_mock, runner):
     assert not r.exception
 
 
+@patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
 def test_describe_jobs_from_config(req_mock, runner):
     config_data = {
         'name': 'training-1',
         'handler': 'train:handler',
         'image': 'abeja-inc/all-cpu:18.10'
     }
-    with open(CONFIGFILE_NAME, 'w') as configfile:
+    with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
         yaml.dump(config_data, configfile)
     url = "{}/training/definitions/{}/jobs".format(
         ORGANIZATION_ENDPOINT, config_data["name"])
@@ -1322,9 +1337,11 @@ def test_describe_jobs_from_config(req_mock, runner):
 
     cmd = []
     r = runner.invoke(describe_jobs, cmd)
+    print(r.output)
     assert not r.exception
 
 
+@patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
 def test_describe_jobs_option_overwrites_config(req_mock, runner):
     testing_name = 'dummy-name'
     config_data = {
@@ -1332,7 +1349,7 @@ def test_describe_jobs_option_overwrites_config(req_mock, runner):
         'handler': 'train:handler',
         'image': 'abeja-inc/all-cpu:18.10'
     }
-    with open(CONFIGFILE_NAME, 'w') as configfile:
+    with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
         yaml.dump(config_data, configfile)
     url = "{}/training/definitions/{}/jobs".format(
         ORGANIZATION_ENDPOINT, testing_name)
