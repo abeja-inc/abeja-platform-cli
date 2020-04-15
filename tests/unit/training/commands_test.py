@@ -481,6 +481,7 @@ def test_create_training_version(
 )
 @patch('abejacli.training.commands.version_archive', MagicMock(return_value=None))
 @patch('abejacli.training.commands.CONFIG', TEST_CONFIG)
+@patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
 def test_create_training_version_from_git(
         req_mock, runner, cmd, additional_config, expected_payload):
     config_data = {
@@ -489,7 +490,7 @@ def test_create_training_version_from_git(
         'image': 'abeja-inc/all-cpu:18.10'
     }
     config_data = {**config_data, **additional_config}
-    with open(CONFIGFILE_NAME, 'w') as configfile:
+    with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
         yaml.dump(config_data, configfile)
 
     url = "{}/training/definitions/{}/git/versions".format(
