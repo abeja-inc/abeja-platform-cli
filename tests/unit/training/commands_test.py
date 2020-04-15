@@ -6,6 +6,8 @@ import pytest
 import re
 import requests_mock
 from ruamel.yaml import YAML
+import uuid
+import os
 
 from abejacli.config import ORGANIZATION_ENDPOINT
 from abejacli.exceptions import ResourceNotFound
@@ -34,6 +36,10 @@ TEST_CONFIG = {
 }
 
 yaml = YAML()
+
+def get_tmp_training_file_name():
+    filename = '{}.yaml'.format(uuid.uuid4())
+    return os.path.join('/tmp', filename)
 
 
 @pytest.fixture
