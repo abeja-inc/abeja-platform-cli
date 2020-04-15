@@ -6,7 +6,6 @@ import pytest
 import re
 import requests_mock
 from ruamel.yaml import YAML
-import uuid
 import os
 
 from abejacli.config import ORGANIZATION_ENDPOINT
@@ -24,6 +23,8 @@ from abejacli.training.commands import describe_job_definitions
 from abejacli.training.commands import describe_training_versions
 from abejacli.training.commands import describe_jobs
 from abejacli.training.commands import describe_training_models
+from tests import get_tmp_training_file_name
+
 
 TEST_CONFIG_USER_ID = '12345'
 TEST_CONFIG_TOKEN = 'ntoken12345'
@@ -35,14 +36,6 @@ TEST_CONFIG = {
 }
 
 yaml = YAML()
-
-
-def get_tmp_training_file_name():
-    """Putting temporary file in /tmp dir.
-    Hopefully want to use tempfile but can't close tempfile, so using tmp dir
-    """
-    filename = '{}.yaml'.format(uuid.uuid4())
-    return os.path.join('/tmp', filename)
 
 
 @pytest.fixture
