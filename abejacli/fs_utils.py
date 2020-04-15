@@ -14,7 +14,7 @@ FILE_SPEC_ITEM_SCHEMA = {
     'file': {'type': 'string', 'required': True},
     'metadata': {
         'type': 'dict',
-        'keyschema': {'type': 'string'},
+        'keysrules': {'type': 'string'},
         'valueschema': {'nullable': False},
         'required': False
     }
