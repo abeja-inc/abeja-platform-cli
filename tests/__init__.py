@@ -2,7 +2,8 @@ import requests
 from abejacli.config import ABEJA_PLATFORM_USER_ID, ABEJA_PLATFORM_TOKEN, PLATFORM_AUTH_TOKEN
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
-
+import uuid
+import os
 from unittest.mock import patch
 
 
@@ -57,3 +58,11 @@ def session_decorator(func):
             mock_generate_user_session.side_effect = _test_generate_user_session
             return func(*args, **kwargs)
     return wrapper
+
+
+def get_tmp_training_file_name():
+    """Putting temporary file in /tmp dir.
+    Hopefully want to use tempfile but can't close tempfile, so using tmp dir
+    """
+    filename = '{}.yaml'.format(uuid.uuid4())
+    return os.path.join('/tmp', filename)

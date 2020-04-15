@@ -40,7 +40,7 @@ test_step: &test_step
         esac
         export SAMPLE_MODEL_PATH='https://s3-us-west-2.amazonaws.com/abeja-platform-config-dev'
         make prepare_ci
-        make test
+        NUM_TEST_PROCESS=4 make test
         make integration_test
 
 version: 2
