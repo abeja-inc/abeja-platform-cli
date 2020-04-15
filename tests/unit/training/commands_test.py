@@ -6,7 +6,6 @@ import pytest
 import re
 import requests_mock
 from ruamel.yaml import YAML
-import os
 
 from abejacli.config import ORGANIZATION_ENDPOINT
 from abejacli.exceptions import ResourceNotFound
