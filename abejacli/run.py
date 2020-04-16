@@ -396,6 +396,55 @@ def _version_upload(upload_url, tar_name):
     return result
 
 
+@model.command(name='create-deployment-version-from-git', help='Create version & upload application')
+@click.pass_context
+@click.option('-d', '--deployment_id', '--deployment-id', 'deployment_id', type=str, help='Deployment identifier',
+              required=True)
+@click.option('--git-url', type=str, required=True,
+              help='GitHub URL, which must start with "https://".')
+@click.option('--git-branch', type=str, required=False,
+              help='GitHub branch. Default "master"')
+@click.option('-v', '--version', 'version', type=str, help='Deployment code version', required=True)
+@click.option('-i', '--image', 'image', type=str, help='Base-image name. ex) abeja-inc/all-cpu:19.10', required=True)
+@click.option('-h', '--handler', 'handler', type=str, help='Path to handler in the model archive.')
+@click.option('--user-parameters', '--user_parameters', type=ENVIRONMENT_STR, help='Environment variable',
+              default=None, required=False, multiple=True)
+def create_deployment_version_from_git(
+        ctx, deployment_id, git_url, git_branch, version, image, handler, user_parameters):
+    try:
+        r = _create_deployment_version_from_git(
+            ctx, deployment_id, git_url, git_branch, version, image, handler, user_parameters)
+    except:
+        sys.exit(ERROR_EXITCODE)
+
+    click.echo(json_output_formatter(r))
+
+
+def _create_deployment_version_from_git(
+        ctx, deployment_id, git_url, git_branch, version, image, handler=None, user_parameters=None):
+    parameter = {
+        'git_url': git_url,
+        'image': image,
+        'version': version
+    }
+    if handler:
+        parameter['handler'] = handler
+    if user_parameters:
+        parameter['user_parameters'] = user_parameters
+    if git_branch is not None:
+        parameter['git_branch'] = git_branch
+    json_data = json.dumps(parameter)
+
+    url = '{}/deployments/{}/git/versions'.format(
+        ORGANIZATION_ENDPOINT, deployment_id)
+    r = api_post(url, json_data)
+    result = {
+        'version': r['version'],
+        'version_id': r['version_id']
+    }
+    return result
+
+
 @model.command(name='describe-deployment-versions', help='Get to version or version list')
 @click.option('-d', '--deployment_id', '--deployment-id', 'deployment_id', type=str, help='Deployment identifier',
               required=True)
