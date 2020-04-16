@@ -7,7 +7,6 @@ from abejacli.bucket.download_job import (_get_default_file_path,
 from abejacli.bucket.process_file_job import (FINISH_REPORT,
                                               INITIALIZE_REPORT,
                                               PROGRESS_REPORT, RAISE_ERROR)
-from nose.tools import assert_equals
 from pyfakefs.fake_filesystem_unittest import TestCase
 
 try:
@@ -47,9 +46,9 @@ class ResolveFilePathTest(TestCase):
         self.fs.create_file(os.path.join(DOWNLOAD_DIR, 'file2/file2-2.txt'))
 
         file_path = _get_default_file_path(DOWNLOAD_DIR, 'file.txt')
-        self.assertEquals('/target/file.txt', file_path)
+        self.assertEqual('/target/file.txt', file_path)
         file_path = _get_default_file_path(DOWNLOAD_DIR, 'file2/file2-2.txt')
-        self.assertEquals('/target/file2/file2-2.txt', file_path)
+        self.assertEqual('/target/file2/file2-2.txt', file_path)
 
 
 class DownloadWorkerTest(TestCase):
@@ -74,12 +73,12 @@ class DownloadWorkerTest(TestCase):
         download_job(BUCKET_ID, FILE_INFO, report_queue, worker_option)
         with open(os.path.join(DOWNLOAD_DIR, FILE_NAME), 'r') as f:
             download_content = f.read()
-            assert_equals(download_content, content)
+            assert download_content == content
         result_options = {
             'source': FILE_ID,
             'destination': os.path.join(DOWNLOAD_DIR, FILE_NAME),
         }
-        assert_equals(report_queue.put.call_count, 3)
+        assert report_queue.put.call_count == 3
         report_queue.put.assert_any_call((INITIALIZE_REPORT, ANY, 0, ANY))
         report_queue.put.assert_any_call(
             (PROGRESS_REPORT, ANY, len(content), None))
@@ -108,12 +107,12 @@ class DownloadWorkerTest(TestCase):
         download_job(BUCKET_ID, FILE_INFO, report_queue, worker_option)
         with open(os.path.join(DOWNLOAD_DIR, FILE_NAME), 'r') as f:
             download_content = f.read()
-            assert_equals(download_content, content)
+            assert download_content == content
         result_options = {
             'source': FILE_ID,
             'destination': os.path.join(DOWNLOAD_DIR, FILE_NAME),
         }
-        assert_equals(report_queue.put.call_count, 3)
+        assert report_queue.put.call_count == 3
         report_queue.put.assert_any_call((INITIALIZE_REPORT, ANY, 0, ANY))
         report_queue.put.assert_any_call(
             (PROGRESS_REPORT, ANY, len(content), None))
@@ -133,7 +132,7 @@ class DownloadWorkerTest(TestCase):
         # mock download request
         mock.register_uri('GET', DOWNLOAD_URI, status_code=500)
         download_job(BUCKET_ID, FILE_INFO, report_queue, worker_option)
-        assert_equals(report_queue.put.call_count, DOWNLOAD_RETRY_ATTEMPT_NUMBER)
+        assert report_queue.put.call_count == DOWNLOAD_RETRY_ATTEMPT_NUMBER
         expected_options = {
             'source': FILE_ID,
             'error': 'Failed to download {} of bucket_id {}'.format(FILE_ID, BUCKET_ID)

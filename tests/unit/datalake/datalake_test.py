@@ -5,7 +5,6 @@ import requests_mock
 from abejacli.config import ABEJA_API_URL, DATALAKE_ITEMS_PER_PAGE
 from abejacli.datalake import (generate_channel_file_iter_by_id,
                                generate_channel_file_iter_by_period)
-from nose.tools import assert_equals, assert_list_equal, assert_raises
 
 FILE = {
   "url_expires_on": "2017-11-21T02:18:16+00:00",
@@ -87,7 +86,7 @@ class GenerateFilePeriodIterTest(TestCase):
         mock.register_uri('GET', url, json=res)
 
         it = generate_channel_file_iter_by_period(channel_id, start, end)
-        assert_list_equal(FILES, list(it))
+        assert FILES == list(it)
 
     @requests_mock.Mocker()
     def test_iter_file_period_empty(self, mock):
@@ -103,7 +102,7 @@ class GenerateFilePeriodIterTest(TestCase):
         mock.register_uri('GET', url, json=res)
 
         it = generate_channel_file_iter_by_period(channel_id, start, end)
-        assert_equals(0, len(list(it)))
+        assert 0 == len(list(it))
 
     @requests_mock.Mocker()
     def test_iter_file_period_pagination(self, mock):
@@ -128,7 +127,7 @@ class GenerateFilePeriodIterTest(TestCase):
         mock.register_uri('GET', second_page_url, json=second_res)
 
         it = generate_channel_file_iter_by_period(channel_id, start, end)
-        assert_list_equal(FILES, list(it))
+        assert FILES == list(it)
 
 
 class GenerateFileIdIterTest(TestCase):
@@ -142,7 +141,7 @@ class GenerateFileIdIterTest(TestCase):
 
         file_ids = [file_id]
         it = generate_channel_file_iter_by_id(channel_id, *file_ids)
-        assert_list_equal([FILE], list(it))
+        assert [FILE] == list(it)
 
     @requests_mock.Mocker()
     def test_iter_file_id_not_found(self, mock):
@@ -152,6 +151,6 @@ class GenerateFileIdIterTest(TestCase):
         mock.register_uri('GET', url, json=FILE, status_code=404)
 
         file_ids = [file_id]
-        with assert_raises(requests.HTTPError):
+        with self.assertRaises(requests.HTTPError):
             it = generate_channel_file_iter_by_id(channel_id, *file_ids)
             list(it)

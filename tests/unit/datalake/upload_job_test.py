@@ -7,7 +7,6 @@ from abejacli.datalake.process_file_job import (FINISH_REPORT,
                                                 PROGRESS_REPORT, RAISE_ERROR)
 from abejacli.datalake.upload_job import upload_job
 from abejacli.fs_utils import UploadFile
-from nose.tools import assert_equals
 from pyfakefs.fake_filesystem_unittest import TestCase
 
 try:
@@ -74,7 +73,7 @@ class UploadWorkerTest(TestCase):
             'metadata': {}
         }
         upload_job(CHANNEL_ID, file_info, report_queue, None)
-        assert_equals(report_queue.put.call_count, 3)
+        assert report_queue.put.call_count == 3
         report_queue.put.assert_any_call((INITIALIZE_REPORT, ANY, 0, ANY))
         report_queue.put.assert_any_call(
             (PROGRESS_REPORT, ANY, len(UPLOAD_FILE_CONTENTS), None))
@@ -118,7 +117,7 @@ class UploadWorkerTest(TestCase):
             'metadata': metadata,
         }
         upload_job(CHANNEL_ID, file_info, report_queue, worker_options)
-        assert_equals(report_queue.put.call_count, 3)
+        assert report_queue.put.call_count == 3
         report_queue.put.assert_any_call((INITIALIZE_REPORT, ANY, 0, ANY))
         report_queue.put.assert_any_call(
             (PROGRESS_REPORT, ANY, len(UPLOAD_FILE_CONTENTS), None))
@@ -154,7 +153,7 @@ class UploadWorkerTest(TestCase):
             'POST', url, request_headers=request_headers, status_code=403)
         # execute upload job
         upload_job(CHANNEL_ID, UploadFile(file_path), report_queue, None)
-        assert_equals(report_queue.put.call_count, 1)
+        assert report_queue.put.call_count == 1
 
         _name, args, kwargs = report_queue.put.mock_calls[0]
 

@@ -653,7 +653,7 @@ class RunTest(TestCase):
         ]
         r = self.runner.invoke(initialize_training, cmd)
         actual_file = open(abejacli.training.CONFIGFILE_NAME, 'r').read()
-        self.assertEquals(actual_file, training_default_configuration)
+        self.assertEqual(actual_file, training_default_configuration)
         self.assertEqual(r.output, 'training initialized\n')
 
     @requests_mock.Mocker()

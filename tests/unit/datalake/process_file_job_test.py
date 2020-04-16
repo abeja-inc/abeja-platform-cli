@@ -5,7 +5,6 @@ from abejacli.datalake.process_file_job import (FINISH_REPORT,
                                                 INITIALIZE_REPORT,
                                                 PROGRESS_REPORT,
                                                 handle_command)
-from nose.tools import assert_equals, assert_is_none, assert_is_not_none
 
 try:
     from unittest.mock import patch
@@ -39,7 +38,7 @@ class ProcessFileJobTest(TestCase):
                        INITIALIZE_REPORT, publisher_id, 0, initialize_options)
         tqdm_mock.assert_called_with(**expected_tqdm_options)
         index = publisher_container.index(publisher_id)
-        assert_is_not_none(container[index])
+        assert container[index] is not None
 
         # assert tqdm is updated with expected args
         handle_command(container, publisher_container,
@@ -49,15 +48,15 @@ class ProcessFileJobTest(TestCase):
         handle_command(container, publisher_container,
                        PROGRESS_REPORT, publisher_id, progress_diff, None)
 
-        assert_equals(tqdm_instance.update.call_count, 3)
+        assert tqdm_instance.update.call_count == 3
         tqdm_instance.update.assert_called_with(progress_diff)
 
         # assert tqdm is cleaned up
         handle_command(container, publisher_container,
                        FINISH_REPORT, publisher_id, 0, None)
-        assert_equals(tqdm_instance.refresh.call_count, 1)
-        assert_equals(tqdm_instance.close.call_count, 1)
-        assert_is_none(container[index])
+        assert tqdm_instance.refresh.call_count == 1
+        assert tqdm_instance.close.call_count == 1
+        assert container[index] is None
 
     # @patch('abejacli.report_worker.handle_command')
     # @patch('tqdm.tqdm')
@@ -82,7 +81,7 @@ class ProcessFileJobTest(TestCase):
     #         (FINISH_ALL_REPORTS, None, 0, None),
     #     ]
     #     report_job(report_queue, 'size', total_size)
-    #     assert_equals(tqdm_instance.update.call_count, 6)
+    #     assert tqdm_instance.update.call_count == 6
     #     tqdm_instance.update.assert_any_call(progress_diff)
 
     # @patch('abejacli.report_worker.handle_command')
@@ -109,7 +108,7 @@ class ProcessFileJobTest(TestCase):
     #     ]
     #     report_job(report_queue, 'counter', total_size)
     #     # assert update method is called only once with 1
-    #     assert_equals(tqdm_instance.update.call_count, 1)
+    #     assert tqdm_instance.update.call_count == 1
     #     tqdm_instance.update.assert_any_call(1)
 
     # @patch('abejacli.report_worker.handle_command')
@@ -139,7 +138,7 @@ class ProcessFileJobTest(TestCase):
     #        (FINISH_ALL_REPORTS, None, 0, None),
     #    ]
     #    report_job(report_queue, 'size', total_size)
-    #    assert_equals(tqdm_instance.update.call_count, 5)
+    #    assert tqdm_instance.update.call_count == 5
     #    tqdm_instance.update.assert_any_call(progress_diff)
     #    # assert logger.error is called with message
     #    logging_error_mock.assert_called_with(error_msg)
