@@ -409,7 +409,8 @@ def _version_upload(upload_url, tar_name):
 @click.option('-h', '--handler', 'handler', type=str, help='Path to handler in the model archive.')
 @click.option('--user-parameters', '--user_parameters', type=ENVIRONMENT_STR, help='Environment variable',
               default=None, required=False, multiple=True)
-def create_deployment_version_from_git(ctx, deployment_id, git_url, git_branch, version, image, handler, user_parameters):
+def create_deployment_version_from_git(
+    ctx, deployment_id, git_url, git_branch, version, image, handler, user_parameters):
     try:
         r = _create_deployment_version_from_git(
             ctx, deployment_id, git_url, git_branch, version, image, handler, user_parameters)
@@ -419,7 +420,8 @@ def create_deployment_version_from_git(ctx, deployment_id, git_url, git_branch, 
     click.echo(json_output_formatter(r))
 
 
-def _create_deployment_version_from_git(ctx, deployment_id, git_url, git_branch, version, image, handler=None, user_parameters=None):
+def _create_deployment_version_from_git(
+    ctx, deployment_id, git_url, git_branch, version, image, handler=None, user_parameters=None):
     parameter = {
         'git_url': git_url,
         'image': image,
