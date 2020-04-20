@@ -1,3 +1,11 @@
+
+# 1.0.3
+- Deprecate `/models` endpoint (#9)
+- Add limit and offset options to commands (#10)
+- テストの並列化 (#11)
+- Remove test warnings (#15)
+- Add `POST: /deployments/{deployment_id}/git/versions` (#16)
+
 # 1.0.2
 - Release to pypi with poetry (#7)
 
