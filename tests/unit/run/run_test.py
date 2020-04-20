@@ -10,13 +10,14 @@ from abejacli.run import (describe_datalake_buckets,
                           describe_datalake_channels,
                           initialize_configuragtion, model, show_configuration,
                           list_configurations, delete_configuration, switch_configuration)
-from abejacli.training import CONFIGFILE_NAME, training_default_configuration
+from abejacli.training import training_default_configuration
 from abejacli.training.commands import (
     archive_job, archive_version, create_job_definition, create_training_job, create_training_version,
     describe_jobs, describe_training_versions, initialize_training, unarchive_job, unarchive_version,
     describe_training_models, create_training_model, update_training_model,
     download_training_model, archive_training_model, unarchive_training_model
 )
+import abejacli.training
 from abejacli.registry.commands import (
     create_repository, delete_repository, describe_repository,
     describe_repository_tags, describe_repositories)
@@ -26,6 +27,8 @@ from ruamel.yaml import YAML
 
 import requests_mock
 from tests.unit import ConfigPatcher
+from tests import get_tmp_training_file_name
+
 
 TEST_CONFIG_FILE_ROOT = '/tmp/.abeja'
 TEST_CONFIG_FILE_PATH = os.path.join(TEST_CONFIG_FILE_ROOT, 'config')
@@ -643,28 +646,28 @@ class RunTest(TestCase):
         actual_response = json.loads(r.output[r.output.index('{'):])  # FIXME: Use `r.output` after GA release.
         self.assertDictEqual(actual_response, expected_response)
 
+    @patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
     def test_initialize_training(self):
         cmd = [
             'training-1'
         ]
         r = self.runner.invoke(initialize_training, cmd)
-        actual_file = open(CONFIGFILE_NAME, 'r').read()
-        self.assertEquals(actual_file, training_default_configuration)
+        actual_file = open(abejacli.training.CONFIGFILE_NAME, 'r').read()
+        self.assertEqual(actual_file, training_default_configuration)
         self.assertEqual(r.output, 'training initialized\n')
-        os.remove(CONFIGFILE_NAME)
 
     @requests_mock.Mocker()
+    @patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
     def test_create_job_definition(self, mock):
         cmd = []
 
         data = yaml.load(training_default_configuration)
-        with open(CONFIGFILE_NAME, 'w') as configfile:
+        with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
             yaml.dump(data, configfile)
         url = "{}/training/definitions".format(ORGANIZATION_ENDPOINT)
         mock.register_uri('POST', url, json={"dummy": "dummy"})
         r = self.runner.invoke(create_job_definition, cmd)
         self.assertDictEqual(json.loads(r.output), {"dummy": "dummy"})
-        os.remove(CONFIGFILE_NAME)
 
     @requests_mock.Mocker()
     def test_create_training_version_without_config_file(self, req_mock):
@@ -678,13 +681,14 @@ class RunTest(TestCase):
                 r.output, 'training configuration file does not exists.\n')
 
     @requests_mock.Mocker()
+    @patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
     def test_create_training_version_with_invalid_configuration(self, req_mock):
         config = DEFAULT_TRAINING_CONFIG.copy()
         del config['handler']
 
         with self.runner.isolated_filesystem():
-            with open(CONFIGFILE_NAME, 'w') as f:
-                yaml.dump(config, f)
+            with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
+                yaml.dump(config, configfile)
             with open('train.py', 'w') as f:
                 f.write('dummy')
 
@@ -697,9 +701,10 @@ class RunTest(TestCase):
                 r.output, 'invalid training configuration file.\n')
 
     @requests_mock.Mocker()
+    @patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
     def test_create_training_version(self, req_mock):
         with self.runner.isolated_filesystem():
-            with open(CONFIGFILE_NAME, 'w') as configfile:
+            with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
                 yaml.dump(DEFAULT_TRAINING_CONFIG, configfile)
             with open('train.py', 'w') as f:
                 f.write('dummy')
@@ -719,9 +724,10 @@ class RunTest(TestCase):
             self.assertRegex(req.body, b'Content-Disposition:')
 
     @requests_mock.Mocker()
+    @patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
     def test_describe_training_versions(self, req_mock):
         with self.runner.isolated_filesystem():
-            with open(CONFIGFILE_NAME, 'w') as configfile:
+            with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
                 yaml.dump(DEFAULT_TRAINING_CONFIG, configfile)
             with open('train.py', 'w') as f:
                 f.write('dummy')
@@ -747,13 +753,14 @@ class RunTest(TestCase):
             self.assertTrue(req_mock.called)
 
     @requests_mock.Mocker()
+    @patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
     def test_create_training_version_without_datasets(self, req_mock):
         config = DEFAULT_TRAINING_CONFIG.copy()
         del config['datasets']
 
         with self.runner.isolated_filesystem():
-            with open(CONFIGFILE_NAME, 'w') as f:
-                yaml.dump(config, f)
+            with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
+                yaml.dump(config, configfile)
             with open('train.py', 'w') as f:
                 f.write('dummy')
 
@@ -765,6 +772,7 @@ class RunTest(TestCase):
             self.assertDictEqual(json.loads(r.output), {"dummy": "dummy"})
 
     @requests_mock.Mocker()
+    @patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
     def test_create_training_job(self, mock):
         cmd = [
             '--version', '1',
@@ -774,7 +782,7 @@ class RunTest(TestCase):
             '--instance-type', 'gpu:b-4'
         ]
         config_data = yaml.load(training_default_configuration)
-        with open(CONFIGFILE_NAME, 'w') as configfile:
+        with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
             yaml.dump(config_data, configfile)
         url = "{}/training/definitions/{}/versions/{}/jobs".format(
             ORGANIZATION_ENDPOINT, config_data['name'], '1')
@@ -784,16 +792,16 @@ class RunTest(TestCase):
         self.assertEqual(request_body['description'], 'Initial job')
         self.assertEqual(request_body['instance_type'], 'gpu:b-4')
         self.assertDictEqual(json.loads(r.output), {"dummy": "dummy"})
-        os.remove(CONFIGFILE_NAME)
 
     @requests_mock.Mocker()
+    @patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
     def test_create_training_job_without_version(self, mock):
         cmd = [
             '--params', 'USER_ID:1234567890123',
             '--params', 'ACCESS_KEY:373be7309f0146c0d283440e500843d8',
         ]
         config_data = yaml.load(training_default_configuration)
-        with open(CONFIGFILE_NAME, 'w') as configfile:
+        with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
             yaml.dump(config_data, configfile)
         list_versions_url = "{}/training/definitions/{}/versions".format(
             ORGANIZATION_ENDPOINT, config_data['name'])
@@ -807,16 +815,16 @@ class RunTest(TestCase):
         mock.register_uri('POST', create_job_url, json={"dummy": "dummy"})
         r = self.runner.invoke(create_training_job, cmd)
         self.assertDictEqual(json.loads(r.output), {"dummy": "dummy"})
-        os.remove(CONFIGFILE_NAME)
 
     @requests_mock.Mocker()
+    @patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
     def test_create_training_job_without_version_not_exist(self, mock):
         cmd = [
             '--params', 'USER_ID:1234567890123',
             '--params', 'ACCESS_KEY:373be7309f0146c0d283440e500843d8',
         ]
         config_data = yaml.load(training_default_configuration)
-        with open(CONFIGFILE_NAME, 'w') as configfile:
+        with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
             yaml.dump(config_data, configfile)
         list_versions_url = "{}/training/definitions/{}/versions".format(
             ORGANIZATION_ENDPOINT, config_data['name'])
@@ -828,85 +836,84 @@ class RunTest(TestCase):
         r = self.runner.invoke(create_training_job, cmd)
         self.assertEqual(r.output, 'there is no available training versions. '
                                    'please create training version first.\n')
-        os.remove(CONFIGFILE_NAME)
 
     @requests_mock.Mocker()
+    @patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
     def test_archive_version(self, mock):
         cmd = [
             '--version-id', '1234567890123'
         ]
 
         data = yaml.load(training_default_configuration)
-        with open(CONFIGFILE_NAME, 'w') as configfile:
+        with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
             yaml.dump(data, configfile)
         url = "{}/training/definitions/{}/versions/{}/archive".format(
             ORGANIZATION_ENDPOINT, data['name'], '1234567890123')
         mock.register_uri('POST', url, json={"dummy": "dummy"})
         r = self.runner.invoke(archive_version, cmd)
         self.assertDictEqual(json.loads(r.output), {"dummy": "dummy"})
-        os.remove(CONFIGFILE_NAME)
 
     @requests_mock.Mocker()
+    @patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
     def test_unarchive_version(self, mock):
         cmd = [
             '--version-id', '1234567890123'
         ]
 
         data = yaml.load(training_default_configuration)
-        with open(CONFIGFILE_NAME, 'w') as configfile:
+        with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
             yaml.dump(data, configfile)
         url = "{}/training/definitions/{}/versions/{}/unarchive".format(
             ORGANIZATION_ENDPOINT, data['name'], '1234567890123')
         mock.register_uri('POST', url, json={"dummy": "dummy"})
         r = self.runner.invoke(unarchive_version, cmd)
         self.assertDictEqual(json.loads(r.output), {"dummy": "dummy"})
-        os.remove(CONFIGFILE_NAME)
 
     @requests_mock.Mocker()
+    @patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
     def test_describe_job(self, mock):
         cmd = []
 
         data = yaml.load(training_default_configuration)
-        with open(CONFIGFILE_NAME, 'w') as configfile:
+        with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
             yaml.dump(data, configfile)
         url = "{}/training/definitions/{}/jobs".format(
             ORGANIZATION_ENDPOINT, data['name'])
         mock.register_uri('GET', url, json={"dummy": "dummy"})
         r = self.runner.invoke(describe_jobs, cmd)
         self.assertDictEqual(json.loads(r.output), {"dummy": "dummy"})
-        os.remove(CONFIGFILE_NAME)
 
     @requests_mock.Mocker()
+    @patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
     def test_archive_job(self, mock):
         cmd = [
             '--job-id', '1234567890123'
         ]
 
         data = yaml.load(training_default_configuration)
-        with open(CONFIGFILE_NAME, 'w') as configfile:
+        with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
             yaml.dump(data, configfile)
         url = "{}/training/definitions/{}/jobs/{}/archive".format(
             ORGANIZATION_ENDPOINT, data['name'], '1234567890123')
         mock.register_uri('POST', url, json={"dummy": "dummy"})
         r = self.runner.invoke(archive_job, cmd)
         self.assertDictEqual(json.loads(r.output), {"dummy": "dummy"})
-        os.remove(CONFIGFILE_NAME)
 
     @requests_mock.Mocker()
+    @patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
     def test_unarchive_job(self, mock):
         cmd = [
             '--job-id', '1234567890123'
         ]
 
         data = yaml.load(training_default_configuration)
-        with open(CONFIGFILE_NAME, 'w') as configfile:
+        with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
             yaml.dump(data, configfile)
         url = "{}/training/definitions/{}/jobs/{}/unarchive".format(
             ORGANIZATION_ENDPOINT, data['name'], '1234567890123')
         mock.register_uri('POST', url, json={"dummy": "dummy"})
         r = self.runner.invoke(unarchive_job, cmd)
         self.assertDictEqual(json.loads(r.output), {"dummy": "dummy"})
-        os.remove(CONFIGFILE_NAME)
 
     @requests_mock.Mocker()
     def test_create_repository(self, mock):

@@ -1,18 +1,20 @@
 import json
 from unittest.mock import MagicMock, patch
-
+from urllib.parse import urlparse
 from click.testing import CliRunner
 import pytest
+import re
 import requests_mock
 from ruamel.yaml import YAML
 
 from abejacli.config import ORGANIZATION_ENDPOINT
 from abejacli.exceptions import ResourceNotFound
-from abejacli.training import CONFIGFILE_NAME
+import abejacli.training
 from abejacli.training.commands import debug_local, train_local
 from abejacli.training.commands import create_notebook
 from abejacli.training.commands import start_notebook
 from abejacli.training.commands import create_training_version
+from abejacli.training.commands import create_training_version_from_git
 from abejacli.training.commands import create_training_job
 from abejacli.training.commands import update_training_version
 from abejacli.training.commands import _get_latest_training_version
@@ -20,6 +22,7 @@ from abejacli.training.commands import describe_job_definitions
 from abejacli.training.commands import describe_training_versions
 from abejacli.training.commands import describe_jobs
 from abejacli.training.commands import describe_training_models
+from tests import get_tmp_training_file_name
 
 
 TEST_CONFIG_USER_ID = '12345'
@@ -56,13 +59,14 @@ def test_get_latest_training_version(m):
 
 
 @patch('abejacli.training.commands.CONFIG', TEST_CONFIG)
+@patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
 def test_update_training_version(req_mock, runner):
     config_data = {
         'name': 'training-1',
         'handler': 'train:handler',
         'image': 'abeja-inc/all-cpu:18.10'
     }
-    with open(CONFIGFILE_NAME, 'w') as configfile:
+    with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
         yaml.dump(config_data, configfile)
 
     url = "{}/training/definitions/{}/versions/{}".format(
@@ -138,6 +142,7 @@ def test_update_training_version(req_mock, runner):
     ]
 )
 @patch('abejacli.training.commands.CONFIG', TEST_CONFIG)
+@patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
 def test_create_notebook(
         req_mock, runner, cmd, additional_config, expected_payload):
     config_data = {
@@ -145,7 +150,7 @@ def test_create_notebook(
         'image': 'abeja-inc/all-cpu:18.10'
     }
     config_data = {**config_data, **additional_config}
-    with open(CONFIGFILE_NAME, 'w') as configfile:
+    with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
         yaml.dump(config_data, configfile)
 
     url = "{}/training/definitions/{}/notebooks".format(
@@ -213,6 +218,7 @@ def test_create_notebook(
     ]
 )
 @patch('abejacli.training.commands.CONFIG', TEST_CONFIG)
+@patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
 def test_start_notebook(
         req_mock, runner, cmd, additional_config, expected_payload):
     notebook_id = '9876543210987'
@@ -221,7 +227,7 @@ def test_start_notebook(
         'image': 'abeja-inc/all-cpu:18.10'
     }
     config_data = {**config_data, **additional_config}
-    with open(CONFIGFILE_NAME, 'w') as configfile:
+    with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
         yaml.dump(config_data, configfile)
 
     url = "{}/training/definitions/{}/notebooks/{}/start".format(
@@ -296,6 +302,7 @@ def test_start_notebook(
 )
 @patch('abejacli.training.commands.version_archive', MagicMock(return_value=None))
 @patch('abejacli.training.commands.CONFIG', TEST_CONFIG)
+@patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
 def test_create_training_version(
         req_mock, runner, cmd, additional_config, expected_payload):
     config_data = {
@@ -304,7 +311,7 @@ def test_create_training_version(
         'image': 'abeja-inc/all-cpu:18.10'
     }
     config_data = {**config_data, **additional_config}
-    with open(CONFIGFILE_NAME, 'w') as configfile:
+    with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
         yaml.dump(config_data, configfile)
 
     url = "{}/training/definitions/{}/versions".format(
@@ -335,7 +342,7 @@ def test_create_training_version(
         'image': 'abeja-inc/all-cpu:18.10'
     }
     config_data = {**config_data, **additional_config}
-    with open(CONFIGFILE_NAME, 'w') as configfile:
+    with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
         yaml.dump(config_data, configfile)
 
     url = "{}/training/definitions/{}/versions".format(
@@ -359,7 +366,7 @@ def test_create_training_version(
         'image': 'abeja-inc/all-cpu:20.02a'
     }
     config_data = {**config_data, **additional_config}
-    with open(CONFIGFILE_NAME, 'w') as configfile:
+    with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
         yaml.dump(config_data, configfile)
 
     url = "{}/training/definitions/{}/versions".format(
@@ -380,6 +387,128 @@ def test_create_training_version(
         args = mock.call_args[0]
         assert args[0] == url
         assert args[1] == expected_payload
+    assert not r.exception
+
+
+@pytest.mark.parametrize(
+    'cmd,additional_config,expected_payload',
+    [
+        (['--git-url', 'https://github.com/abeja-inc/platform-template-image-classification.git',
+          '--description', 'dummy description'],
+         {},
+         {
+             'git_url': 'https://github.com/abeja-inc/platform-template-image-classification.git',
+             'description': 'dummy description'
+         }),
+        (['--git-url', 'https://github.com/abeja-inc/platform-template-image-classification.git',
+          '--git-branch', 'develop',
+          '--description', 'dummy description'],
+         {},
+         {
+             'git_url': 'https://github.com/abeja-inc/platform-template-image-classification.git',
+             'git_branch': 'develop',
+             'description': 'dummy description'
+         }),
+        (['--git-url', 'https://github.com/abeja-inc/platform-template-image-classification.git',
+          '--description', 'dummy description', '--environment', 'BATCH_SIZE:32'],
+         {},
+         {
+             'git_url': 'https://github.com/abeja-inc/platform-template-image-classification.git',
+             'description': 'dummy description',
+             'environment': {'BATCH_SIZE': '32'}
+         }),
+        (['--git-url', 'https://github.com/abeja-inc/platform-template-image-classification.git',
+          '--description', 'dummy description'],
+         {
+             'datasets': {'train': '1600000000000'},
+             'params': {'key9': 'value9'}
+         },
+         {
+             'git_url': 'https://github.com/abeja-inc/platform-template-image-classification.git',
+             'description': 'dummy description',
+             'environment': {'key9': 'value9'}
+         }),
+        (['--git-url', 'https://github.com/abeja-inc/platform-template-image-classification.git',
+          '--description', 'dummy description'],
+         {
+             'datasets': {'train': '1600000000000'},
+             'environment': {'key1': 'value1', 'key2': 'value2'}
+         },
+         {
+             'git_url': 'https://github.com/abeja-inc/platform-template-image-classification.git',
+             'description': 'dummy description',
+             'environment': {'key1': 'value1', 'key2': 'value2'}
+         }),
+        (['--git-url', 'https://github.com/abeja-inc/platform-template-image-classification.git',
+          '--description', 'dummy description'],
+         {
+             'datasets': {'train': '1600000000000'},
+             'environment': {'key1': 'value1', 'key2': 'value2'},
+             'params': {'key9': 'value9'}
+         },
+         {
+             'git_url': 'https://github.com/abeja-inc/platform-template-image-classification.git',
+             'description': 'dummy description', 'environment': {'key1': 'value1', 'key2': 'value2'}
+         }),
+        (['--git-url', 'https://github.com/abeja-inc/platform-template-image-classification.git',
+          '--datalake', '1234567890123'],
+         {},
+         {
+             'git_url': 'https://github.com/abeja-inc/platform-template-image-classification.git',
+             'datalakes': ['1234567890123']
+         }),
+        (['--git-url', 'https://github.com/abeja-inc/platform-template-image-classification.git',
+          '--bucket', '2345678901234'],
+         {},
+         {
+             'git_url': 'https://github.com/abeja-inc/platform-template-image-classification.git',
+             'buckets': ['2345678901234']
+         }),
+        (['--git-url', 'https://github.com/abeja-inc/platform-template-image-classification.git',
+          '--datalake', '1234567890123', '--bucket', '2345678901234'],
+         {},
+         {
+             'git_url': 'https://github.com/abeja-inc/platform-template-image-classification.git',
+             'datalakes': ['1234567890123'],
+             'buckets': ['2345678901234']
+         })
+    ]
+)
+@patch('abejacli.training.commands.version_archive', MagicMock(return_value=None))
+@patch('abejacli.training.commands.CONFIG', TEST_CONFIG)
+@patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
+def test_create_training_version_from_git(
+        req_mock, runner, cmd, additional_config, expected_payload):
+    config_data = {
+        'name': 'training-1',
+        'handler': 'train:handler',
+        'image': 'abeja-inc/all-cpu:18.10'
+    }
+    config_data = {**config_data, **additional_config}
+    with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
+        yaml.dump(config_data, configfile)
+
+    url = "{}/training/definitions/{}/git/versions".format(
+        ORGANIZATION_ENDPOINT, config_data['name'])
+
+    def match_request_text(request):
+        return json.loads(request.text) == expected_payload
+
+    req_mock.register_uri(
+        'POST', url,
+        json=expected_payload,
+        additional_matcher=match_request_text)
+
+    expected_payload = {**expected_payload, **{'handler': config_data['handler'], 'image': config_data['image']}}
+
+    def match_request_text(request):
+        return json.loads(request.text) == expected_payload
+
+    req_mock.register_uri(
+        'POST', url,
+        json=expected_payload,
+        additional_matcher=match_request_text)
+    r = runner.invoke(create_training_version_from_git, cmd)
     assert not r.exception
 
 
@@ -506,6 +635,7 @@ def test_create_training_version(
     ]
 )
 @patch('abejacli.training.commands.CONFIG', TEST_CONFIG)
+@patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
 def test_create_training_job(req_mock, runner, cmd, additional_config, expected_payload):
     config_data = {
         'name': 'training-1',
@@ -513,7 +643,7 @@ def test_create_training_job(req_mock, runner, cmd, additional_config, expected_
         'image': 'abeja-inc/all-cpu:18.10'
     }
     config_data = {**config_data, **additional_config}
-    with open(CONFIGFILE_NAME, 'w') as configfile:
+    with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
         yaml.dump(config_data, configfile)
 
     url = "{}/training/definitions/{}/versions/{}/jobs".format(
@@ -549,6 +679,7 @@ def test_create_training_job(req_mock, runner, cmd, additional_config, expected_
     ]
 )
 @patch('abejacli.training.commands.CONFIG', TEST_CONFIG)
+@patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
 @patch('abejacli.training.commands.TrainingJobDebugRun')
 def test_debug_local_params(
         mock_debug_job, runner, cmd, additional_config,
@@ -563,7 +694,7 @@ def test_debug_local_params(
         'ignores': ['.gitignore']
     }
     config_data = {**config_data, **additional_config}
-    with open(CONFIGFILE_NAME, 'w') as configfile:
+    with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
         yaml.dump(config_data, configfile)
 
     default_cmd = [
@@ -571,7 +702,7 @@ def test_debug_local_params(
         '--organization_id', '1122334455667',
         '--volume', '/tmp:/data',
         '--volume', '/usr/bin/hoge:/hoge',
-        '--config', CONFIGFILE_NAME,
+        '--config', abejacli.training.CONFIGFILE_NAME,
     ]
     r = runner.invoke(debug_local, default_cmd + cmd)
 
@@ -587,6 +718,7 @@ def test_debug_local_params(
 
 
 @patch('abejacli.training.commands.CONFIG', TEST_CONFIG)
+@patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
 @patch('abejacli.training.commands.TrainingJobDebugRun')
 def test_debug_local(mock_debug_job, runner):
     mock_job = MagicMock()
@@ -603,7 +735,7 @@ def test_debug_local(mock_debug_job, runner):
         'datasets': {'dataset_name1': 'value1'},
         'ignores': ['.gitignore']
     }
-    with open(CONFIGFILE_NAME, 'w') as configfile:
+    with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
         yaml.dump(config_data, configfile)
 
     cmd = [
@@ -614,7 +746,7 @@ def test_debug_local(mock_debug_job, runner):
         '--environment', 'MAX_ITEMS:',
         '--volume', '/tmp:/data',
         '--volume', '/usr/bin/hoge:/hoge',
-        '--config', CONFIGFILE_NAME,
+        '--config', abejacli.training.CONFIGFILE_NAME,
     ]
     r = runner.invoke(debug_local, cmd)
 
@@ -654,6 +786,7 @@ def test_debug_local(mock_debug_job, runner):
 
 
 @patch('abejacli.training.commands.CONFIG', TEST_CONFIG)
+@patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
 @patch('abejacli.training.commands.TrainingJobDebugRun')
 def test_debug_local_with_default_params(mock_debug_job, runner):
     mock_job = MagicMock()
@@ -671,12 +804,12 @@ def test_debug_local_with_default_params(mock_debug_job, runner):
         'datasets': {'dataset_name1': 'value1'},
         'ignores': ['.gitignore']
     }
-    with open(CONFIGFILE_NAME, 'w') as configfile:
+    with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
         yaml.dump(config_data, configfile)
 
     r = runner.invoke(debug_local, [
         '--organization_id', '1122334455667',
-        '--config', CONFIGFILE_NAME
+        '--config', abejacli.training.CONFIGFILE_NAME
     ])
 
     assert r.exit_code == 0
@@ -691,6 +824,7 @@ def test_debug_local_with_default_params(mock_debug_job, runner):
 
 
 @patch('abejacli.training.commands.CONFIG', TEST_CONFIG)
+@patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
 @patch('abejacli.common.get_organization_id')
 @patch('abejacli.training.commands.TrainingJobDebugRun')
 def test_debug_local_debug_without_organization_id(
@@ -709,7 +843,7 @@ def test_debug_local_debug_without_organization_id(
         'datasets': {'dataset_name1': 'value1'},
         'ignores': ['.gitignore']
     }
-    with open(CONFIGFILE_NAME, 'w') as configfile:
+    with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
         yaml.dump(config_data, configfile)
 
     cmd = [
@@ -717,7 +851,7 @@ def test_debug_local_debug_without_organization_id(
         # '--organization_id', '1122334455667',
         '--environment', 'USER_ID:1234567890123',
         '--environment', 'ACCESS_KEY:373be7309f0146c0d283440e500843d8',
-        '--config', CONFIGFILE_NAME,
+        '--config', abejacli.training.CONFIGFILE_NAME,
     ]
     r = runner.invoke(debug_local, cmd)
 
@@ -730,6 +864,7 @@ def test_debug_local_debug_without_organization_id(
 
 
 @patch('abejacli.common.get_organization_id')
+@patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
 @patch('abejacli.training.commands.TrainingJobLocalContainerRun')
 def test_train_local_environment(mock_train_local, mock_get_organization_id, runner, req_mock):
     mock_job = MagicMock()
@@ -746,7 +881,7 @@ def test_train_local_environment(mock_train_local, mock_get_organization_id, run
         'datasets': {'dataset_name1': 'value1'},
         'ignores': ['.gitignore']
     }
-    with open(CONFIGFILE_NAME, 'w') as configfile:
+    with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
         yaml.dump(config_data, configfile)
 
     version_info = {
@@ -771,7 +906,7 @@ def test_train_local_environment(mock_train_local, mock_get_organization_id, run
         '--version', '1',
         '--environment', 'USER_ID:1234567890123',
         '--environment', 'param3:value333',
-        '--config', CONFIGFILE_NAME,
+        '--config', abejacli.training.CONFIGFILE_NAME,
     ]
 
     r = runner.invoke(train_local, cmd)
@@ -792,13 +927,20 @@ def test_train_local_environment(mock_train_local, mock_get_organization_id, run
 
 
 def test_describe_job_definitions(req_mock, runner):
-    url = "{}/training/definitions?filter_archived=exclude_archived".format(ORGANIZATION_ENDPOINT)
+    url = "{}/training/definitions".format(ORGANIZATION_ENDPOINT)
+    re_url = r"^{}.+".format(url)
+    matcher = re.compile(re_url)
+
+    expected_params = {
+        "filter_archived": ["exclude_archived"],
+    }
 
     def match_request_url(request):
-        return request.url == url
+        assert request.qs == expected_params
+        return request.path == urlparse(url).path
 
     req_mock.register_uri(
-        'GET', url,
+        'GET', matcher,
         json={},
         additional_matcher=match_request_url)
 
@@ -807,15 +949,42 @@ def test_describe_job_definitions(req_mock, runner):
     assert not r.exception
 
 
+def test_describe_job_definitions_limit_offset(req_mock, runner):
+    url = "{}/training/definitions".format(ORGANIZATION_ENDPOINT)
+    re_url = r"^{}.+".format(url)
+    matcher = re.compile(re_url)
+
+    expected_params = {
+        "filter_archived": ["exclude_archived"],
+        "limit": ['444'],
+        "offset": ["333"]
+    }
+
+    def match_request_url(request):
+        assert request.qs == expected_params
+        return request.path == urlparse(url).path
+
+    req_mock.register_uri(
+        'GET', matcher,
+        json={},
+        additional_matcher=match_request_url)
+
+    cmd = ["--limit", "444", "--offset", "333"]
+    r = runner.invoke(describe_job_definitions, cmd)
+    assert not r.exception
+
+
 def test_describe_job_definition(req_mock, runner):
     test_job_name = 'test-job'
     url = "{}/training/definitions/{}".format(ORGANIZATION_ENDPOINT, test_job_name)
+    re_url = r"^{}$".format(url)
+    matcher = re.compile(re_url)
 
     def match_request_url(request):
         return request.url == url
 
     req_mock.register_uri(
-        'GET', url,
+        'GET', matcher,
         json={},
         additional_matcher=match_request_url)
 
@@ -825,13 +994,20 @@ def test_describe_job_definition(req_mock, runner):
 
 
 def test_describe_job_definitions_include_archived(req_mock, runner):
-    url = "{}/training/definitions?filter_archived=include_archived".format(ORGANIZATION_ENDPOINT)
+    url = "{}/training/definitions".format(ORGANIZATION_ENDPOINT)
+    re_url = r"^{}.+".format(url)
+    matcher = re.compile(re_url)
+
+    expected_params = {
+        "filter_archived": ["include_archived"],
+    }
 
     def match_request_url(request):
-        return request.url == url
+        assert request.qs == expected_params
+        return request.path == urlparse(url).path
 
     req_mock.register_uri(
-        'GET', url,
+        'GET', matcher,
         json={},
         additional_matcher=match_request_url)
 
@@ -844,14 +1020,21 @@ def test_describe_job_definitions_include_archived(req_mock, runner):
 
 def test_describe_job_definition_versions(req_mock, runner):
     test_job_name = 'test-job-name'
-    url = "{}/training/definitions/{}/versions?filter_archived=exclude_archived".format(
+    url = "{}/training/definitions/{}/versions".format(
         ORGANIZATION_ENDPOINT, test_job_name)
+    re_url = r"^{}.+".format(url)
+    matcher = re.compile(re_url)
+
+    expected_params = {
+        "filter_archived": ["exclude_archived"]
+    }
 
     def match_request_url(request):
-        return request.url == url
+        assert request.qs == expected_params
+        return request.path == urlparse(url).path
 
     req_mock.register_uri(
-        'GET', url,
+        'GET', matcher,
         json={},
         additional_matcher=match_request_url)
 
@@ -860,22 +1043,30 @@ def test_describe_job_definition_versions(req_mock, runner):
     assert not r.exception
 
 
+@patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
 def test_describe_job_definition_versions_from_config(req_mock, runner):
     config_data = {
         'name': 'training-1',
         'handler': 'train:handler',
         'image': 'abeja-inc/all-cpu:18.10'
     }
-    with open(CONFIGFILE_NAME, 'w') as configfile:
+    with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
         yaml.dump(config_data, configfile)
-    url = "{}/training/definitions/{}/versions?filter_archived=exclude_archived".format(
+    url = "{}/training/definitions/{}/versions".format(
         ORGANIZATION_ENDPOINT, config_data["name"])
+    re_url = r"^{}.+".format(url)
+    matcher = re.compile(re_url)
+
+    expected_params = {
+        "filter_archived": ["exclude_archived"],
+    }
 
     def match_request_url(request):
-        return request.url == url
+        assert request.qs == expected_params
+        return request.path == urlparse(url).path
 
     req_mock.register_uri(
-        'GET', url,
+        'GET', matcher,
         json={},
         additional_matcher=match_request_url)
 
@@ -884,6 +1075,7 @@ def test_describe_job_definition_versions_from_config(req_mock, runner):
     assert not r.exception
 
 
+@patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
 def test_describe_job_definition_versions_option_overwrites_config(req_mock, runner):
     testing_name = 'dummy-name'
     config_data = {
@@ -891,16 +1083,23 @@ def test_describe_job_definition_versions_option_overwrites_config(req_mock, run
         'handler': 'train:handler',
         'image': 'abeja-inc/all-cpu:18.10'
     }
-    with open(CONFIGFILE_NAME, 'w') as configfile:
+    with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
         yaml.dump(config_data, configfile)
-    url = "{}/training/definitions/{}/versions?filter_archived=exclude_archived".format(
+    url = "{}/training/definitions/{}/versions".format(
         ORGANIZATION_ENDPOINT, testing_name)
+    re_url = r"^{}.+".format(url)
+    matcher = re.compile(re_url)
+
+    expected_params = {
+        "filter_archived": ["exclude_archived"],
+    }
 
     def match_request_url(request):
-        return request.url == url
+        assert request.qs == expected_params
+        return request.path == urlparse(url).path
 
     req_mock.register_uri(
-        'GET', url,
+        'GET', matcher,
         json={},
         additional_matcher=match_request_url)
 
@@ -911,14 +1110,21 @@ def test_describe_job_definition_versions_option_overwrites_config(req_mock, run
 
 def test_describe_job_definition_versions_include_archived(req_mock, runner):
     test_job_name = 'test-job-name'
-    url = "{}/training/definitions/{}/versions?filter_archived=include_archived".format(
+    url = "{}/training/definitions/{}/versions".format(
         ORGANIZATION_ENDPOINT, test_job_name)
+    re_url = r"^{}.+".format(url)
+    matcher = re.compile(re_url)
+
+    expected_params = {
+        "filter_archived": ["include_archived"],
+    }
 
     def match_request_url(request):
-        return request.url == url
+        assert request.qs == expected_params
+        return request.path == urlparse(url).path
 
     req_mock.register_uri(
-        'GET', url,
+        'GET', matcher,
         json={},
         additional_matcher=match_request_url)
 
@@ -931,14 +1137,21 @@ def test_describe_job_definition_versions_include_archived(req_mock, runner):
 
 def test_describe_training_models(req_mock, runner):
     test_job_name = 'test-job-name'
-    url = "{}/training/definitions/{}/models?filter_archived=exclude_archived".format(
+    url = "{}/training/definitions/{}/models".format(
         ORGANIZATION_ENDPOINT, test_job_name)
+    re_url = r"^{}.+".format(url)
+    matcher = re.compile(re_url)
+
+    expected_params = {
+        "filter_archived": ["exclude_archived"],
+    }
 
     def match_request_url(request):
-        return request.url == url
+        assert request.qs == expected_params
+        return request.path == urlparse(url).path
 
     req_mock.register_uri(
-        'GET', url,
+        'GET', matcher,
         json={},
         additional_matcher=match_request_url)
 
@@ -947,22 +1160,30 @@ def test_describe_training_models(req_mock, runner):
     assert not r.exception
 
 
+@patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
 def test_describe_training_models_from_config(req_mock, runner):
     config_data = {
         'name': 'training-1',
         'handler': 'train:handler',
         'image': 'abeja-inc/all-cpu:18.10'
     }
-    with open(CONFIGFILE_NAME, 'w') as configfile:
+    with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
         yaml.dump(config_data, configfile)
-    url = "{}/training/definitions/{}/models?filter_archived=exclude_archived".format(
+    url = "{}/training/definitions/{}/models".format(
         ORGANIZATION_ENDPOINT, config_data["name"])
+    re_url = r"^{}.+".format(url)
+    matcher = re.compile(re_url)
+
+    expected_params = {
+        "filter_archived": ["exclude_archived"],
+    }
 
     def match_request_url(request):
-        return request.url == url
+        assert request.qs == expected_params
+        return request.path == urlparse(url).path
 
     req_mock.register_uri(
-        'GET', url,
+        'GET', matcher,
         json={},
         additional_matcher=match_request_url)
 
@@ -971,6 +1192,7 @@ def test_describe_training_models_from_config(req_mock, runner):
     assert not r.exception
 
 
+@patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
 def test_describe_training_models_option_overwrites_config(req_mock, runner):
     testing_name = 'dummy-name'
     config_data = {
@@ -978,16 +1200,23 @@ def test_describe_training_models_option_overwrites_config(req_mock, runner):
         'handler': 'train:handler',
         'image': 'abeja-inc/all-cpu:18.10'
     }
-    with open(CONFIGFILE_NAME, 'w') as configfile:
+    with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
         yaml.dump(config_data, configfile)
-    url = "{}/training/definitions/{}/models?filter_archived=exclude_archived".format(
+    url = "{}/training/definitions/{}/models".format(
         ORGANIZATION_ENDPOINT, testing_name)
+    re_url = r"^{}.+".format(url)
+    matcher = re.compile(re_url)
+
+    expected_params = {
+        "filter_archived": ["exclude_archived"],
+    }
 
     def match_request_url(request):
-        return request.url == url
+        assert request.qs == expected_params
+        return request.path == urlparse(url).path
 
     req_mock.register_uri(
-        'GET', url,
+        'GET', matcher,
         json={},
         additional_matcher=match_request_url)
 
@@ -998,14 +1227,21 @@ def test_describe_training_models_option_overwrites_config(req_mock, runner):
 
 def test_describe_training_models_include_archived(req_mock, runner):
     test_job_name = 'test-job-name'
-    url = "{}/training/definitions/{}/models?filter_archived=include_archived".format(
+    url = "{}/training/definitions/{}/models".format(
         ORGANIZATION_ENDPOINT, test_job_name)
+    re_url = r"^{}.+".format(url)
+    matcher = re.compile(re_url)
+
+    expected_params = {
+        "filter_archived": ["include_archived"],
+    }
 
     def match_request_url(request):
-        return request.url == url
+        assert request.qs == expected_params
+        return request.path == urlparse(url).path
 
     req_mock.register_uri(
-        'GET', url,
+        'GET', matcher,
         json={},
         additional_matcher=match_request_url)
 
@@ -1018,14 +1254,21 @@ def test_describe_training_models_include_archived(req_mock, runner):
 
 def test_describe_jobs(req_mock, runner):
     test_job_name = 'test-job-name'
-    url = "{}/training/definitions/{}/jobs?filter_archived=exclude_archived".format(
+    url = "{}/training/definitions/{}/jobs".format(
         ORGANIZATION_ENDPOINT, test_job_name)
+    re_url = r"^{}.+".format(url)
+    matcher = re.compile(re_url)
+
+    expected_params = {
+        "filter_archived": ["exclude_archived"],
+    }
 
     def match_request_url(request):
-        return request.url == url
+        assert request.qs == expected_params
+        return request.path == urlparse(url).path
 
     req_mock.register_uri(
-        'GET', url,
+        'GET', matcher,
         json={},
         additional_matcher=match_request_url)
 
@@ -1034,30 +1277,67 @@ def test_describe_jobs(req_mock, runner):
     assert not r.exception
 
 
+def test_describe_jobs_limit_offset(req_mock, runner):
+    test_job_name = 'test-job-name'
+    url = "{}/training/definitions/{}/jobs".format(
+        ORGANIZATION_ENDPOINT, test_job_name)
+    re_url = r"^{}.+".format(url)
+    matcher = re.compile(re_url)
+
+    expected_params = {
+        "filter_archived": ["exclude_archived"],
+        "limit": ["444"],
+        "offset": ["333"]
+    }
+
+    def match_request_url(request):
+        assert request.qs == expected_params
+        return request.path == urlparse(url).path
+
+    req_mock.register_uri(
+        'GET', matcher,
+        json={},
+        additional_matcher=match_request_url)
+
+    cmd = ['-j', test_job_name, "--limit", "444", "--offset", "333"]
+    r = runner.invoke(describe_jobs, cmd)
+    assert not r.exception
+
+
+@patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
 def test_describe_jobs_from_config(req_mock, runner):
     config_data = {
         'name': 'training-1',
         'handler': 'train:handler',
         'image': 'abeja-inc/all-cpu:18.10'
     }
-    with open(CONFIGFILE_NAME, 'w') as configfile:
+    with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
         yaml.dump(config_data, configfile)
-    url = "{}/training/definitions/{}/jobs?filter_archived=exclude_archived".format(
+    url = "{}/training/definitions/{}/jobs".format(
         ORGANIZATION_ENDPOINT, config_data["name"])
+    re_url = r"^{}.+".format(url)
+    matcher = re.compile(re_url)
+
+    expected_params = {
+        "filter_archived": ["exclude_archived"],
+    }
 
     def match_request_url(request):
-        return request.url == url
+        assert request.qs == expected_params
+        return request.path == urlparse(url).path
 
     req_mock.register_uri(
-        'GET', url,
+        'GET', matcher,
         json={},
         additional_matcher=match_request_url)
 
     cmd = []
     r = runner.invoke(describe_jobs, cmd)
+    print(r.output)
     assert not r.exception
 
 
+@patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
 def test_describe_jobs_option_overwrites_config(req_mock, runner):
     testing_name = 'dummy-name'
     config_data = {
@@ -1065,16 +1345,23 @@ def test_describe_jobs_option_overwrites_config(req_mock, runner):
         'handler': 'train:handler',
         'image': 'abeja-inc/all-cpu:18.10'
     }
-    with open(CONFIGFILE_NAME, 'w') as configfile:
+    with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
         yaml.dump(config_data, configfile)
-    url = "{}/training/definitions/{}/jobs?filter_archived=exclude_archived".format(
+    url = "{}/training/definitions/{}/jobs".format(
         ORGANIZATION_ENDPOINT, testing_name)
+    re_url = r"^{}.+".format(url)
+    matcher = re.compile(re_url)
+
+    expected_params = {
+        "filter_archived": ["exclude_archived"],
+    }
 
     def match_request_url(request):
-        return request.url == url
+        assert request.qs == expected_params
+        return request.path == urlparse(url).path
 
     req_mock.register_uri(
-        'GET', url,
+        'GET', matcher,
         json={},
         additional_matcher=match_request_url)
 
@@ -1085,14 +1372,20 @@ def test_describe_jobs_option_overwrites_config(req_mock, runner):
 
 def test_describe_jobs_include_archived(req_mock, runner):
     test_job_name = 'test-job-name'
-    url = "{}/training/definitions/{}/jobs?filter_archived=include_archived".format(
+    url = "{}/training/definitions/{}/jobs".format(
         ORGANIZATION_ENDPOINT, test_job_name)
+    re_url = r"^{}.+".format(url)
+    matcher = re.compile(re_url)
+    expected_params = {
+        "filter_archived": ["include_archived"],
+    }
 
     def match_request_url(request):
-        return request.url == url
+        assert request.qs == expected_params
+        return request.path == urlparse(url).path
 
     req_mock.register_uri(
-        'GET', url,
+        'GET', matcher,
         json={},
         additional_matcher=match_request_url)
 

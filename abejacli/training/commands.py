@@ -20,7 +20,7 @@ from abejacli.config import (ABEJA_PLATFORM_TOKEN, ABEJA_PLATFORM_USER_ID,
 from abejacli.exceptions import ConfigFileNotFoundError, InvalidConfigException, ResourceNotFound
 from abejacli.docker.commands.run import build_volumes
 from abejacli.logger import get_logger
-from abejacli.session import api_get, api_post, api_patch
+from abejacli.session import api_get, api_post, api_patch, api_get_data
 from abejacli.training import TrainingConfig, CONFIGFILE_NAME, read_training_config, is_valid_image_and_handler_pair
 from abejacli.training.jobs import TrainingJobDebugRun
 from abejacli.training.jobs import TrainingJobLocalContainerRun
@@ -87,15 +87,23 @@ def create_job_definition():
               required=False, default=None)
 @click.option('--include-archived', 'include_archived', is_flag=True,
               help="Includes archived job definitions.")
-def describe_job_definitions(job_definition_name, include_archived):
+@click.option('-l', '--limit', 'limit', type=int,
+              help='Number of pagings', default=None, required=False)
+@click.option('-o', '--offset', 'offset', type=int,
+              help='Paging start index', default=None, required=False)
+def describe_job_definitions(job_definition_name, include_archived, limit, offset):
+    params = {}
     if job_definition_name is None:
         url = "{}/training/definitions".format(ORGANIZATION_ENDPOINT)
-        url = '{}?filter_archived=include_archived'.format(
-            url) if include_archived else '{}?filter_archived=exclude_archived'.format(url)
+        params["filter_archived"] = 'include_archived' if include_archived else 'exclude_archived'
+        if limit:
+            params['limit'] = limit
+        if offset:
+            params["offset"] = offset
     else:
         url = "{}/training/definitions/{}".format(ORGANIZATION_ENDPOINT, job_definition_name)
     try:
-        r = api_get(url)
+        r = api_get_data(url, params)
     except Exception as e:
         logger.error('create job definition aborted:{}'.format(e))
         click.echo('create job definition aborted.')
@@ -311,6 +319,72 @@ def _create_training_version(url: str, payload: Dict[str, str], archive):
         return api_post(url, files=files)
 
 
+@training.command(name='create-version-from-git')
+@click.option('--git-url', type=str, required=True,
+              help='GitHub URL, which must start with "https://".')
+@click.option('--git-branch', type=str, required=False,
+              help='GitHub branch. Default "master"')
+@click.option('-d', '--description', type=str, required=False,
+              help='Description for the training job, which must be less than or equal to 256 characters.')
+@click.option('-e', '--environment', type=ENVIRONMENT_STR, default=None, required=False, multiple=True,
+              help='Environment variables, ex. BATCH_SIZE:32')
+@click.option('--datalake', '--datalakes', 'datalakes', type=str, default=None, required=False, multiple=True,
+              help='[Alpha stage option] Datalake channel ID for premount.')
+@click.option('--bucket', '--buckets', 'buckets', type=str, default=None, required=False, multiple=True,
+              help='[Alpha stage option] Datalake bucket ID for premount.')
+def create_training_version_from_git(git_url, git_branch, description, environment, datalakes, buckets):
+    try:
+        params = dict(training_config.read(training_config.create_version_schema))
+
+        handler = params.get('handler')
+        image = params.get('image')
+        if not handler or not image:
+            raise InvalidConfigException('need to specify handler and image both')
+
+        # FIXME: For "20.02" trial.
+        if not is_valid_image_and_handler_pair(image, handler):
+            raise InvalidConfigException('handler must be "file:method" format.')
+
+        payload = {
+            'git_url': git_url,
+            'handler': handler,
+            'image': image
+        }
+
+        if git_branch is not None:
+            payload['git_branch'] = git_branch
+
+        if description is not None:
+            payload['description'] = description
+
+        environment = {**params.get('environment', {}), **dict(environment)}
+        if environment:
+            payload['environment'] = environment
+
+        if datalakes:
+            payload['datalakes'] = list(datalakes)
+        if buckets:
+            payload['buckets'] = list(buckets)
+
+        url = "{}/training/definitions/{}/git/versions".format(
+            ORGANIZATION_ENDPOINT, params['name'])
+
+        r = api_post(url, json.dumps(payload))
+    except ConfigFileNotFoundError:
+        logger.error('training configuration file does not exists.')
+        click.echo('training configuration file does not exists.')
+        sys.exit(ERROR_EXITCODE)
+    except InvalidConfigException as e:
+        logger.error('invalid training configuration file: {}'.format(e))
+        click.echo('invalid training configuration file.')
+        sys.exit(ERROR_EXITCODE)
+    except Exception as e:
+        logger.error('create training version aborted: {}'.format(e))
+        click.echo('create training version aborted.')
+        sys.exit(ERROR_EXITCODE)
+    click.echo(json_output_formatter(r))
+
+
 @training.command(name='update-version')
 @click.option('-v', '--version', type=str, required=False,
               help='Job definition version. By default, latest version is used')
@@ -490,7 +564,11 @@ def create_training_job(version, environment, params, instance_type, description
               required=False, default=None)
 @click.option('--include-archived', 'include_archived', is_flag=True,
               help="Includes archived training jobs .")
-def describe_jobs(job_definition_name, include_archived):
+@click.option('-l', '--limit', 'limit', type=int,
+              help='Number of pagings', default=None, required=False)
+@click.option('-o', '--offset', 'offset', type=int,
+              help='Paging start index', default=None, required=False)
+def describe_jobs(job_definition_name, include_archived, limit, offset):
     if job_definition_name:
         name = job_definition_name
     else:
@@ -504,9 +582,13 @@ def describe_jobs(job_definition_name, include_archived):
         name = config_data['name']
     try:
         url = "{}/training/definitions/{}/jobs".format(ORGANIZATION_ENDPOINT, name)
-        url = '{}?filter_archived=include_archived'.format(
-            url) if include_archived else '{}?filter_archived=exclude_archived'.format(url)
-        r = api_get(url)
+        params = {}
+        params["filter_archived"] = 'include_archived' if include_archived else 'exclude_archived'
+        if limit:
+            params['limit'] = limit
+        if offset:
+            params["offset"] = offset
+        r = api_get_data(url, params)
     except InvalidConfigException as e:
         logger.error('invalid training configuration file: {}'.format(e))
         click.echo('invalid training configuration file.')
@@ -712,9 +794,9 @@ def _describe_training_models(job_definition_name, model_id, include_archived=No
         r = api_get(url)
         return r
 
-    url = '{}?filter_archived=include_archived'.format(
-        url) if include_archived else '{}?filter_archived=exclude_archived'.format(url)
-    r = api_get(url)
+    params = {}
+    params["filter_archived"] = 'include_archived' if include_archived else 'exclude_archived'
+    r = api_get_data(url, params)
     return r
 
 
