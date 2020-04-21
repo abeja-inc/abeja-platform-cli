@@ -359,7 +359,7 @@ def _create_deployment_version(ctx, deployment_id, version, image, handler=None,
     if handler:
         parameter['handler'] = handler
     if user_parameters:
-        parameter['user_parameters'] = user_parameters
+        parameter['user_parameters'] = dict(user_parameters)
     json_data = json.dumps(parameter)
 
     url = '{}/deployments/{}/versions'.format(
@@ -430,7 +430,7 @@ def _create_deployment_version_from_git(
     if handler:
         parameter['handler'] = handler
     if user_parameters:
-        parameter['user_parameters'] = user_parameters
+        parameter['user_parameters'] = dict(user_parameters)
     if git_branch is not None:
         parameter['git_branch'] = git_branch
     json_data = json.dumps(parameter)
