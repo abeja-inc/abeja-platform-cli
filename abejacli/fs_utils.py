@@ -2,10 +2,10 @@ import json
 import mimetypes
 import os
 import os.path
-from pathlib import Path
 import tarfile
 import zipfile
 from abc import ABC, abstractmethod
+from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional
 
 from cerberus import Validator

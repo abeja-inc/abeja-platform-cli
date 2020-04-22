@@ -1,5 +1,6 @@
 import json
 from typing import Optional
+
 from abejacli.config import ORGANIZATION_ENDPOINT
 from abejacli.session import api_get, api_post
 

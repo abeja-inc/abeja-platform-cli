@@ -1,5 +1,5 @@
 import os
-from typing import Optional, Iterable
+from typing import Iterable, Optional
 
 
 class Config(object):

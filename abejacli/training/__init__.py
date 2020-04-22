@@ -1,6 +1,7 @@
 from cerberus import Validator
-from abejacli.exceptions import InvalidConfigException, ConfigFileNotFoundError
 from ruamel.yaml import YAML
+
+from abejacli.exceptions import ConfigFileNotFoundError, InvalidConfigException
 
 yaml = YAML()
 HANDLER_REGEX = r'\A(([a-zA-Z_]\w+\.)+)?[a-zA-Z_]\w+(:[a-zA-Z_]\w+\Z)?'

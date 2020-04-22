@@ -1,11 +1,11 @@
-from collections import deque
 import os
+from collections import deque
 from typing import Any, Iterable, Optional, Tuple
 
 from abejacli.bucket.download_job import download_job
 from abejacli.bucket.process_file_job import process_file_jobs
 from abejacli.bucket.upload_job import upload_job
-from abejacli.config import (ORGANIZATION_ENDPOINT, DATALAKE_ITEMS_PER_PAGE,
+from abejacli.config import (DATALAKE_ITEMS_PER_PAGE, ORGANIZATION_ENDPOINT,
                              PLATFORM_REQUEST_TIMEOUT_SECONDS)
 from abejacli.fs_utils import UploadBucketFile
 from abejacli.session import generate_user_session

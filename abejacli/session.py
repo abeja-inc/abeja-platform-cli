@@ -1,11 +1,13 @@
 from json import JSONDecodeError
 
 import requests
-from abejacli.config import ABEJA_PLATFORM_USER_ID, ABEJA_PLATFORM_TOKEN, PLATFORM_AUTH_TOKEN
-from abejacli.logger import get_logger
-from abejacli.version import VERSION
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
+
+from abejacli.config import (ABEJA_PLATFORM_TOKEN, ABEJA_PLATFORM_USER_ID,
+                             PLATFORM_AUTH_TOKEN)
+from abejacli.logger import get_logger
+from abejacli.version import VERSION
 
 
 def generate_retry_session():

@@ -1,8 +1,10 @@
 import os.path
+
+import click
+
 from abejacli.configuration.config import ConfigSet
 from abejacli.configuration.loader import ConfigSetLoader
 from abejacli.exceptions import InvalidConfigException
-import click
 
 ROOT_DIRECTORY = os.path.join(os.path.expanduser('~'), '.abeja')
 CONFIG_FILE_PATH = os.path.join(ROOT_DIRECTORY, 'config')

@@ -1,8 +1,7 @@
-from typing import List
 import json
 import re
 from collections import OrderedDict
-from typing import Dict
+from typing import Dict, List
 
 from abejacli.configuration.config import Config, ConfigSet
 

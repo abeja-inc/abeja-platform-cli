@@ -1,36 +1,32 @@
-from concurrent.futures import ThreadPoolExecutor
 import copy
-from datetime import datetime
-from enum import Enum
 import json
 import os
-from requests.exceptions import HTTPError
 import time
+import zipfile
+from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
+from enum import Enum
 from tempfile import TemporaryDirectory
 from typing import Optional
-import zipfile
 
-from abejacli.config import ABEJA_API_URL, TRAIN_DEBUG_COMMAND_V1, TAG_VERSION_SAMPV1, TRAIN_DEBUG_COMMAND_V2, \
-    TRAIN_LOCAL_COMMAND_V1, TRAIN_LOCAL_COMMAND_V2
-from abejacli.config import ORGANIZATION_ENDPOINT
-from abejacli.config import RESERVED_ENV_VAR
-from abejacli.config import LOG_MAX_SIZE
-from abejacli.config import LOG_FLUSH_INTERVAL
-from abejacli.config import POLLING_INTERVAL
+from requests.exceptions import HTTPError
+
 from abejacli.common import convert_to_local_image_name
-from abejacli.docker.container_run import ContainerRun
-from abejacli.docker.container_run import ContainerBuildAndRun
-from abejacli.docker.commands.run import TrainRunCommand
-from abejacli.docker.commands.run import DEFAULT_ARTIFACT_DIR
-from abejacli.docker.commands.run import get_default_volume
-from abejacli.docker.commands.run import get_storage_volume
-from abejacli.docker.commands.run import build_volume
+from abejacli.config import (ABEJA_API_URL, LOG_FLUSH_INTERVAL, LOG_MAX_SIZE,
+                             ORGANIZATION_ENDPOINT, POLLING_INTERVAL,
+                             RESERVED_ENV_VAR, TAG_VERSION_SAMPV1,
+                             TRAIN_DEBUG_COMMAND_V1, TRAIN_DEBUG_COMMAND_V2,
+                             TRAIN_LOCAL_COMMAND_V1, TRAIN_LOCAL_COMMAND_V2)
+from abejacli.docker.commands.run import (DEFAULT_ARTIFACT_DIR,
+                                          TrainRunCommand, build_volume,
+                                          get_default_volume,
+                                          get_storage_volume)
+from abejacli.docker.container_run import ContainerBuildAndRun, ContainerRun
 from abejacli.docker.utils import parse_image
-from abejacli.model.docker_handler import LOCAL_TRAIN_TYPE_VALUE    # deprecate
-from abejacli.session import generate_retry_session
-from abejacli.session import generate_user_session
-from abejacli.training.client import create_local_training_job
-from abejacli.training.client import describe_training_version
+from abejacli.model.docker_handler import LOCAL_TRAIN_TYPE_VALUE  # deprecate
+from abejacli.session import generate_retry_session, generate_user_session
+from abejacli.training.client import (create_local_training_job,
+                                      describe_training_version)
 
 
 class TrainingJobDebugRun(ContainerBuildAndRun):

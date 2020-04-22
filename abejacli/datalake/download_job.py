@@ -1,14 +1,15 @@
 import glob
 import os
 import uuid
+
 from retrying import retry
 
 from abejacli.config import (ABEJA_API_URL, HTTP_READ_CHUNK_SIZE,
                              PLATFORM_REQUEST_TIMEOUT_SECONDS)
 from abejacli.datalake.process_file_job import (FINISH_REPORT,
                                                 INITIALIZE_REPORT,
-                                                PROGRESS_REPORT,
-                                                RAISE_ERROR, SKIP_REPORT)
+                                                PROGRESS_REPORT, RAISE_ERROR,
+                                                SKIP_REPORT)
 from abejacli.session import generate_retry_session, generate_user_session
 
 

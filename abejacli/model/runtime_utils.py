@@ -1,6 +1,7 @@
-from abejacli.config import DOCKER_REPOSITORIES
-from abejacli.config import TAG_VERSION_SAMPV1, RUN_LOCAL_COMMAND_V1, RUN_LOCAL_COMMAND_V2
 import json
+
+from abejacli.config import (DOCKER_REPOSITORIES, RUN_LOCAL_COMMAND_V1,
+                             RUN_LOCAL_COMMAND_V2, TAG_VERSION_SAMPV1)
 
 
 def get_runtime_command(image: str, tag: str, v1_flag: bool):

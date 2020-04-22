@@ -1,8 +1,7 @@
 import os
 
 # Make callers be able to `from abejacli.config import Config`
-from abejacli.configuration import (CONFIG_FILE_PATH,  # noqa: F401
-                                    ROOT_DIRECTORY)
+from abejacli.configuration import CONFIG_FILE_PATH  # noqa: F401
 from abejacli.configuration.loader import ConfigSetLoader
 from abejacli.exceptions import InvalidConfigException
 

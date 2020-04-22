@@ -1,16 +1,16 @@
-from abc import abstractmethod
 import json
 import os
 import tempfile
+from abc import abstractmethod
 from typing import Generator, Optional
 
 import docker
 from docker.models.images import Image
 
 from abejacli.docker.utils import check_docker_installation, parse_image
-from abejacli.model import md5file, md5digest
-from abejacli.model.docker_handler import BUILT_IMAGE_SUFFIX
-from abejacli.model.docker_handler import DOCKERFILE_RUN_LOCAL_TEMPLATE
+from abejacli.model import md5digest, md5file
+from abejacli.model.docker_handler import (BUILT_IMAGE_SUFFIX,
+                                           DOCKERFILE_RUN_LOCAL_TEMPLATE)
 from abejacli.task import Run
 
 REQUIREMENTS_TXT = 'requirements.txt'

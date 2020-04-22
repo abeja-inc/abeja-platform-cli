@@ -4,10 +4,11 @@ import tempfile
 from typing import Callable, Generator, Optional
 
 import docker
-from abejacli.docker.commands.run import RunCommand
-from abejacli.model import md5file
 from docker.models.containers import Container
 from docker.models.images import Image
+
+from abejacli.docker.commands.run import RunCommand
+from abejacli.model import md5file
 
 DOCKERFILE_RUN_LOCAL_TEMPLATE = '''
 FROM {IMAGE}
