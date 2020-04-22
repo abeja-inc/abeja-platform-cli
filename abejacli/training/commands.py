@@ -757,6 +757,30 @@ def unarchive_version(version_id):
     click.echo(json_output_formatter(r))
 
 
+@training.command(name='stop-job', help='Stop training job')
+@click.option('--job-id', '--job_id', type=str, required=True,
+              help='Training Job identifier')
+def stop_training_job(job_id):
+    try:
+        config_data = training_config.read(training_config.default_schema)
+        url = "{}/training/definitions/{}/jobs/{}/stop".format(
+            ORGANIZATION_ENDPOINT, config_data['name'], job_id)
+        r = api_post(url, json.dumps({}))
+    except ConfigFileNotFoundError:
+        logger.error('training configuration file does not exists.')
+        click.echo('training configuration file does not exists.')
+        sys.exit(ERROR_EXITCODE)
+    except InvalidConfigException as e:
+        logger.error('invalid training configuration file: {}'.format(e))
+        click.echo('invalid training configuration file.')
+        sys.exit(ERROR_EXITCODE)
+    except Exception as e:
+        logger.error('stop training job aborted: {}'.format(e))
+        click.echo('stop training job aborted.')
+        sys.exit(ERROR_EXITCODE)
+    click.echo(json_output_formatter(r))
+
+
 # ---------------------------------------------------
 # training models
 # ---------------------------------------------------
