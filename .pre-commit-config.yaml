@@ -5,9 +5,11 @@ repos:
       name: fmt
       entry: make fmt
       language: system
+      types: [python]
   - repo: local
     hooks:
     - id: system
       name: lint
       entry: make lint
       language: system
+      types: [python]

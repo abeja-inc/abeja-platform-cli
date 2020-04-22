@@ -26,6 +26,7 @@ lint:
 	poetry run flake8 abejacli tests --max-line-length=120 --max-complexity=25 --ignore E402,E121
 
 fmt:
+	poetry run isort abejacli/**/*.py
 	poetry run autopep8 -i -r abejacli tests --max-line-length=120 --exclude=abejacli/template/*
 	poetry run autoflake -i -r abejacli tests --remove-all-unused-imports --remove-unused-variables
 
