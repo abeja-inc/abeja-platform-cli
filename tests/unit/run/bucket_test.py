@@ -6,8 +6,11 @@ import requests_mock
 from click.testing import CliRunner
 from pyfakefs import fake_filesystem_unittest
 
-from abejacli.config import (INVALID_PARAMETER_EXITCODE, ORGANIZATION_ENDPOINT,
-                             SUCCESS_EXITCODE)
+from abejacli.config import (
+    INVALID_PARAMETER_EXITCODE,
+    ORGANIZATION_ENDPOINT,
+    SUCCESS_EXITCODE
+)
 from abejacli.run import bucket
 from tests.unit import ConfigPatcher
 

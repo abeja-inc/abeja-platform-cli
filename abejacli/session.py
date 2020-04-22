@@ -4,8 +4,11 @@ import requests
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 
-from abejacli.config import (ABEJA_PLATFORM_TOKEN, ABEJA_PLATFORM_USER_ID,
-                             PLATFORM_AUTH_TOKEN)
+from abejacli.config import (
+    ABEJA_PLATFORM_TOKEN,
+    ABEJA_PLATFORM_USER_ID,
+    PLATFORM_AUTH_TOKEN
+)
 from abejacli.logger import get_logger
 from abejacli.version import VERSION
 

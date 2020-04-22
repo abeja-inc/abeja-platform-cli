@@ -6,10 +6,17 @@ from unittest import TestCase
 
 from pyfakefs.fake_filesystem_unittest import Patcher
 
-from abejacli.fs_utils import (FileSpecFormatError, InvalidPathException,
-                               TARFile, TGZFile, UploadFileSpec, ZIPFile,
-                               generate_upload_bucket_iter,
-                               generate_upload_file_iter, get_compressed_file)
+from abejacli.fs_utils import (
+    FileSpecFormatError,
+    InvalidPathException,
+    TARFile,
+    TGZFile,
+    UploadFileSpec,
+    ZIPFile,
+    generate_upload_bucket_iter,
+    generate_upload_file_iter,
+    get_compressed_file
+)
 
 HIDDEN_FILE = '/dummy/.IgnoreMe'
 ALL_FILES = {

@@ -9,8 +9,10 @@ from docker.models.images import Image
 
 from abejacli.docker.utils import check_docker_installation, parse_image
 from abejacli.model import md5digest, md5file
-from abejacli.model.docker_handler import (BUILT_IMAGE_SUFFIX,
-                                           DOCKERFILE_RUN_LOCAL_TEMPLATE)
+from abejacli.model.docker_handler import (
+    BUILT_IMAGE_SUFFIX,
+    DOCKERFILE_RUN_LOCAL_TEMPLATE
+)
 from abejacli.task import Run
 
 REQUIREMENTS_TXT = 'requirements.txt'

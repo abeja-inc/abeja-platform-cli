@@ -1,10 +1,12 @@
 import uuid
 from unittest import TestCase
 
-from abejacli.datalake.process_file_job import (FINISH_REPORT,
-                                                INITIALIZE_REPORT,
-                                                PROGRESS_REPORT,
-                                                handle_command)
+from abejacli.datalake.process_file_job import (
+    FINISH_REPORT,
+    INITIALIZE_REPORT,
+    PROGRESS_REPORT,
+    handle_command
+)
 
 try:
     from unittest.mock import patch

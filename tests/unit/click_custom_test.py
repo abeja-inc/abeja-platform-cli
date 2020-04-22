@@ -5,10 +5,14 @@ import pytest
 from click.testing import CliRunner
 from parameterized import parameterized
 
-from abejacli.click_custom import (DatasetParamType, EnvParamType,
-                                   PortNumberType, UserParamType,
-                                   VolumeParamType,
-                                   convert_to_local_image_callback)
+from abejacli.click_custom import (
+    DatasetParamType,
+    EnvParamType,
+    PortNumberType,
+    UserParamType,
+    VolumeParamType,
+    convert_to_local_image_callback
+)
 
 
 class TestPortNumberType(TestCase):

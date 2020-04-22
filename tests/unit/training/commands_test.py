@@ -11,16 +11,22 @@ from ruamel.yaml import YAML
 import abejacli.training
 from abejacli.config import ORGANIZATION_ENDPOINT
 from abejacli.exceptions import ResourceNotFound
-from abejacli.training.commands import (_get_latest_training_version,
-                                        create_notebook, create_training_job,
-                                        create_training_version,
-                                        create_training_version_from_git,
-                                        debug_local, describe_job_definitions,
-                                        describe_jobs,
-                                        describe_training_models,
-                                        describe_training_versions,
-                                        start_notebook, stop_training_job,
-                                        train_local, update_training_version)
+from abejacli.training.commands import (
+    _get_latest_training_version,
+    create_notebook,
+    create_training_job,
+    create_training_version,
+    create_training_version_from_git,
+    debug_local,
+    describe_job_definitions,
+    describe_jobs,
+    describe_training_models,
+    describe_training_versions,
+    start_notebook,
+    stop_training_job,
+    train_local,
+    update_training_version
+)
 from tests import get_tmp_training_file_name
 
 TEST_CONFIG_USER_ID = '12345'

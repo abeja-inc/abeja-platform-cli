@@ -7,9 +7,13 @@ import requests_mock
 from click.testing import CliRunner
 from pyfakefs import fake_filesystem_unittest
 
-from abejacli.config import (ABEJA_API_URL, ERROR_EXITCODE,
-                             JOB_WORKER_THREAD_NUM, ORGANIZATION_ENDPOINT,
-                             SUCCESS_EXITCODE)
+from abejacli.config import (
+    ABEJA_API_URL,
+    ERROR_EXITCODE,
+    JOB_WORKER_THREAD_NUM,
+    ORGANIZATION_ENDPOINT,
+    SUCCESS_EXITCODE
+)
 from abejacli.run import datalake
 from tests.unit import ConfigPatcher
 

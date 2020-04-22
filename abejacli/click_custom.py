@@ -4,8 +4,11 @@ from datetime import date
 from click import Option, ParamType, UsageError
 
 from abejacli.common import convert_to_local_image_name
-from abejacli.config import (DATASET_VAR_KEY_FORMAT, ENV_VAR_KEY_FORMAT,
-                             VOLUME_FORMAT)
+from abejacli.config import (
+    DATASET_VAR_KEY_FORMAT,
+    ENV_VAR_KEY_FORMAT,
+    VOLUME_FORMAT
+)
 
 
 class MutuallyExclusiveAndRequireOption(Option):

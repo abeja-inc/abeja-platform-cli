@@ -5,8 +5,12 @@ import uuid
 from io import BytesIO
 from mimetypes import guess_type
 
-from abejacli.bucket.process_file_job import (FINISH_REPORT, INITIALIZE_REPORT,
-                                              PROGRESS_REPORT, RAISE_ERROR)
+from abejacli.bucket.process_file_job import (
+    FINISH_REPORT,
+    INITIALIZE_REPORT,
+    PROGRESS_REPORT,
+    RAISE_ERROR
+)
 from abejacli.config import ORGANIZATION_ENDPOINT
 from abejacli.fs_utils import UploadBucketFile
 from abejacli.session import generate_user_session

@@ -4,12 +4,18 @@ import requests_mock
 from pyfakefs.fake_filesystem_unittest import TestCase
 
 from abejacli.config import ABEJA_API_URL
-from abejacli.datalake.download_job import (DOWNLOAD_RETRY_ATTEMPT_NUMBER,
-                                            _get_default_file_path,
-                                            _resolve_file_path, download_job)
-from abejacli.datalake.process_file_job import (FINISH_REPORT,
-                                                INITIALIZE_REPORT,
-                                                PROGRESS_REPORT, RAISE_ERROR)
+from abejacli.datalake.download_job import (
+    DOWNLOAD_RETRY_ATTEMPT_NUMBER,
+    _get_default_file_path,
+    _resolve_file_path,
+    download_job
+)
+from abejacli.datalake.process_file_job import (
+    FINISH_REPORT,
+    INITIALIZE_REPORT,
+    PROGRESS_REPORT,
+    RAISE_ERROR
+)
 
 try:
     from unittest.mock import MagicMock, ANY

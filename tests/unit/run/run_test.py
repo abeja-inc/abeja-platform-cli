@@ -12,27 +12,42 @@ from ruamel.yaml import YAML
 import abejacli.training
 from abejacli.config import ORGANIZATION_ENDPOINT
 from abejacli.configuration.config import Config
-from abejacli.registry.commands import (create_repository, delete_repository,
-                                        describe_repositories,
-                                        describe_repository,
-                                        describe_repository_tags)
-from abejacli.run import (delete_configuration, describe_datalake_buckets,
-                          describe_datalake_channels,
-                          initialize_configuragtion, list_configurations,
-                          model, show_configuration, switch_configuration)
+from abejacli.registry.commands import (
+    create_repository,
+    delete_repository,
+    describe_repositories,
+    describe_repository,
+    describe_repository_tags
+)
+from abejacli.run import (
+    delete_configuration,
+    describe_datalake_buckets,
+    describe_datalake_channels,
+    initialize_configuragtion,
+    list_configurations,
+    model,
+    show_configuration,
+    switch_configuration
+)
 from abejacli.training import training_default_configuration
-from abejacli.training.commands import (archive_job, archive_training_model,
-                                        archive_version, create_job_definition,
-                                        create_training_job,
-                                        create_training_model,
-                                        create_training_version, describe_jobs,
-                                        describe_training_models,
-                                        describe_training_versions,
-                                        download_training_model,
-                                        initialize_training, unarchive_job,
-                                        unarchive_training_model,
-                                        unarchive_version,
-                                        update_training_model)
+from abejacli.training.commands import (
+    archive_job,
+    archive_training_model,
+    archive_version,
+    create_job_definition,
+    create_training_job,
+    create_training_model,
+    create_training_version,
+    describe_jobs,
+    describe_training_models,
+    describe_training_versions,
+    download_training_model,
+    initialize_training,
+    unarchive_job,
+    unarchive_training_model,
+    unarchive_version,
+    update_training_model
+)
 from tests import get_tmp_training_file_name
 from tests.unit import ConfigPatcher
 

@@ -7,22 +7,40 @@ from datetime import datetime
 
 from backports import tempfile
 
-from abejacli.bucket import (download_from_bucket, generate_bucket_file_iter,
-                             upload_to_bucket)
-from abejacli.datalake import (download_from_datalake,
-                               generate_channel_file_iter_by_period,
-                               upload_to_datalake)
-from abejacli.fs_utils import (generate_upload_bucket_iter,
-                               generate_upload_file_iter)
-from abejacli.run import (_create_deployment, _create_deployment_version,
-                          _create_deployment_version_from_git,
-                          _create_endpoint, _create_service, _create_trigger,
-                          _delete_deployment, _delete_deployment_version,
-                          _delete_endpoint, _delete_service, _delete_trigger,
-                          _describe_deployment_versions, _describe_deployments,
-                          _describe_endpoints, _describe_services,
-                          _describe_triggers, _download_deployment_version,
-                          _update_endpoint)
+from abejacli.bucket import (
+    download_from_bucket,
+    generate_bucket_file_iter,
+    upload_to_bucket
+)
+from abejacli.datalake import (
+    download_from_datalake,
+    generate_channel_file_iter_by_period,
+    upload_to_datalake
+)
+from abejacli.fs_utils import (
+    generate_upload_bucket_iter,
+    generate_upload_file_iter
+)
+from abejacli.run import (
+    _create_deployment,
+    _create_deployment_version,
+    _create_deployment_version_from_git,
+    _create_endpoint,
+    _create_service,
+    _create_trigger,
+    _delete_deployment,
+    _delete_deployment_version,
+    _delete_endpoint,
+    _delete_service,
+    _delete_trigger,
+    _describe_deployment_versions,
+    _describe_deployments,
+    _describe_endpoints,
+    _describe_services,
+    _describe_triggers,
+    _download_deployment_version,
+    _update_endpoint
+)
 from tests import session_decorator
 
 TRIGGER_INPUT_DATALAKE_ID = os.environ.get(

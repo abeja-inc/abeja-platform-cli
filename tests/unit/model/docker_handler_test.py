@@ -5,11 +5,14 @@ from pyfakefs.fake_filesystem_unittest import TestCase
 
 from abejacli.docker.commands.run import ModelRunCommand
 from abejacli.model import md5file
-from abejacli.model.docker_handler import (BUILT_IMAGE_SUFFIX,
-                                           DOCKERFILE_RUN_LOCAL_TEMPLATE,
-                                           LOCAL_MODEL_REQUIREMENTS_MD5_KEY,
-                                           LOCAL_MODEL_TYPE_VALUE,
-                                           REQUIREMENTS_TXT, LocalModelHandler)
+from abejacli.model.docker_handler import (
+    BUILT_IMAGE_SUFFIX,
+    DOCKERFILE_RUN_LOCAL_TEMPLATE,
+    LOCAL_MODEL_REQUIREMENTS_MD5_KEY,
+    LOCAL_MODEL_TYPE_VALUE,
+    REQUIREMENTS_TXT,
+    LocalModelHandler
+)
 
 IMAGE = 'abeja/test-model'
 TAG = 'testing'
