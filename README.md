@@ -12,7 +12,10 @@ This package provides a unified command line interface to ABEJA Platform.
 ## Setup
 
 ```sh
-$ pipenv install --dev
+$ poetry install
+
+# configure pre-commit
+$ poetry run pre-commit install
 
 # install git-flow
 $ brew install git-flow-avh # for macOS
@@ -22,7 +25,7 @@ $ apt-get install git-flow # for Linux
 ## Run command locally
 
 ```bash
-$ pipenv run python -m abejacli.run
+$ poetry run python -m abejacli.run
 ```
 
 ## Test
