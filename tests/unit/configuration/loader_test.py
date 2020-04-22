@@ -2,11 +2,11 @@ import json
 import os
 from unittest import mock
 
+import pytest
+
 from abejacli.configuration.config import Config
 from abejacli.configuration.loader import ConfigSetLoader
 from abejacli.exceptions import InvalidConfigException
-
-import pytest
 
 
 @pytest.fixture

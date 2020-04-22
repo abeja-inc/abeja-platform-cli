@@ -1,9 +1,8 @@
+import json
 import os
 
-from mock import MagicMock
-from mock import patch
-import json
 import pytest
+from mock import MagicMock, patch
 
 from abejacli.docker.container_run import ContainerBuildAndRun
 

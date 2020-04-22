@@ -1,14 +1,21 @@
 import os
-from pathlib import Path
 import uuid
+from pathlib import Path
+
 from retrying import retry
 
-from abejacli.config import (ORGANIZATION_ENDPOINT, HTTP_READ_CHUNK_SIZE,
-                             PLATFORM_REQUEST_TIMEOUT_SECONDS)
-from abejacli.bucket.process_file_job import (FINISH_REPORT,
-                                              INITIALIZE_REPORT,
-                                              PROGRESS_REPORT,
-                                              RAISE_ERROR, SKIP_REPORT)
+from abejacli.bucket.process_file_job import (
+    FINISH_REPORT,
+    INITIALIZE_REPORT,
+    PROGRESS_REPORT,
+    RAISE_ERROR,
+    SKIP_REPORT
+)
+from abejacli.config import (
+    HTTP_READ_CHUNK_SIZE,
+    ORGANIZATION_ENDPOINT,
+    PLATFORM_REQUEST_TIMEOUT_SECONDS
+)
 from abejacli.session import generate_retry_session, generate_user_session
 
 

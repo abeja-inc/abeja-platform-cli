@@ -1,4 +1,5 @@
 from unittest.mock import Mock
+
 import requests_mock
 
 from abejacli.model.local_server_manager import LocalServerManager

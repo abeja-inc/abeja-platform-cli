@@ -1,6 +1,7 @@
 import os
 import random
 from unittest import mock
+
 import pytest
 
 from abejacli.configuration.config import Config, ConfigSet

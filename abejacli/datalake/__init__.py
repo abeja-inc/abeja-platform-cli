@@ -1,8 +1,11 @@
 import os
 from typing import Any, Iterable, Optional, Tuple
 
-from abejacli.config import (ABEJA_API_URL, DATALAKE_ITEMS_PER_PAGE,
-                             PLATFORM_REQUEST_TIMEOUT_SECONDS)
+from abejacli.config import (
+    ABEJA_API_URL,
+    DATALAKE_ITEMS_PER_PAGE,
+    PLATFORM_REQUEST_TIMEOUT_SECONDS
+)
 from abejacli.datalake.download_job import download_job
 from abejacli.datalake.process_file_job import process_file_jobs
 from abejacli.datalake.upload_job import upload_job

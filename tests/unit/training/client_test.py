@@ -1,8 +1,12 @@
 import json
+
 import requests_mock
+
 from abejacli.config import ORGANIZATION_ENDPOINT
-from abejacli.training.client import create_local_training_job
-from abejacli.training.client import describe_training_version
+from abejacli.training.client import (
+    create_local_training_job,
+    describe_training_version
+)
 
 
 def test_describe_training_version():

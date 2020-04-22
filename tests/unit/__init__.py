@@ -1,4 +1,5 @@
 from mock import patch
+
 from abejacli.configuration.config import Config, ConfigSet
 
 

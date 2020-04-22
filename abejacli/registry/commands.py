@@ -1,13 +1,15 @@
 import datetime
 import json
 import sys
+
+import click
+
 import abejacli.configuration
 import abejacli.version
-import click
-from abejacli.logger import get_logger
-from abejacli.config import (CONFIG, ERROR_EXITCODE, ORGANIZATION_ENDPOINT)
 from abejacli.common import json_output_formatter
-from abejacli.session import (api_get, api_post, api_delete, api_get_data)
+from abejacli.config import CONFIG, ERROR_EXITCODE, ORGANIZATION_ENDPOINT
+from abejacli.logger import get_logger
+from abejacli.session import api_delete, api_get, api_get_data, api_post
 
 __version__ = abejacli.version.VERSION
 date = datetime.datetime.today()

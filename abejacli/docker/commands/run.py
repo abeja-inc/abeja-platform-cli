@@ -4,8 +4,7 @@ import socket
 from typing import List, Optional
 
 from abejacli import config
-from abejacli.config import RUN_LOCAL_COMMAND_V1
-from abejacli.config import RESERVED_ENV_VAR
+from abejacli.config import RESERVED_ENV_VAR, RUN_LOCAL_COMMAND_V1
 from abejacli.docker.utils import get_home_path
 
 # ==========================

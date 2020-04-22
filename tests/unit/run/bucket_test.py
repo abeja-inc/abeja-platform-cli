@@ -2,15 +2,16 @@ import json
 import os.path
 from unittest import TestCase
 
-from abejacli.config import (INVALID_PARAMETER_EXITCODE,
-                             SUCCESS_EXITCODE)
-from abejacli.config import ORGANIZATION_ENDPOINT
-from abejacli.run import bucket
-from click.testing import CliRunner
-
 import requests_mock
+from click.testing import CliRunner
 from pyfakefs import fake_filesystem_unittest
 
+from abejacli.config import (
+    INVALID_PARAMETER_EXITCODE,
+    ORGANIZATION_ENDPOINT,
+    SUCCESS_EXITCODE
+)
+from abejacli.run import bucket
 from tests.unit import ConfigPatcher
 
 

@@ -1,17 +1,17 @@
 import json
 import os
-from pathlib import Path
 import sys
 import tarfile
 import tempfile
-from typing import Optional
 import zipfile
+from pathlib import Path
+from typing import Optional
 
 import click
+import requests
 from click.exceptions import MissingParameter
 from pygments import formatters, highlight, lexers
 from pygments.styles import get_style_by_name
-import requests
 
 from abejacli.config import ORGANIZATION_ENDPOINT
 from abejacli.session import api_get

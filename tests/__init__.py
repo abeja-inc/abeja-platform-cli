@@ -1,10 +1,16 @@
+import os
+import uuid
+from unittest.mock import patch
+
 import requests
-from abejacli.config import ABEJA_PLATFORM_USER_ID, ABEJA_PLATFORM_TOKEN, PLATFORM_AUTH_TOKEN
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
-import uuid
-import os
-from unittest.mock import patch
+
+from abejacli.config import (
+    ABEJA_PLATFORM_TOKEN,
+    ABEJA_PLATFORM_USER_ID,
+    PLATFORM_AUTH_TOKEN
+)
 
 
 def _test_generate_retry_session():

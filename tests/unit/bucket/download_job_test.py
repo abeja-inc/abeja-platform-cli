@@ -1,13 +1,20 @@
 import os
 
 import requests_mock
-from abejacli.config import ORGANIZATION_ENDPOINT
-from abejacli.bucket.download_job import (_get_default_file_path,
-                                          download_job, DOWNLOAD_RETRY_ATTEMPT_NUMBER)
-from abejacli.bucket.process_file_job import (FINISH_REPORT,
-                                              INITIALIZE_REPORT,
-                                              PROGRESS_REPORT, RAISE_ERROR)
 from pyfakefs.fake_filesystem_unittest import TestCase
+
+from abejacli.bucket.download_job import (
+    DOWNLOAD_RETRY_ATTEMPT_NUMBER,
+    _get_default_file_path,
+    download_job
+)
+from abejacli.bucket.process_file_job import (
+    FINISH_REPORT,
+    INITIALIZE_REPORT,
+    PROGRESS_REPORT,
+    RAISE_ERROR
+)
+from abejacli.config import ORGANIZATION_ENDPOINT
 
 try:
     from unittest.mock import MagicMock, ANY
