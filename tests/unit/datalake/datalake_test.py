@@ -2,6 +2,7 @@ from unittest import TestCase
 
 import requests
 import requests_mock
+
 from abejacli.config import ABEJA_API_URL, DATALAKE_ITEMS_PER_PAGE
 from abejacli.datalake import (generate_channel_file_iter_by_id,
                                generate_channel_file_iter_by_period)

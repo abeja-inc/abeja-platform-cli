@@ -1,11 +1,10 @@
 from unittest import TestCase
 
 from abejacli.config import RESERVED_ENV_VAR
-from abejacli.docker.commands.run import ModelRunCommand
-from abejacli.docker.commands.run import TrainRunCommand
-from abejacli.docker.commands.run import build_volumes
-from abejacli.docker.commands.run import ABEJA_PLATFORM_USER_ID
-from abejacli.docker.commands.run import ABEJA_PLATFORM_PERSONAL_ACCESS_TOKEN
+from abejacli.docker.commands.run import (ABEJA_PLATFORM_PERSONAL_ACCESS_TOKEN,
+                                          ABEJA_PLATFORM_USER_ID,
+                                          ModelRunCommand, TrainRunCommand,
+                                          build_volumes)
 
 
 def convert_to_dict(env_vars):

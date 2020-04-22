@@ -1,12 +1,11 @@
 import requests_mock
-from abejacli.config import ORGANIZATION_ENDPOINT
-from abejacli.bucket.process_file_job import (FINISH_REPORT,
-                                              INITIALIZE_REPORT,
-                                              PROGRESS_REPORT,
-                                              RAISE_ERROR)
-from abejacli.bucket.upload_job import upload_job
-from abejacli.fs_utils import UploadBucketFile
 from pyfakefs.fake_filesystem_unittest import TestCase
+
+from abejacli.bucket.process_file_job import (FINISH_REPORT, INITIALIZE_REPORT,
+                                              PROGRESS_REPORT, RAISE_ERROR)
+from abejacli.bucket.upload_job import upload_job
+from abejacli.config import ORGANIZATION_ENDPOINT
+from abejacli.fs_utils import UploadBucketFile
 
 try:
     from unittest.mock import MagicMock, ANY

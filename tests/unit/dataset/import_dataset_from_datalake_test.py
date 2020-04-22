@@ -3,14 +3,14 @@ import math
 import random
 from unittest import TestCase
 
-from abejacli.config import ABEJA_API_URL, DATASET_CHUNK_SIZE
-from abejacli.config import ORGANIZATION_ENDPOINT
+import requests_mock
+from click.testing import CliRunner
+
+from abejacli.config import (ABEJA_API_URL, DATASET_CHUNK_SIZE,
+                             ORGANIZATION_ENDPOINT)
 from abejacli.dataset import (create_request_element, filter_items_by_max_size,
                               import_dataset_from_datalake,
                               register_dataset_items)
-from click.testing import CliRunner
-
-import requests_mock
 
 DATASET_ID = 1
 CHANNEL_ID = '1111111111111'

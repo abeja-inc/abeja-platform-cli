@@ -1,30 +1,27 @@
 import json
+import re
 from unittest.mock import MagicMock, patch
 from urllib.parse import urlparse
-from click.testing import CliRunner
+
 import pytest
-import re
 import requests_mock
+from click.testing import CliRunner
 from ruamel.yaml import YAML
 
+import abejacli.training
 from abejacli.config import ORGANIZATION_ENDPOINT
 from abejacli.exceptions import ResourceNotFound
-import abejacli.training
-from abejacli.training.commands import debug_local, train_local
-from abejacli.training.commands import create_notebook
-from abejacli.training.commands import start_notebook
-from abejacli.training.commands import create_training_version
-from abejacli.training.commands import create_training_version_from_git
-from abejacli.training.commands import create_training_job
-from abejacli.training.commands import stop_training_job
-from abejacli.training.commands import update_training_version
-from abejacli.training.commands import _get_latest_training_version
-from abejacli.training.commands import describe_job_definitions
-from abejacli.training.commands import describe_training_versions
-from abejacli.training.commands import describe_jobs
-from abejacli.training.commands import describe_training_models
+from abejacli.training.commands import (_get_latest_training_version,
+                                        create_notebook, create_training_job,
+                                        create_training_version,
+                                        create_training_version_from_git,
+                                        debug_local, describe_job_definitions,
+                                        describe_jobs,
+                                        describe_training_models,
+                                        describe_training_versions,
+                                        start_notebook, stop_training_job,
+                                        train_local, update_training_version)
 from tests import get_tmp_training_file_name
-
 
 TEST_CONFIG_USER_ID = '12345'
 TEST_CONFIG_TOKEN = 'ntoken12345'

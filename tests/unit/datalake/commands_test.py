@@ -1,11 +1,14 @@
 
-from click.testing import CliRunner
+import re
+from urllib.parse import urlparse
+
 import pytest
 import requests_mock
-from urllib.parse import urlparse
+from click.testing import CliRunner
+
 from abejacli.config import ORGANIZATION_ENDPOINT
 from abejacli.run import describe_datalake_channels
-import re
+
 TEST_CONFIG_USER_ID = '12345'
 TEST_CONFIG_TOKEN = 'ntoken12345'
 TEST_CONFIG_ORG_NAME = 'test-inc'

@@ -1,8 +1,9 @@
 import json
-
-import pytest
 import os
 from unittest import mock
+
+import pytest
+
 from abejacli.configuration.config import Config
 from abejacli.configuration.formatter import ConfigFormatter
 

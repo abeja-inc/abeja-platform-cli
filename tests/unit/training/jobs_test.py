@@ -1,15 +1,16 @@
 import os
 import time
-import pytest
-from mock import MagicMock, patch
 from tempfile import TemporaryDirectory
-from docker.models.images import Image
 
-from abejacli.config import TRAIN_LOCAL_COMMAND_V1, TRAIN_LOCAL_COMMAND_V2, TRAIN_DEBUG_COMMAND_V1, \
-    TRAIN_DEBUG_COMMAND_V2
-from abejacli.training.jobs import TrainingJobLocalContainerRun
-from abejacli.training.jobs import TrainingJobDebugRun
-from abejacli.training.jobs import truncate_log_line
+import pytest
+from docker.models.images import Image
+from mock import MagicMock, patch
+
+from abejacli.config import (TRAIN_DEBUG_COMMAND_V1, TRAIN_DEBUG_COMMAND_V2,
+                             TRAIN_LOCAL_COMMAND_V1, TRAIN_LOCAL_COMMAND_V2)
+from abejacli.training.jobs import (TrainingJobDebugRun,
+                                    TrainingJobLocalContainerRun,
+                                    truncate_log_line)
 
 TEST_CONFIG_USER_ID = '12345'
 TEST_CONFIG_TOKEN = 'ntoken12345'

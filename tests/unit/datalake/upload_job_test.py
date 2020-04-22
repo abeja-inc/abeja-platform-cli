@@ -1,13 +1,14 @@
 import os.path
 
 import requests_mock
+from pyfakefs.fake_filesystem_unittest import TestCase
+
 from abejacli.config import ABEJA_API_URL, FILE_READ_CHUNK_SIZE
 from abejacli.datalake.process_file_job import (FINISH_REPORT,
                                                 INITIALIZE_REPORT,
                                                 PROGRESS_REPORT, RAISE_ERROR)
 from abejacli.datalake.upload_job import upload_job
 from abejacli.fs_utils import UploadFile
-from pyfakefs.fake_filesystem_unittest import TestCase
 
 try:
     from unittest.mock import MagicMock, ANY

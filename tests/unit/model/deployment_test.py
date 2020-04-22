@@ -2,9 +2,10 @@
 from unittest import TestCase
 
 import requests_mock
+from click.testing import CliRunner
+
 from abejacli.config import ORGANIZATION_ENDPOINT
 from abejacli.run import create_deployment
-from click.testing import CliRunner
 
 
 class ModelDeploymentTest(TestCase):
