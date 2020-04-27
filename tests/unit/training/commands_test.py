@@ -98,51 +98,100 @@ def test_update_training_version(req_mock, runner):
     'cmd,additional_config,expected_payload',
     [
         ([],
-         {},
          {
-             'notebook_type': 'notebook'
+             'image': 'abeja-inc/all-gpu:19.10'
+        },
+            {
+             'notebook_type': 'notebook',
+             'image': 'abeja-inc/all-gpu:19.10'
         }),
         (['-t', 'lab'],
-         {},
          {
-             'notebook_type': 'lab'
+             'image': 'abeja-inc/all-gpu:19.10'
+        },
+            {
+             'notebook_type': 'lab',
+             'image': 'abeja-inc/all-gpu:19.10'
         }),
         (['--instance-type', 'gpu-1'],
-         {},
          {
+             'image': 'abeja-inc/all-gpu:19.10'
+        },
+            {
              'notebook_type': 'notebook',
+             'image': 'abeja-inc/all-gpu:19.10',
              'instance_type': 'gpu-1'
         }),
         (['--image', 'abeja-inc/all-gpu:19.10'],
          {},
          {
+             'notebook_type': 'notebook',
              'image': 'abeja-inc/all-gpu:19.10'
         }),
         (['--datalake', '1234567890123'],
-         {},
          {
+             'image': 'abeja-inc/all-gpu:19.10'
+        },
+            {
              'notebook_type': 'notebook',
+             'image': 'abeja-inc/all-gpu:19.10',
              'datalakes': ['1234567890123']
         }),
         (['--bucket', '1234567890123'],
-         {},
          {
+             'image': 'abeja-inc/all-gpu:19.10'
+        },
+            {
              'notebook_type': 'notebook',
+             'image': 'abeja-inc/all-gpu:19.10',
              'buckets': ['1234567890123']
         }),
         (['--datalake', '1234567890123', '--bucket', '1234567890123'],
-         {},
          {
+             'image': 'abeja-inc/all-gpu:19.10'
+        },
+            {
              'notebook_type': 'notebook',
+             'image': 'abeja-inc/all-gpu:19.10',
              'datalakes': ['1234567890123'],
              'buckets': ['1234567890123']
         }),
         (['--dataset', 'train:1600000000000'],
-         {},
          {
+             'image': 'abeja-inc/all-gpu:19.10'
+        },
+            {
              'notebook_type': 'notebook',
+             'image': 'abeja-inc/all-gpu:19.10',
              'datasets': {'train': '1600000000000'}
-        })
+        }),
+        (['--image', 'abeja-inc/all-gpu:18.10'],
+         {
+             'image': 'abeja-inc/all-gpu:19.10'
+        },
+            {
+             'notebook_type': 'notebook',
+             'image': 'abeja-inc/all-gpu:18.10'
+        }),
+        ([],
+         {
+             'image': 'abeja-inc/all-gpu:19.10',
+             'instance_type': 'gpu-1'
+        },
+            {
+             'notebook_type': 'notebook',
+             'image': 'abeja-inc/all-gpu:19.10',
+             'instance_type': 'gpu-1'
+        }),
+        ([],
+         {
+             'image': 'abeja-inc/all-gpu:19.10',
+             'dummy': 'dummy'
+        },
+            {
+             'notebook_type': 'notebook',
+             'image': 'abeja-inc/all-gpu:19.10'
+        }),
     ]
 )
 @patch('abejacli.training.commands.CONFIG', TEST_CONFIG)
@@ -150,8 +199,7 @@ def test_update_training_version(req_mock, runner):
 def test_create_notebook(
         req_mock, runner, cmd, additional_config, expected_payload):
     config_data = {
-        'name': 'training-1',
-        'image': 'abeja-inc/all-cpu:18.10'
+        'name': 'training-1'
     }
     config_data = {**config_data, **additional_config}
     with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
@@ -174,51 +222,38 @@ def test_create_notebook(
     [
         (['-n', '9876543210987'],
          {},
-         {
-            'image': 'abeja-inc/all-cpu:18.10'
-        }),
-        (['-n', '9876543210987', '--instance-type', 'gpu-1'],
-         {},
-         {
-            'image': 'abeja-inc/all-cpu:18.10',
-            'instance_type': 'gpu-1'
-        }),
-        (['-n', '9876543210987', '--image', 'abeja-inc/all-gpu:19.10'],
-         {},
-         {
-            'image': 'abeja-inc/all-gpu:19.10'
-        }),
+         {}),
         (['-n', '9876543210987', '-t', 'lab'],
          {},
          {
-            'image': 'abeja-inc/all-cpu:18.10',
             'notebook_type': 'lab'
         }),
         (['-n', '9876543210987', '--datalake', '1234567890123'],
          {},
          {
-            'image': 'abeja-inc/all-cpu:18.10',
             'datalakes': ['1234567890123']
         }),
         (['-n', '9876543210987', '--bucket', '1234567890123'],
          {},
          {
-            'image': 'abeja-inc/all-cpu:18.10',
             'buckets': ['1234567890123']
         }),
         (['-n', '9876543210987', '--datalake', '1234567890123', '--bucket', '1234567890123'],
          {},
          {
-            'image': 'abeja-inc/all-cpu:18.10',
             'datalakes': ['1234567890123'],
             'buckets': ['1234567890123']
         }),
         (['-n', '9876543210987', '--dataset', 'train:1600000000000'],
          {},
          {
-            'image': 'abeja-inc/all-cpu:18.10',
             'datasets': {'train': '1600000000000'}
-        })
+        }),
+        (['-n', '9876543210987'],
+         {
+             'dummy': 'dummy'
+        },
+            {}),
     ]
 )
 @patch('abejacli.training.commands.CONFIG', TEST_CONFIG)
@@ -227,8 +262,7 @@ def test_start_notebook(
         req_mock, runner, cmd, additional_config, expected_payload):
     notebook_id = '9876543210987'
     config_data = {
-        'name': 'training-1',
-        'image': 'abeja-inc/all-cpu:18.10'
+        'name': 'training-1'
     }
     config_data = {**config_data, **additional_config}
     with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
@@ -635,16 +669,28 @@ def test_create_training_version_from_git(
              'description': 'dummy description',
              'datalakes': ['1234567890123'],
              'buckets': ['2345678901234']
-        })
+        }),
+        (['--version', '1'],
+         {
+             'instance_type': 'gpu-1'
+        },
+            {
+             'instance_type': 'gpu-1'
+        }),
+        (['--version', '1', '--instance-type', 'cpu-4'],
+         {
+             'instance_type': 'gpu-1'
+        },
+            {
+             'instance_type': 'cpu-4'
+        }),
     ]
 )
 @patch('abejacli.training.commands.CONFIG', TEST_CONFIG)
 @patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
 def test_create_training_job(req_mock, runner, cmd, additional_config, expected_payload):
     config_data = {
-        'name': 'training-1',
-        'handler': 'train:handler',
-        'image': 'abeja-inc/all-cpu:18.10'
+        'name': 'training-1'
     }
     config_data = {**config_data, **additional_config}
     with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:

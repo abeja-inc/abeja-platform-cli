@@ -2,7 +2,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from abejacli.training import TrainingConfig, default_schema
+from abejacli.training import TrainingConfig, create_version_schema
 
 
 @pytest.fixture
@@ -32,7 +32,7 @@ class TestTrainingConfig:
         config = TrainingConfig()
         config._load_config = MagicMock(
             return_value=training_configuration)
-        res = config.read(default_schema)
+        res = config.read(create_version_schema)
         assert 'environment' in res
         for param in res['environment'].values():
             assert param is None or type(param) == str

@@ -22,25 +22,17 @@ name: training-1
 """
 
 default_schema = {
+    'name': {'type': 'string', 'required': True}
+}
+
+debug_schema = {
     'name': {'type': 'string', 'required': True},
-    'handler': {'type': 'string', 'required': False, 'regex': HANDLER_REGEX},
-    'image': {'type': 'string', 'required': False},
+    'handler': {'type': 'string', 'required': False, 'nullable': True, 'regex': HANDLER_REGEX},
+    'image': {'type': 'string', 'required': False, 'nullable': True},
     'datasets': {
         'type': 'dict',
         'keysrules': {'type': 'string'},
         'valuesrules': {'type': 'string', 'coerce': str},
-        'required': False,
-        'nullable': True,
-    },
-    # DEPRECATED: params will be replaced with environment
-    'params': {
-        'type': 'dict',
-        'keysrules': {'type': 'string'},
-        'valuesrules': {
-            'type': 'string',
-            'coerce': lambda v: v if v is None else str(v),
-            'nullable': True
-        },
         'required': False,
         'nullable': True,
     },
@@ -54,16 +46,31 @@ default_schema = {
         },
         'required': False,
         'nullable': True,
-    },
-    'ignores': {
-        'type': 'list',
-        'required': False,
-        'nullable': True,
-        'schema': {
-            'type': 'string'
-        }
     }
 }
+
+local_schema = {
+    'name': {'type': 'string', 'required': True},
+    'datasets': {
+        'type': 'dict',
+        'keysrules': {'type': 'string'},
+        'valuesrules': {'type': 'string', 'coerce': str},
+        'required': False,
+        'nullable': True,
+    },
+    'environment': {
+        'type': 'dict',
+        'keysrules': {'type': 'string'},
+        'valuesrules': {
+            'type': 'string',
+            'coerce': lambda v: v if v is None else str(v),
+            'nullable': True
+        },
+        'required': False,
+        'nullable': True,
+    }
+}
+
 create_version_schema = {
     'name': {'type': 'string', 'required': True},
     'handler': {'type': 'string', 'required': True, 'regex': HANDLER_REGEX},
@@ -107,9 +114,54 @@ create_version_schema = {
         }
     }
 }
+
+create_job_schema = {
+    'name': {'type': 'string', 'required': True},
+    'instance_type': {'type': 'string', 'required': False, 'nullable': True},
+    'datasets': {
+        'type': 'dict',
+        'keysrules': {'type': 'string'},
+        'valuesrules': {'type': 'string', 'coerce': str},
+        'required': False,
+        'nullable': True,
+    },
+    # DEPRECATED: params will be replaced with environment
+    'params': {
+        'type': 'dict',
+        'keysrules': {'type': 'string'},
+        'valuesrules': {
+            'type': 'string',
+            'coerce': lambda v: v if v is None else str(v),
+            'nullable': True
+        },
+        'required': False,
+        'nullable': True,
+    },
+    'environment': {
+        'type': 'dict',
+        'keysrules': {'type': 'string'},
+        'valuesrules': {
+            'type': 'string',
+            'coerce': lambda v: v if v is None else str(v),
+            'nullable': True
+        },
+        'required': False,
+        'nullable': True,
+    },
+    'ignores': {
+        'type': 'list',
+        'required': False,
+        'nullable': True,
+        'schema': {
+            'type': 'string'
+        }
+    }
+}
+
 create_notebook_schema = {
     'name': {'type': 'string', 'required': True},
-    'image': {'type': 'string', 'required': True}
+    'image': {'type': 'string', 'required': False, 'nullable': True},
+    'instance_type': {'type': 'string', 'required': False, 'nullable': True}
 }
 
 
@@ -117,7 +169,10 @@ class TrainingConfig:
     def __init__(self):
         self.config_file = training_default_configuration
         self.default_schema = default_schema
+        self.debug_schema = debug_schema
+        self.local_schema = local_schema
         self.create_version_schema = create_version_schema
+        self.create_job_schema = create_job_schema
         self.create_notebook_schema = create_notebook_schema
 
     def write(self, name):
@@ -142,7 +197,7 @@ class TrainingConfig:
             return yaml.load(configfile.read())
 
     def _validate_and_normalize(self, config_data, schema):
-        v = Validator(schema)
+        v = Validator(schema=schema, allow_unknown=True)
         if v.validate(config_data):
             return v.document
         else:
