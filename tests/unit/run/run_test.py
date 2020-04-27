@@ -25,7 +25,7 @@ from abejacli.run import (
     describe_datalake_channels,
     initialize_configuragtion,
     list_configurations,
-    model,
+    deployment,
     show_configuration,
     switch_configuration
 )
@@ -437,7 +437,7 @@ class RunTest(TestCase):
             '--environment={}'.format(environment)
         ]
 
-        result = self.runner.invoke(model, options)
+        result = self.runner.invoke(deployment, options)
         assert not result.exception
         call_args, call_kwargs = mock_api_post.call_args
         self.assertEqual(call_args[0], url)
@@ -476,7 +476,7 @@ class RunTest(TestCase):
             '--environment={}'.format(environment)
         ]
 
-        result = self.runner.invoke(model, options)
+        result = self.runner.invoke(deployment, options)
         assert not result.exception
         mock_api_post.assert_called_once_with(url, json.dumps(data))
 
@@ -500,7 +500,7 @@ class RunTest(TestCase):
             '--environment={}'.format(environment)
         ]
 
-        result = self.runner.invoke(model, options)
+        result = self.runner.invoke(deployment, options)
         assert result.exception
 
     @patch('abejacli.run.ORGANIZATION_ENDPOINT', TEST_ORGANIZATION_DOMAIN)
@@ -543,7 +543,7 @@ class RunTest(TestCase):
             '--environment={}'.format(environment)
         ]
 
-        result = self.runner.invoke(model, options)
+        result = self.runner.invoke(deployment, options)
         assert not result.exception
         call_args, call_kwargs = mock_api_post.call_args
         self.assertEqual(call_args[0], url)
@@ -579,7 +579,7 @@ class RunTest(TestCase):
             '--environment={}'.format(environment)
         ]
 
-        result = self.runner.invoke(model, options)
+        result = self.runner.invoke(deployment, options)
         assert not result.exception
         mock_api_post.assert_called_once_with(url, json.dumps(data))
 
@@ -601,7 +601,7 @@ class RunTest(TestCase):
             '--environment={}'.format(environment)
         ]
 
-        result = self.runner.invoke(model, options)
+        result = self.runner.invoke(deployment, options)
         assert result.exception
 
     @requests_mock.Mocker()

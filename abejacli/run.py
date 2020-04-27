@@ -116,9 +116,9 @@ def main(ctx):
     pass
 
 
-@main.group(help='Model operation commands')
+@main.group(help='Deployment operation commands')
 @click.pass_context
-def model(ctx):
+def deployment(ctx):
     __ensure_configuration_exists(ctx)
 
 
@@ -298,7 +298,7 @@ def initialize_configuragtion(ctx, name: str, assume_yes: bool):
 # ---------------------------------------------------
 # deployments
 # ---------------------------------------------------
-@model.command(name='create-deployment', help='Deploy a specific model')
+@deployment.command(name='create-deployment', help='Deploy a specific deployment')
 @click.option('-n', '--name', 'name', type=str, help='Deployment name', required=True)
 @click.option('-e', '--environment', type=ENVIRONMENT_STR, help='Default environment variable', default=None,
               required=False, multiple=True)
@@ -326,7 +326,7 @@ def _create_deployment(name, environment=None, description=None):
     return r
 
 
-@model.command(name='describe-deployments', help='Get to deployment or deployment list')
+@deployment.command(name='describe-deployments', help='Get to deployment or deployment list')
 @click.option('-d', '--deployment_id', '--deployment-id', 'deployment_id', type=str, help='Deployment identifier',
               default='all', required=False)
 def describe_deployments(deployment_id):
@@ -347,7 +347,7 @@ def _describe_deployments(deployment_id):
     return r
 
 
-@model.command(name='delete-deployment', help='Delete deployment')
+@deployment.command(name='delete-deployment', help='Delete deployment')
 @click.option('-d', '--deployment_id', '--deployment-id', 'deployment_id', type=str, help='Deployment identifier',
               required=True)
 def delete_deployment(deployment_id):
@@ -369,7 +369,7 @@ def _delete_deployment(deployment_id):
 # ---------------------------------------------------
 # deployment code versions
 # ---------------------------------------------------
-@model.command(name='create-deployment-version', help='Create version & upload application')
+@deployment.command(name='create-deployment-version', help='Create version')
 @click.pass_context
 @click.option('-d', '--deployment_id', '--deployment-id', 'deployment_id', type=str, help='Deployment identifier',
               required=True)
@@ -433,7 +433,7 @@ def _version_upload(upload_url, tar_name):
     return result
 
 
-@model.command(name='create-deployment-version-from-git', help='Create version & upload application')
+@deployment.command(name='create-deployment-version-from-git', help='Create version from GitHub')
 @click.pass_context
 @click.option('-d', '--deployment_id', '--deployment-id', 'deployment_id', type=str, help='Deployment identifier',
               required=True)
@@ -482,7 +482,7 @@ def _create_deployment_version_from_git(
     return result
 
 
-@model.command(name='describe-deployment-versions', help='Get to version or version list')
+@deployment.command(name='describe-deployment-versions', help='Get to version or version list')
 @click.option('-d', '--deployment_id', '--deployment-id', 'deployment_id', type=str, help='Deployment identifier',
               required=True)
 @click.option('-v', '--version_id', '--version-id', 'version_id', type=str, help='Version identifier', default='all',
@@ -506,7 +506,7 @@ def _describe_deployment_versions(deployment_id, version_id):
     return r
 
 
-@model.command(name='download-deployment-version', help='Download version')
+@deployment.command(name='download-deployment-version', help='Download version')
 @click.option('-d', '--deployment_id', '--deployment-id', 'deployment_id', type=str, help='Deployment identifier',
               required=True)
 @click.option('-v', '--version-id', '--version_id', 'version_id', type=str, help='Version identifier', required=True)
@@ -538,7 +538,7 @@ def _download_deployment_version(deployment_id, version_id):
     return target_file_name
 
 
-@model.command(name='delete-deployment-version', help='Delete version')
+@deployment.command(name='delete-deployment-version', help='Delete version')
 @click.option('-d', '--deployment_id', '--deployment-id', 'deployment_id', type=str, help='Deployment identifier',
               required=True)
 @click.option('-v', '--version_id', '--version-id', 'version_id', type=str, help='Version identifier', required=True)
@@ -562,7 +562,7 @@ def _delete_deployment_version(deployment_id, version_id):
 # ---------------------------------------------------
 # service
 # ---------------------------------------------------
-@model.command(name='create-service', help='Create http service')
+@deployment.command(name='create-service', help='Create http service')
 @click.option('-d', '--deployment_id', '--deployment-id', 'deployment_id', type=str, help='Deployment identifier',
               required=True)
 @click.option('-v', '--version_id', '--version-id', 'version_id', type=str, help='Version identifier', required=True)
@@ -635,7 +635,7 @@ def _create_service(deployment_id, version_id, environment=None, instance_type=N
     return r
 
 
-@model.command(name='describe-services', help='Get to service or service list')
+@deployment.command(name='describe-services', help='Get to service or service list')
 @click.option('-d', '--deployment_id', '--deployment-id', 'deployment_id', type=str, help='Deployment identifier',
               required=True)
 @click.option('-s', '--service_id', '--service-id', 'service_id', type=str, help='Service identifier', default='all',
@@ -659,7 +659,7 @@ def _describe_services(deployment_id, service_id):
     return r
 
 
-@model.command(name='delete-service', help='Delete service')
+@deployment.command(name='delete-service', help='Delete service')
 @click.option('-d', '--deployment_id', '--deployment-id', 'deployment_id', type=str, help='Deployment identifier',
               required=True)
 @click.option('-s', '--service_id', '--service-id', 'service_id', type=str, help='Service identifier', required=True)
@@ -680,7 +680,7 @@ def _delete_service(deployment_id, service_id):
     return r
 
 
-@model.command(name='stop-service', help='Stop service')
+@deployment.command(name='stop-service', help='Stop service')
 @click.option('-d', '--deployment_id', '--deployment-id', 'deployment_id', type=str, help='Deployment identifier',
               required=True)
 @click.option('-s', '--service_id', '--service-id', 'service_id', type=str, help='Service identifier', required=True)
@@ -698,7 +698,7 @@ def _stop_service(deployment_id, service_id):
     return api_post(url)
 
 
-@model.command(name='start-service', help='Start stopped service')
+@deployment.command(name='start-service', help='Start stopped service')
 @click.option('-d', '--deployment_id', '--deployment-id', 'deployment_id', type=str, help='Deployment identifier',
               required=True)
 @click.option('-s', '--service_id', '--service-id', 'service_id', type=str, help='Service identifier', required=True)
@@ -719,7 +719,7 @@ def _start_service(deployment_id, service_id):
 # ---------------------------------------------------
 # endpoint
 # ---------------------------------------------------
-@model.command(name='create-endpoint', help='Create endpoint')
+@deployment.command(name='create-endpoint', help='Create endpoint')
 @click.option('-d', '--deployment_id', '--deployment-id', 'deployment_id', type=str, help='Deployment identifier',
               required=True)
 @click.option('-s', '--service_id', '--service-id', 'service_id', type=str, help='Service identifier', required=True)
@@ -748,7 +748,7 @@ def _create_endpoint(deployment_id, service_id, custom_alias):
     return r
 
 
-@model.command(name='describe-endpoints', help='Get to endpoint or endpoint list')
+@deployment.command(name='describe-endpoints', help='Get to endpoint or endpoint list')
 @click.option('-d', '--deployment_id', '--deployment-id', 'deployment_id', type=str, help='Deployment identifier',
               required=True)
 @click.option('-e', '--endpoint_id', '--endpoint-id', 'endpoint_id', type=str, help='Endpoint identifier',
@@ -772,7 +772,7 @@ def _describe_endpoints(deployment_id, endpoint_id):
     return r
 
 
-@model.command(name='delete-endpoint', help='Delete endpoint')
+@deployment.command(name='delete-endpoint', help='Delete endpoint')
 @click.option('-d', '--deployment_id', '--deployment-id', 'deployment_id', type=str, help='Deployment identifier',
               required=True)
 @click.option('-e', '--endpoint_id', '--endpoint-id', 'endpoint_id', type=str, help='Endpoint identifier',
@@ -794,7 +794,7 @@ def _delete_endpoint(deployment_id, endpoint_id):
     return r
 
 
-@model.command(name='update-endpoint', help='Update endpoint')
+@deployment.command(name='update-endpoint', help='Update endpoint')
 @click.option('-d', '--deployment_id', '--deployment-id', 'deployment_id', type=str, help='Deployment identifier',
               required=True)
 @click.option('-s', '--service_id', '--service-id', 'service_id', type=str, help='Service identifier', required=True)
@@ -822,7 +822,7 @@ def _update_endpoint(deployment_id, service_id, endpoint_id):
     return r
 
 
-@model.command(name='check-endpoint-json', help='Check endpoint json')
+@deployment.command(name='check-endpoint-json', help='Check endpoint json')
 @click.option('-d', '--deployment_id', '--deployment-id', 'deployment_id', type=str, help='Deployment identifier',
               required=True)
 @click.option('-s', '--service_id', '--service-id', 'service_id', type=str, help='Service identifier', required=False)
@@ -852,7 +852,7 @@ def _check_endpoint_json(deployment_id, service_id, key, value):
     return r
 
 
-@model.command(name='check-endpoint-image', help='Check endpoint image')
+@deployment.command(name='check-endpoint-image', help='Check endpoint image')
 @click.option('-d', '--deployment_id', '--deployment-id', 'deployment_id', type=str, help='Deployment identifier',
               required=True)
 @click.option('-s', '--service_id', '--service-id', 'service_id', type=str, help='Service identifier', required=False)
@@ -892,7 +892,7 @@ def _check_endpoint_image(deployment_id, service_id, type, image_path):
 # ---------------------------------------------------
 # submit-run
 # ---------------------------------------------------
-@model.command(name='submit-run', help='Submit run')
+@deployment.command(name='submit-run', help='Submit run')
 @click.option('-d', '--deployment_id', '--deployment-id', 'deployment_id', type=str, help='Deployment identifier',
               required=True)
 @click.option('-v', '--version_id', '--version-id', 'version_id', type=str, help='Version identifier', required=True)
@@ -949,7 +949,7 @@ def _submit_run(deployment_id, version_id, input_operator, input_target,
     return r
 
 
-@model.command(name='describe-runs', help='Get to run or run list')
+@deployment.command(name='describe-runs', help='Get to run or run list')
 @click.option('-d', '--deployment_id', '--deployment-id', 'deployment_id', type=str, help='Deployment identifier',
               required=True)
 @click.option('-r', '--run_id', '--run-id', 'run_id', type=str, help='Run identifier', default='all', required=False)
@@ -974,7 +974,7 @@ def _describe_runs(deployment_id, run_id):
 # ---------------------------------------------------
 # trigger
 # ---------------------------------------------------
-@model.command(name='create-trigger', help='Create trigger')
+@deployment.command(name='create-trigger', help='Create trigger')
 @click.option('-d', '--deployment_id', '--deployment-id', 'deployment_id', type=str, help='Deployment identifier',
               required=True)
 @click.option('-v', '--version_id', '--version-id', 'version_id', type=str, help='Version identifier', required=True)
@@ -1039,7 +1039,7 @@ def _create_trigger(deployment_id, version_id, input_service_name, input_service
     return r
 
 
-@model.command(name='describe-triggers', help='Get to trigger or trigger list')
+@deployment.command(name='describe-triggers', help='Get to trigger or trigger list')
 @click.option('-d', '--deployment_id', '--deployment-id', 'deployment_id', type=str, help='Deployment identifier',
               required=True)
 @click.option('-t', '--trigger_id', '--trigger-id', 'trigger_id', type=str, help='Trigger identifier', default='all',
@@ -1063,7 +1063,7 @@ def _describe_triggers(deployment_id, trigger_id):
     return r
 
 
-@model.command(name='delete-trigger', help='Delete trigger')
+@deployment.command(name='delete-trigger', help='Delete trigger')
 @click.option('-d', '--deployment_id', '--deployment-id', 'deployment_id', type=str, help='Deployment identifier',
               required=True)
 @click.option('-t', '--trigger_id', '--trigger-id', 'trigger_id', type=str, help='Trigger identifier', required=True)
@@ -1087,7 +1087,7 @@ def _delete_trigger(deployment_id, trigger_id):
 # ---------------------------------------------------
 # log
 # ---------------------------------------------------
-@model.command(name='describe-service-logs', help='Get service log')
+@deployment.command(name='describe-service-logs', help='Get service log')
 @click.option('-d', '--deployment_id', '--deployment-id', 'deployment_id', type=str, help='Deployment identifier',
               required=True)
 @click.option('-s', '--service_id', '--service-id', 'service_id', type=str, help='Service identifier', required=True)
@@ -1112,7 +1112,7 @@ def describe_service_logs(deployment_id, service_id, start_time, end_time, next_
     return click.echo(json_output_formatter(r))
 
 
-@model.command(name='describe-run-logs', help='Get run log')
+@deployment.command(name='describe-run-logs', help='Get run log')
 @click.option('-d', '--deployment_id', '--deployment-id', 'deployment_id', type=str, help='Deployment identifier',
               required=True)
 @click.option('-r', '--run_id', '--run-id', 'run_id', type=str, help='Run identifier', required=True)
@@ -1135,7 +1135,7 @@ def describe_run_logs(deployment_id, run_id, start_time, end_time, next_token):
     return click.echo(json_output_formatter(r))
 
 
-@model.command(name='run-local', help='Local run commands')
+@deployment.command(name='run-local', help='Local run commands')
 @click.option('-h', '--handler', 'handler', type=str, help='Model hanlder', required=True)
 @click.option('-i', '--image', 'image', type=str, help='Base-image name. ex) abeja-inc/all-cpu:19.10', required=True,
               callback=convert_to_local_image_callback)
@@ -1276,7 +1276,7 @@ def _get_headers_and_data(input):
     return headers, data
 
 
-@model.command(name='run-local-server', help='Local run commands')
+@deployment.command(name='run-local-server', help='Local run commands')
 @click.option('-h', '--handler', 'handler', type=str, help='Model hanlder', required=True)
 @click.option('-i', '--image', 'image', type=str, help='Base-image name. ex) abeja-inc/all-cpu:19.10', required=True,
               callback=convert_to_local_image_callback)
