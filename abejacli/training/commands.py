@@ -1050,8 +1050,7 @@ def debug_local(
                    'this value is set as an environment variable named `ABEJA_ORGANIZATION_ID`.',
               callback=__try_get_organization_id)
 @click.option('--name', 'name', type=str, help='Training Job Definition Name', required=True)
-@click.option('--version', 'version', type=str, required=False,
-              help='Job definition version. By default, latest version is used')
+@click.option('--version', 'version', type=str, help='Training Job Definition Version', required=True)
 @click.option('--description', 'description', type=str, help='Training Job description', required=False)
 @click.option('-d', '--datasets', type=DATASET_PARAM_STR, help='Datasets name', default=None,
               required=False, multiple=True)
@@ -1072,14 +1071,6 @@ def debug_local(
 def train_local(organization_id, name, version, description, datasets, environment, volume, v1, runtime=None):
     try:
         config = training_config.read(training_config.local_schema)
-        if version is None:
-            try:
-                version = _get_latest_training_version(config['name'])
-            except ResourceNotFound:
-                logger.error('there is no available training versions.')
-                click.echo(
-                    'there is no available training versions. please create training version first.')
-                sys.exit(ERROR_EXITCODE)
 
         job_definition_version = _describe_training_version(name, version)
         version_datasets = job_definition_version.get('datasets')
