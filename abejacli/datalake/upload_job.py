@@ -4,10 +4,13 @@ import uuid
 from mimetypes import guess_type
 
 from abejacli.config import ABEJA_API_URL, FILE_READ_CHUNK_SIZE
-from abejacli.datalake.process_file_job import (FINISH_REPORT,
-                                                INITIALIZE_REPORT,
-                                                PROGRESS_REPORT, RAISE_ERROR,
-                                                SKIP_REPORT)
+from abejacli.datalake.process_file_job import (
+    FINISH_REPORT,
+    INITIALIZE_REPORT,
+    PROGRESS_REPORT,
+    RAISE_ERROR,
+    SKIP_REPORT
+)
 from abejacli.session import generate_user_session
 
 

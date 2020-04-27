@@ -1,29 +1,55 @@
 import json
-from io import StringIO
-from operator import itemgetter
 import os
 import sys
-from typing import Dict, Optional
 import urllib
+from io import StringIO
+from operator import itemgetter
+from typing import Dict, Optional
 
 import click
 import click_config_file
 
-from abejacli.click_custom import (DATASET_PARAM_STR, ENVIRONMENT_STR, USER_PARAM_STR, VOLUME_PARAM_STR)
-from abejacli.click_custom import convert_to_local_image_callback
-from abejacli.common import json_output_formatter, progress_status, version_archive, training_model_archive
-from abejacli.common import __try_get_organization_id
-from abejacli.config import (ABEJA_PLATFORM_TOKEN, ABEJA_PLATFORM_USER_ID,
-                             CONFIG, DEFAULT_EXCLUDE_FILES,
-                             ERROR_EXITCODE, ORGANIZATION_ENDPOINT,
-                             SUCCESS_EXITCODE)
-from abejacli.exceptions import ConfigFileNotFoundError, InvalidConfigException, ResourceNotFound
+from abejacli.click_custom import (
+    DATASET_PARAM_STR,
+    ENVIRONMENT_STR,
+    USER_PARAM_STR,
+    VOLUME_PARAM_STR,
+    convert_to_local_image_callback
+)
+from abejacli.common import (
+    __try_get_organization_id,
+    json_output_formatter,
+    progress_status,
+    training_model_archive,
+    version_archive
+)
+from abejacli.config import (
+    ABEJA_PLATFORM_TOKEN,
+    ABEJA_PLATFORM_USER_ID,
+    CONFIG,
+    DEFAULT_EXCLUDE_FILES,
+    ERROR_EXITCODE,
+    ORGANIZATION_ENDPOINT,
+    SUCCESS_EXITCODE
+)
 from abejacli.docker.commands.run import build_volumes
+from abejacli.exceptions import (
+    ConfigFileNotFoundError,
+    InvalidConfigException,
+    ResourceNotFound
+)
 from abejacli.logger import get_logger
-from abejacli.session import api_get, api_post, api_patch, api_get_data
-from abejacli.training import TrainingConfig, CONFIGFILE_NAME, read_training_config, is_valid_image_and_handler_pair
-from abejacli.training.jobs import TrainingJobDebugRun
-from abejacli.training.jobs import TrainingJobLocalContainerRun
+from abejacli.session import api_get, api_get_data, api_patch, api_post
+from abejacli.training import (
+    CONFIGFILE_NAME,
+    TrainingConfig,
+    is_valid_image_and_handler_pair,
+    read_training_config
+)
+from abejacli.training.jobs import (
+    TrainingJobDebugRun,
+    TrainingJobLocalContainerRun
+)
 
 logger = get_logger()
 
@@ -753,6 +779,30 @@ def unarchive_version(version_id):
     except Exception as e:
         logger.error('create training job aborted: {}'.format(e))
         click.echo('create training job aborted.')
+        sys.exit(ERROR_EXITCODE)
+    click.echo(json_output_formatter(r))
+
+
+@training.command(name='stop-job', help='Stop training job')
+@click.option('--job-id', '--job_id', type=str, required=True,
+              help='Training Job identifier')
+def stop_training_job(job_id):
+    try:
+        config_data = training_config.read(training_config.default_schema)
+        url = "{}/training/definitions/{}/jobs/{}/stop".format(
+            ORGANIZATION_ENDPOINT, config_data['name'], job_id)
+        r = api_post(url, json.dumps({}))
+    except ConfigFileNotFoundError:
+        logger.error('training configuration file does not exists.')
+        click.echo('training configuration file does not exists.')
+        sys.exit(ERROR_EXITCODE)
+    except InvalidConfigException as e:
+        logger.error('invalid training configuration file: {}'.format(e))
+        click.echo('invalid training configuration file.')
+        sys.exit(ERROR_EXITCODE)
+    except Exception as e:
+        logger.error('stop training job aborted: {}'.format(e))
+        click.echo('stop training job aborted.')
         sys.exit(ERROR_EXITCODE)
     click.echo(json_output_formatter(r))
 

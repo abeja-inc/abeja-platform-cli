@@ -2,9 +2,10 @@ import json
 from unittest import TestCase
 
 import requests_mock
-from abejacli.config import ORGANIZATION_ENDPOINT
-from abejacli.run import create_service, stop_service, start_service
 from click.testing import CliRunner
+
+from abejacli.config import ORGANIZATION_ENDPOINT
+from abejacli.run import create_service, start_service, stop_service
 
 
 class ModelServiceTest(TestCase):

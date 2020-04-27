@@ -1,7 +1,7 @@
-from mock import MagicMock
 import pytest
-from abejacli.task import Run
+from mock import MagicMock
 
+from abejacli.task import Run
 
 run = pytest.fixture(lambda: Run())
 

@@ -3,8 +3,7 @@
 import json
 from collections import defaultdict
 
-from abejacli.config import DATASET_CHUNK_SIZE
-from abejacli.config import ORGANIZATION_ENDPOINT
+from abejacli.config import DATASET_CHUNK_SIZE, ORGANIZATION_ENDPOINT
 from abejacli.datalake import generate_channel_file_iter_by_period
 from abejacli.logger import get_logger
 from abejacli.session import api_post

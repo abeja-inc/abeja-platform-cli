@@ -2,9 +2,12 @@ from unittest import TestCase
 
 import requests
 import requests_mock
-from abejacli.config import ORGANIZATION_ENDPOINT, DATALAKE_ITEMS_PER_PAGE
-from abejacli.bucket import (generate_bucket_file_iter_by_id,
-                             generate_bucket_file_iter)
+
+from abejacli.bucket import (
+    generate_bucket_file_iter,
+    generate_bucket_file_iter_by_id
+)
+from abejacli.config import DATALAKE_ITEMS_PER_PAGE, ORGANIZATION_ENDPOINT
 
 FILE = {
   "expires": "2017-11-21T02:18:16+00:00",

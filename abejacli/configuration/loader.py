@@ -5,7 +5,6 @@ from typing.io import BinaryIO
 # run_test.py will rewrite the variable `CONFIG_FILE_PATH` so we have to access
 # the variable through the module. Don't import variable directly.
 import abejacli.configuration
-
 from abejacli.configuration.config import Config, ConfigSet
 from abejacli.exceptions import InvalidConfigException
 
