@@ -1,3 +1,8 @@
+# 1.0.4
+- Convert to dict format (#17)
+- add stop training job command (#18)
+- configure pre-commit (#19)
+- introduce isort (#20)
 
 # 1.0.3
 - Deprecate `/models` endpoint (#9)
