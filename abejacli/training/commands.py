@@ -981,8 +981,8 @@ def _unarchive_training_model(job_definition_name, model_id):
 # ---------------------------------------------------
 @training.command(name='debug-local', help='Local train commands', context_settings=dict(
     ignore_unknown_options=True, allow_extra_args=True))
-@click.option('-h', '--handler', 'handler', type=str, help='Training handler', required=True)
-@click.option('-i', '--image', 'image', type=str, required=True,
+@click.option('-h', '--handler', 'handler', type=str, help='Training handler', required=False)
+@click.option('-i', '--image', 'image', type=str, required=False,
               callback=convert_to_local_image_callback,
               help='Specify base image name and tag in the "name:tag" format. ex) abeja-inc/all-gpu:19.10')
 @click.option('-o', '--organization_id', '--organization-id', 'organization_id', type=str, required=False,
