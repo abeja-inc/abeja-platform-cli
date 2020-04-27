@@ -100,24 +100,24 @@ def test_update_training_version(req_mock, runner):
         ([],
          {
              'image': 'abeja-inc/all-gpu:19.10'
-         },
-         {
+        },
+            {
              'notebook_type': 'notebook',
              'image': 'abeja-inc/all-gpu:19.10'
         }),
         (['-t', 'lab'],
          {
              'image': 'abeja-inc/all-gpu:19.10'
-         },
-         {
+        },
+            {
              'notebook_type': 'lab',
              'image': 'abeja-inc/all-gpu:19.10'
         }),
         (['--instance-type', 'gpu-1'],
          {
              'image': 'abeja-inc/all-gpu:19.10'
-         },
-         {
+        },
+            {
              'notebook_type': 'notebook',
              'image': 'abeja-inc/all-gpu:19.10',
              'instance_type': 'gpu-1'
@@ -131,8 +131,8 @@ def test_update_training_version(req_mock, runner):
         (['--datalake', '1234567890123'],
          {
              'image': 'abeja-inc/all-gpu:19.10'
-         },
-         {
+        },
+            {
              'notebook_type': 'notebook',
              'image': 'abeja-inc/all-gpu:19.10',
              'datalakes': ['1234567890123']
@@ -140,8 +140,8 @@ def test_update_training_version(req_mock, runner):
         (['--bucket', '1234567890123'],
          {
              'image': 'abeja-inc/all-gpu:19.10'
-         },
-         {
+        },
+            {
              'notebook_type': 'notebook',
              'image': 'abeja-inc/all-gpu:19.10',
              'buckets': ['1234567890123']
@@ -149,8 +149,8 @@ def test_update_training_version(req_mock, runner):
         (['--datalake', '1234567890123', '--bucket', '1234567890123'],
          {
              'image': 'abeja-inc/all-gpu:19.10'
-         },
-         {
+        },
+            {
              'notebook_type': 'notebook',
              'image': 'abeja-inc/all-gpu:19.10',
              'datalakes': ['1234567890123'],
@@ -159,8 +159,8 @@ def test_update_training_version(req_mock, runner):
         (['--dataset', 'train:1600000000000'],
          {
              'image': 'abeja-inc/all-gpu:19.10'
-         },
-         {
+        },
+            {
              'notebook_type': 'notebook',
              'image': 'abeja-inc/all-gpu:19.10',
              'datasets': {'train': '1600000000000'}
@@ -168,8 +168,8 @@ def test_update_training_version(req_mock, runner):
         (['--image', 'abeja-inc/all-gpu:18.10'],
          {
              'image': 'abeja-inc/all-gpu:19.10'
-         },
-         {
+        },
+            {
              'notebook_type': 'notebook',
              'image': 'abeja-inc/all-gpu:18.10'
         }),
@@ -177,8 +177,8 @@ def test_update_training_version(req_mock, runner):
          {
              'image': 'abeja-inc/all-gpu:19.10',
              'instance_type': 'gpu-1'
-         },
-         {
+        },
+            {
              'notebook_type': 'notebook',
              'image': 'abeja-inc/all-gpu:19.10',
              'instance_type': 'gpu-1'
@@ -187,8 +187,8 @@ def test_update_training_version(req_mock, runner):
          {
              'image': 'abeja-inc/all-gpu:19.10',
              'dummy': 'dummy'
-         },
-         {
+        },
+            {
              'notebook_type': 'notebook',
              'image': 'abeja-inc/all-gpu:19.10'
         }),
@@ -252,8 +252,8 @@ def test_create_notebook(
         (['-n', '9876543210987'],
          {
              'dummy': 'dummy'
-         },
-         {}),
+        },
+            {}),
     ]
 )
 @patch('abejacli.training.commands.CONFIG', TEST_CONFIG)
@@ -557,7 +557,7 @@ def test_create_training_version_from_git(
          {},
          {
              'description': 'dummy description'
-         }),
+        }),
         (['--version', '1', '--description', 'dummy description',
           '--environment', 'BATCH_SIZE:32', '--datasets', 'train:1600000000000'],
          {},
@@ -566,45 +566,45 @@ def test_create_training_version_from_git(
              'datasets': {'train': '1600000000000'},
              'dataset_premounted': False,
              'environment': {'BATCH_SIZE': '32'}
-         }),
+        }),
         (['--version', '1', '--description', 'dummy description'],
          {
              'datasets': {'train': '1600000000000'},
              'environment': {'key1': 'value1', 'key2': 'value2'},
              'params': {'key9': 'value9'}
-         },
-         {
+        },
+            {
              'description': 'dummy description',
              'datasets': {'train': '1600000000000'},
              'dataset_premounted': False,
              'environment': {'key1': 'value1', 'key2': 'value2'}
-         }),
+        }),
         (['--version', '1', '--description', 'dummy description',
           '--environment', 'BATCH_SIZE:32'],
          {
              'datasets': {'train': '1600000000000'},
              'environment': {'key1': 'value1', 'key2': 'value2'},
              'params': {'key9': 'value9'}
-         },
-         {
+        },
+            {
              'description': 'dummy description',
              'datasets': {'train': '1600000000000'},
              'dataset_premounted': False,
              'environment': {'key1': 'value1', 'key2': 'value2', 'BATCH_SIZE': '32'}
-         }),
+        }),
         (['--version', '1', '--description', 'dummy description',
           '--environment', 'BATCH_SIZE:32', '--datasets', 'train:1600000000001'],
          {
              'datasets': {'train': '1600000000000'},
              'environment': {'key1': 'value1', 'key2': 'value2'},
              'params': {'key9': 'value9'}
-         },
-         {
+        },
+            {
              'description': 'dummy description',
              'datasets': {'train': '1600000000001'},
              'dataset_premounted': False,
              'environment': {'key1': 'value1', 'key2': 'value2', 'BATCH_SIZE': '32'}
-         }),
+        }),
         (['--version', '1', '--description', 'dummy description',
           '--environment', 'BATCH_SIZE:32', '--datasets', 'val:1600000000001',
           '--datasets', 'test:1600000000002'],
@@ -612,13 +612,13 @@ def test_create_training_version_from_git(
              'datasets': {'train': '1600000000000'},
              'environment': {'key1': 'value1', 'key2': 'value2'},
              'params': {'key9': 'value9'}
-         },
-         {
+        },
+            {
              'description': 'dummy description',
              'datasets': {'train': '1600000000000', 'val': '1600000000001', 'test': '1600000000002'},
              'dataset_premounted': False,
              'environment': {'key1': 'value1', 'key2': 'value2', 'BATCH_SIZE': '32'}
-         }),
+        }),
         (['--version', '1', '--description', 'dummy description',
           '--environment', 'BATCH_SIZE:32', '--datasets', 'val:1600000000001',
           '--datasets', 'test:1600000000002', '--instance-type', 'cpu-4'],
@@ -626,14 +626,14 @@ def test_create_training_version_from_git(
              'datasets': {'train': '1600000000000'},
              'environment': {'key1': 'value1', 'key2': 'value2'},
              'params': {'key9': 'value9'}
-         },
-         {
+        },
+            {
              'description': 'dummy description',
              'datasets': {'train': '1600000000000', 'val': '1600000000001', 'test': '1600000000002'},
              'dataset_premounted': False,
              'environment': {'key1': 'value1', 'key2': 'value2', 'BATCH_SIZE': '32'},
              'instance_type': 'cpu-4'
-         }),
+        }),
         (['--version', '1', '--description', 'dummy description',
           '--environment', 'BATCH_SIZE:32', '--datasets', 'val:1600000000001',
           '--datasets', 'test:1600000000002', '--instance-type', 'cpu-4',
@@ -642,26 +642,26 @@ def test_create_training_version_from_git(
              'datasets': {'train': '1600000000000'},
              'environment': {'key1': 'value1', 'key2': 'value2'},
              'params': {'key9': 'value9'}
-         },
-         {
+        },
+            {
              'description': 'dummy description',
              'datasets': {'train': '1600000000000', 'val': '1600000000001', 'test': '1600000000002'},
              'dataset_premounted': True,
              'environment': {'key1': 'value1', 'key2': 'value2', 'BATCH_SIZE': '32'},
              'instance_type': 'cpu-4'
-         }),
+        }),
         (['--version', '1', '--description', 'dummy description', '--datalake', '1234567890123'],
          {},
          {
              'description': 'dummy description',
              'datalakes': ['1234567890123']
-         }),
+        }),
         (['--version', '1', '--description', 'dummy description', '--bucket', '2345678901234'],
          {},
          {
              'description': 'dummy description',
              'buckets': ['2345678901234']
-         }),
+        }),
         (['--version', '1', '--description', 'dummy description',
           '--datalake', '1234567890123', '--bucket', '2345678901234'],
          {},
@@ -669,21 +669,21 @@ def test_create_training_version_from_git(
              'description': 'dummy description',
              'datalakes': ['1234567890123'],
              'buckets': ['2345678901234']
-         }),
+        }),
         (['--version', '1'],
          {
              'instance_type': 'gpu-1'
-         },
-         {
+        },
+            {
              'instance_type': 'gpu-1'
-         }),
+        }),
         (['--version', '1', '--instance-type', 'cpu-4'],
          {
              'instance_type': 'gpu-1'
-         },
-         {
+        },
+            {
              'instance_type': 'cpu-4'
-         }),
+        }),
     ]
 )
 @patch('abejacli.training.commands.CONFIG', TEST_CONFIG)
