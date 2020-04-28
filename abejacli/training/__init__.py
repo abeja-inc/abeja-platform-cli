@@ -73,8 +73,8 @@ local_schema = {
 
 create_version_schema = {
     'name': {'type': 'string', 'required': True},
-    'handler': {'type': 'string', 'required': True, 'regex': HANDLER_REGEX},
-    'image': {'type': 'string', 'required': True},
+    'handler': {'type': 'string', 'required': False, 'regex': HANDLER_REGEX},
+    'image': {'type': 'string', 'required': False},
     'datasets': {
         'type': 'dict',
         'keysrules': {'type': 'string'},

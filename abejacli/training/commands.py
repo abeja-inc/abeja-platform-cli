@@ -245,6 +245,9 @@ def start_notebook(notebook_id, notebook_type, datalakes, buckets, datasets):
 # job definition version
 # ---------------------------------------------------
 @training.command(name='create-version', help='Create a version of Training Job Definition.')
+@click.option('-h', '--handler', 'handler', type=str, help='Training handler', required=False)
+@click.option('-i', '--image', 'image', type=str, required=False,
+              help='Specify base image name and tag in the "name:tag" format. ex) abeja-inc/all-gpu:19.10')
 @click.option('-d', '--description', type=str, required=False,
               help='Description for the training job, which must be less than or equal to 256 characters.')
 @click.option('-e', '--environment', type=ENVIRONMENT_STR, default=None, required=False, multiple=True,
@@ -255,7 +258,14 @@ def start_notebook(notebook_id, notebook_type, datalakes, buckets, datasets):
               help='[Alpha stage option] Datalake channel ID for premount.')
 @click.option('--bucket', '--buckets', 'buckets', type=str, default=None, required=False, multiple=True,
               help='[Alpha stage option] Datalake bucket ID for premount.')
-def create_training_version(description, environment, exclude, datalakes, buckets):
+@click.option('-d', '--dataset', '--datasets', 'datasets', type=DATASET_PARAM_STR,
+              help='Datasets name', default=None,
+              required=False, multiple=True)
+@click.option('--dataset-premounted', is_flag=True, type=bool, required=False,
+              help='[Alpha stage option] Flag for pre-mounting datasets. Use this along with "--datasets" option.')
+def create_training_version(
+        handler, image, description, environment, exclude,
+        datalakes, buckets, datasets, dataset_premounted):
     if exclude is None:
         excludes = []
     else:
@@ -265,8 +275,8 @@ def create_training_version(description, environment, exclude, datalakes, bucket
     try:
         config_data = training_config.read(training_config.create_version_schema)
 
-        handler = config_data.get('handler')
-        image = config_data.get('image')
+        handler = handler or config_data.get('handler')
+        image = image or config_data.get('image')
         if not handler or not image:
             raise InvalidConfigException('need to specify handler and image both')
 
@@ -290,6 +300,12 @@ def create_training_version(description, environment, exclude, datalakes, bucket
             payload['datalakes'] = list(datalakes)
         if buckets:
             payload['buckets'] = list(buckets)
+
+        _datasets = dict(config_data.get('datasets', {}))
+        datasets = {**_datasets, **dict(datasets)}
+        if datasets:
+            payload['datasets'] = datasets
+            payload['dataset_premounted'] = dataset_premounted or False
 
         user_exclude_files = config_data.pop('ignores', [])
         exclude_files = set(user_exclude_files + DEFAULT_EXCLUDE_FILES + excludes)
@@ -339,6 +355,9 @@ def _create_training_version(url: str, payload: Dict[str, str], archive):
               help='GitHub URL, which must start with "https://".')
 @click.option('--git-branch', type=str, required=False,
               help='GitHub branch. Default "master"')
+@click.option('-h', '--handler', 'handler', type=str, help='Training handler', required=False)
+@click.option('-i', '--image', 'image', type=str, required=False,
+              help='Specify base image name and tag in the "name:tag" format. ex) abeja-inc/all-gpu:19.10')
 @click.option('-d', '--description', type=str, required=False,
               help='Description for the training job, which must be less than or equal to 256 characters.')
 @click.option('-e', '--environment', type=ENVIRONMENT_STR, default=None, required=False, multiple=True,
@@ -347,12 +366,19 @@ def _create_training_version(url: str, payload: Dict[str, str], archive):
               help='[Alpha stage option] Datalake channel ID for premount.')
 @click.option('--bucket', '--buckets', 'buckets', type=str, default=None, required=False, multiple=True,
               help='[Alpha stage option] Datalake bucket ID for premount.')
-def create_training_version_from_git(git_url, git_branch, description, environment, datalakes, buckets):
+@click.option('-d', '--dataset', '--datasets', 'datasets', type=DATASET_PARAM_STR,
+              help='Datasets name', default=None,
+              required=False, multiple=True)
+@click.option('--dataset-premounted', is_flag=True, type=bool, required=False,
+              help='[Alpha stage option] Flag for pre-mounting datasets. Use this along with "--datasets" option.')
+def create_training_version_from_git(
+        git_url, git_branch, handler, image, description, environment,
+        datalakes, buckets, datasets, dataset_premounted):
     try:
         config_data = training_config.read(training_config.create_version_schema)
 
-        handler = config_data.get('handler')
-        image = config_data.get('image')
+        handler = handler or config_data.get('handler')
+        image = image or config_data.get('image')
         if not handler or not image:
             raise InvalidConfigException('need to specify handler and image both')
 
@@ -380,6 +406,12 @@ def create_training_version_from_git(git_url, git_branch, description, environme
             payload['datalakes'] = list(datalakes)
         if buckets:
             payload['buckets'] = list(buckets)
+
+        _datasets = dict(config_data.get('datasets', {}))
+        datasets = {**_datasets, **dict(datasets)}
+        if datasets:
+            payload['datasets'] = datasets
+            payload['dataset_premounted'] = dataset_premounted or False
 
         url = "{}/training/definitions/{}/git/versions".format(
             ORGANIZATION_ENDPOINT, config_data['name'])
