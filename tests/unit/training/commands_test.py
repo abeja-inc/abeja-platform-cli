@@ -990,6 +990,7 @@ def test_train_local_environment(mock_train_local, mock_get_organization_id, run
     assert r.exit_code == 0, r.output
     mock_get_organization_id.assert_called_once_with()
     args = mock_train_local.call_args[1]
+    assert args['job_definition_name'] == 'training_def_version_1'
     expect_environment = {
         'param1': 'value1',
         'param2': 'value2',
@@ -998,6 +999,21 @@ def test_train_local_environment(mock_train_local, mock_get_organization_id, run
         'foo': 'bar'
     }
     assert args['environment'] == expect_environment
+
+    # Test without `--name`
+    url = "{}/training/definitions/{}/versions/{}".format(
+        ORGANIZATION_ENDPOINT, 'training-1', 1)
+    req_mock.register_uri(
+        'GET', url,
+        json=version_info)
+    cmd = [
+        '--version', '1',
+        '--config', abejacli.training.CONFIGFILE_NAME,
+    ]
+    r = runner.invoke(train_local, cmd)
+    assert r.exit_code == 0, r.output
+    args = mock_train_local.call_args[1]
+    assert args['job_definition_name'] == 'training-1'
 
 # Job definitions
 

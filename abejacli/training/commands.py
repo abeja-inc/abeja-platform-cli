@@ -1049,7 +1049,7 @@ def debug_local(
               help='Organization ID, organization_id of current credential organization is used by default. '
                    'this value is set as an environment variable named `ABEJA_ORGANIZATION_ID`.',
               callback=__try_get_organization_id)
-@click.option('--name', 'name', type=str, help='Training Job Definition Name', required=True)
+@click.option('--name', 'name', type=str, help='Training Job Definition Name', required=False)
 @click.option('--version', 'version', type=str, help='Training Job Definition Version', required=True)
 @click.option('--description', 'description', type=str, help='Training Job description', required=False)
 @click.option('-d', '--datasets', type=DATASET_PARAM_STR, help='Datasets name', default=None,
@@ -1079,6 +1079,10 @@ def train_local(organization_id, name, version, description, datasets, environme
         version_environment = job_definition_version.get('environment')
         if not version_environment:
             version_environment = {}
+
+        name = name or config['name']
+        if not name:
+            raise InvalidConfigException('need to specify name')
 
         datasets = {**version_datasets, **dict(config.get('datasets', {})), **dict(datasets)}
 
