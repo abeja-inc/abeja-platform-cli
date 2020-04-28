@@ -136,12 +136,11 @@ def describe_job_definitions(job_definition_name, include_archived, limit, offse
         sys.exit(ERROR_EXITCODE)
     click.echo(json_output_formatter(r))
 
+
 # ---------------------------------------------------
 # notebook
 # ---------------------------------------------------
-
-
-@training.command(name='create-notebook')
+@training.command(name='create-notebook', help='Create Jupyter Notebook/Lab.')
 @click.option('-t', '--notebook-type', type=str, default='notebook', required=False,
               help='Jupyter type. Choose from "notebook" or "lab". Default is "notebook".')
 @click.option('--instance-type', type=str, required=False,
@@ -198,7 +197,7 @@ def create_notebook(notebook_type, instance_type, image, datalakes, buckets, dat
     click.echo(json_output_formatter(r))
 
 
-@training.command(name='start-notebook')
+@training.command(name='start-notebook', help='Start an existing Jupyter Notebook/Lab.')
 @click.option('-n', '--notebook_id', '--notebook-id', 'notebook_id', type=str, help='notebook id', required=True)
 @click.option('-t', '--notebook-type', type=str, required=False,
               help='Jupyter type. Choose from "notebook" or "lab".')
@@ -245,7 +244,7 @@ def start_notebook(notebook_id, notebook_type, datalakes, buckets, datasets):
 # ---------------------------------------------------
 # job definition version
 # ---------------------------------------------------
-@training.command(name='create-version')
+@training.command(name='create-version', help='Create a version of Training Job Definition.')
 @click.option('-d', '--description', type=str, required=False,
               help='Description for the training job, which must be less than or equal to 256 characters.')
 @click.option('-e', '--environment', type=ENVIRONMENT_STR, default=None, required=False, multiple=True,
@@ -334,7 +333,8 @@ def _create_training_version(url: str, payload: Dict[str, str], archive):
         return api_post(url, files=files)
 
 
-@training.command(name='create-version-from-git')
+@training.command(name='create-version-from-git',
+                  help='Create a version of Training Job Definition from GitHub repository.')
 @click.option('--git-url', type=str, required=True,
               help='GitHub URL, which must start with "https://".')
 @click.option('--git-branch', type=str, required=False,
@@ -400,7 +400,7 @@ def create_training_version_from_git(git_url, git_branch, description, environme
     click.echo(json_output_formatter(r))
 
 
-@training.command(name='update-version')
+@training.command(name='update-version', help='Update a description of Training Job Definition Version.')
 @click.option('-v', '--version', type=str, required=False,
               help='Job definition version. By default, latest version is used')
 @click.option('-d', '--description', type=str, required=False,
@@ -445,7 +445,7 @@ def update_training_version(version, description):
         sys.exit(ERROR_EXITCODE)
 
 
-@training.command(name='describe-versions')
+@training.command(name='describe-versions', help='Describe Training Job Definition Versions')
 @click.option('-j', '--job_definition_name', '--job-definition-name', 'job_definition_name', type=str,
               help='Training job definition name',
               required=False, default=None)
