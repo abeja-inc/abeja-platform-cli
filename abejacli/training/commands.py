@@ -158,9 +158,9 @@ def describe_job_definitions(job_definition_name, include_archived, limit, offse
               required=False, multiple=True)
 def create_notebook(notebook_type, instance_type, image, datalakes, buckets, datasets):
     try:
-        config = training_config.read(training_config.create_notebook_schema)
+        config_data = training_config.read(training_config.create_notebook_schema)
 
-        image = image or config.get('image')
+        image = image or config_data.get('image')
         if not image:
             raise InvalidConfigException('need to specify image')
 
@@ -169,7 +169,7 @@ def create_notebook(notebook_type, instance_type, image, datalakes, buckets, dat
             'notebook_type': notebook_type
         }
 
-        instance_type = instance_type or config.get('instance_type')
+        instance_type = instance_type or config_data.get('instance_type')
         if instance_type is not None:
             payload['instance_type'] = instance_type
         if datalakes:
@@ -180,7 +180,7 @@ def create_notebook(notebook_type, instance_type, image, datalakes, buckets, dat
             payload['datasets'] = dict(datasets)
 
         url = "{}/training/definitions/{}/notebooks".format(
-            ORGANIZATION_ENDPOINT, config['name'])
+            ORGANIZATION_ENDPOINT, config_data['name'])
 
         r = api_post(url, json.dumps(payload))
     except ConfigFileNotFoundError:
@@ -211,7 +211,7 @@ def create_notebook(notebook_type, instance_type, image, datalakes, buckets, dat
               required=False, multiple=True)
 def start_notebook(notebook_id, notebook_type, datalakes, buckets, datasets):
     try:
-        params = training_config.read(training_config.create_notebook_schema)
+        config_data = training_config.read(training_config.create_notebook_schema)
 
         payload = dict()
         if notebook_type is not None:
@@ -224,7 +224,7 @@ def start_notebook(notebook_id, notebook_type, datalakes, buckets, datasets):
             payload['datasets'] = dict(datasets)
 
         url = "{}/training/definitions/{}/notebooks/{}/start".format(
-            ORGANIZATION_ENDPOINT, params['name'], notebook_id)
+            ORGANIZATION_ENDPOINT, config_data['name'], notebook_id)
 
         r = api_post(url, json.dumps(payload))
     except ConfigFileNotFoundError:
@@ -264,10 +264,10 @@ def create_training_version(description, environment, exclude, datalakes, bucket
 
     archive = None
     try:
-        config = training_config.read(training_config.create_version_schema)
+        config_data = training_config.read(training_config.create_version_schema)
 
-        handler = config.get('handler')
-        image = config.get('image')
+        handler = config_data.get('handler')
+        image = config_data.get('image')
         if not handler or not image:
             raise InvalidConfigException('need to specify handler and image both')
 
@@ -283,7 +283,7 @@ def create_training_version(description, environment, exclude, datalakes, bucket
         if description is not None:
             payload['description'] = description
 
-        environment = {**dict(config.get('environment', {})), **dict(environment)}
+        environment = {**dict(config_data.get('environment', {})), **dict(environment)}
         if environment:
             payload['environment'] = environment
 
@@ -292,13 +292,13 @@ def create_training_version(description, environment, exclude, datalakes, bucket
         if buckets:
             payload['buckets'] = list(buckets)
 
-        user_exclude_files = config.pop('ignores', [])
+        user_exclude_files = config_data.pop('ignores', [])
         exclude_files = set(user_exclude_files + DEFAULT_EXCLUDE_FILES + excludes)
 
-        archive = version_archive(config['name'], exclude_files)
+        archive = version_archive(config_data['name'], exclude_files)
 
         url = "{}/training/definitions/{}/versions".format(
-            ORGANIZATION_ENDPOINT, config['name'])
+            ORGANIZATION_ENDPOINT, config_data['name'])
 
         r = _create_training_version(url, payload, archive)
     except ConfigFileNotFoundError:
@@ -349,10 +349,10 @@ def _create_training_version(url: str, payload: Dict[str, str], archive):
               help='[Alpha stage option] Datalake bucket ID for premount.')
 def create_training_version_from_git(git_url, git_branch, description, environment, datalakes, buckets):
     try:
-        config = training_config.read(training_config.create_version_schema)
+        config_data = training_config.read(training_config.create_version_schema)
 
-        handler = config.get('handler')
-        image = config.get('image')
+        handler = config_data.get('handler')
+        image = config_data.get('image')
         if not handler or not image:
             raise InvalidConfigException('need to specify handler and image both')
 
@@ -372,7 +372,7 @@ def create_training_version_from_git(git_url, git_branch, description, environme
         if description is not None:
             payload['description'] = description
 
-        environment = {**dict(config.get('environment', {})), **dict(environment)}
+        environment = {**dict(config_data.get('environment', {})), **dict(environment)}
         if environment:
             payload['environment'] = environment
 
@@ -382,7 +382,7 @@ def create_training_version_from_git(git_url, git_branch, description, environme
             payload['buckets'] = list(buckets)
 
         url = "{}/training/definitions/{}/git/versions".format(
-            ORGANIZATION_ENDPOINT, config['name'])
+            ORGANIZATION_ENDPOINT, config_data['name'])
 
         r = api_post(url, json.dumps(payload))
     except ConfigFileNotFoundError:
@@ -407,7 +407,7 @@ def create_training_version_from_git(git_url, git_branch, description, environme
               help='Description for the training job, which must be less than or equal to 256 characters.')
 def update_training_version(version, description):
     try:
-        config = training_config.read(training_config.default_schema)
+        config_data = training_config.read(training_config.default_schema)
     except ConfigFileNotFoundError:
         logger.error('training configuration file does not exists.')
         click.echo('training configuration file does not exists.')
@@ -428,7 +428,7 @@ def update_training_version(version, description):
     try:
         if version is None:
             try:
-                version = _get_latest_training_version(config['name'])
+                version = _get_latest_training_version(config_data['name'])
             except ResourceNotFound:
                 logger.error('there is no available training versions.')
                 click.echo(
@@ -436,7 +436,7 @@ def update_training_version(version, description):
                 sys.exit(ERROR_EXITCODE)
 
         url = "{}/training/definitions/{}/versions/{}".format(
-            ORGANIZATION_ENDPOINT, config['name'], version)
+            ORGANIZATION_ENDPOINT, config_data['name'], version)
         r = api_patch(url, json.dumps(params))
         click.echo(json_output_formatter(r))
     except Exception as e:
@@ -524,10 +524,10 @@ def _get_latest_training_version(name: str):
 def create_training_job(version, environment, params, instance_type, description,
                         datasets, datalakes, buckets, dataset_premounted):
     try:
-        config = training_config.read(training_config.create_job_schema)
+        config_data = training_config.read(training_config.create_job_schema)
         if version is None:
             try:
-                version = _get_latest_training_version(config['name'])
+                version = _get_latest_training_version(config_data['name'])
             except ResourceNotFound:
                 logger.error('there is no available training versions.')
                 click.echo(
@@ -535,18 +535,18 @@ def create_training_job(version, environment, params, instance_type, description
                 sys.exit(ERROR_EXITCODE)
 
         url = "{}/training/definitions/{}/versions/{}/jobs".format(
-            ORGANIZATION_ENDPOINT, config['name'], version)
+            ORGANIZATION_ENDPOINT, config_data['name'], version)
 
         environment = dict(environment) or dict(params)
-        env_vars = {**dict(config.get('environment', {})), **environment}
+        env_vars = {**dict(config_data.get('environment', {})), **environment}
 
-        _datasets = dict(config.get('datasets', {}))
+        _datasets = dict(config_data.get('datasets', {}))
         datasets = {**_datasets, **dict(datasets)}
 
         data = {}
         if env_vars:
             data['environment'] = env_vars
-        instance_type = instance_type or config.get('instance_type')
+        instance_type = instance_type or config_data.get('instance_type')
         if instance_type is not None:
             data['instance_type'] = instance_type
         if datasets:
@@ -645,26 +645,26 @@ def _download_result(job_definition_id, job_id):
 
 def __training_config_provider(yaml_path, _cmd_name):
     try:
-        config = read_training_config(yaml_path)
-        if not config:
+        config_data = read_training_config(yaml_path)
+        if not config_data:
             return {}
 
         # DEPRECATED: datasets will be removed
         datasets = [
             '{}:{}'.format(k, v)
-            for k, v in config.pop('datasets', {}).items()
+            for k, v in config_data.pop('datasets', {}).items()
         ]
-        config['datasets'] = datasets
+        config_data['datasets'] = datasets
 
         environment = []
-        for k, v in config.pop('environment', config.pop('params', {})).items():
+        for k, v in config_data.pop('environment', config_data.pop('params', {})).items():
             if v is None:
                 v = ''
             environment.append('{}:{}'.format(k, v))
-        if 'params' in config:
-            config.pop('params', None)
-        config['environment'] = environment
-        return config
+        if 'params' in config_data:
+            config_data.pop('params', None)
+        config_data['environment'] = environment
+        return config_data
     except ConfigFileNotFoundError:
         return {}
     except InvalidConfigException as e:
@@ -1014,16 +1014,16 @@ def debug_local(
         handler, image, organization_id, datasets, environment, volume,
         no_cache, quiet, v1, runtime=None, build_only=False):
     try:
-        config = training_config.read(training_config.debug_schema)
+        config_data = training_config.read(training_config.debug_schema)
 
-        handler = handler or config.get('handler')
-        image = image or config.get('image')
+        handler = handler or config_data.get('handler')
+        image = image or config_data.get('image')
         if not handler or not image:
             raise InvalidConfigException('need to specify handler and image both')
 
-        datasets = {**dict(config.get('datasets', {})), **dict(datasets)}
+        datasets = {**dict(config_data.get('datasets', {})), **dict(datasets)}
 
-        environment = {**dict(config.get('environment', {})), **dict(environment)}
+        environment = {**dict(config_data.get('environment', {})), **dict(environment)}
 
         volume = build_volumes(volume) if volume else {}
 
@@ -1070,7 +1070,7 @@ def debug_local(
     help='Read Configuration from PATH. By default read from `{}`'.format(CONFIGFILE_NAME))
 def train_local(organization_id, name, version, description, datasets, environment, volume, v1, runtime=None):
     try:
-        config = training_config.read(training_config.local_schema)
+        config_data = training_config.read(training_config.local_schema)
 
         job_definition_version = _describe_training_version(name, version)
         version_datasets = job_definition_version.get('datasets')
@@ -1080,13 +1080,13 @@ def train_local(organization_id, name, version, description, datasets, environme
         if not version_environment:
             version_environment = {}
 
-        name = name or config['name']
+        name = name or config_data['name']
         if not name:
             raise InvalidConfigException('need to specify name')
 
-        datasets = {**version_datasets, **dict(config.get('datasets', {})), **dict(datasets)}
+        datasets = {**version_datasets, **dict(config_data.get('datasets', {})), **dict(datasets)}
 
-        environment = {**version_environment, **dict(config.get('environment', {})), **dict(environment)}
+        environment = {**version_environment, **dict(config_data.get('environment', {})), **dict(environment)}
 
         volume = build_volumes(volume) if volume else {}
 
