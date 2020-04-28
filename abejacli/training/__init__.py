@@ -22,11 +22,10 @@ name: training-1
 """
 
 default_schema = {
-    'name': {'type': 'string', 'required': True}
+    'name': {'type': 'string', 'required': False, 'nullable': True},
 }
 
 debug_schema = {
-    'name': {'type': 'string', 'required': True},
     'handler': {'type': 'string', 'required': False, 'nullable': True, 'regex': HANDLER_REGEX},
     'image': {'type': 'string', 'required': False, 'nullable': True},
     'datasets': {
@@ -50,7 +49,7 @@ debug_schema = {
 }
 
 local_schema = {
-    'name': {'type': 'string', 'required': True},
+    'name': {'type': 'string', 'required': False, 'nullable': True},
     'datasets': {
         'type': 'dict',
         'keysrules': {'type': 'string'},
@@ -72,9 +71,9 @@ local_schema = {
 }
 
 create_version_schema = {
-    'name': {'type': 'string', 'required': True},
-    'handler': {'type': 'string', 'required': False, 'regex': HANDLER_REGEX},
-    'image': {'type': 'string', 'required': False},
+    'name': {'type': 'string', 'required': False, 'nullable': True},
+    'handler': {'type': 'string', 'required': False, 'nullable': True, 'regex': HANDLER_REGEX},
+    'image': {'type': 'string', 'required': False, 'nullable': True},
     'datasets': {
         'type': 'dict',
         'keysrules': {'type': 'string'},
@@ -116,7 +115,7 @@ create_version_schema = {
 }
 
 create_job_schema = {
-    'name': {'type': 'string', 'required': True},
+    'name': {'type': 'string', 'required': False, 'nullable': True},
     'instance_type': {'type': 'string', 'required': False, 'nullable': True},
     'datasets': {
         'type': 'dict',
@@ -159,7 +158,7 @@ create_job_schema = {
 }
 
 create_notebook_schema = {
-    'name': {'type': 'string', 'required': True},
+    'name': {'type': 'string', 'required': False, 'nullable': True},
     'image': {'type': 'string', 'required': False, 'nullable': True},
     'instance_type': {'type': 'string', 'required': False, 'nullable': True}
 }
@@ -190,7 +189,7 @@ class TrainingConfig:
                 config.pop('params', None)
             return config
         except FileNotFoundError:
-            raise ConfigFileNotFoundError('configuration file not found')
+            return dict()
 
     def _load_config(self):
         with open(CONFIGFILE_NAME, 'r') as configfile:

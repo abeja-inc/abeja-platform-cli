@@ -226,28 +226,28 @@ def test_create_notebook(
         (['-n', '9876543210987', '-t', 'lab'],
          {},
          {
-            'notebook_type': 'lab'
+             'notebook_type': 'lab'
         }),
         (['-n', '9876543210987', '--datalake', '1234567890123'],
          {},
          {
-            'datalakes': ['1234567890123']
+             'datalakes': ['1234567890123']
         }),
         (['-n', '9876543210987', '--bucket', '1234567890123'],
          {},
          {
-            'buckets': ['1234567890123']
+             'buckets': ['1234567890123']
         }),
         (['-n', '9876543210987', '--datalake', '1234567890123', '--bucket', '1234567890123'],
          {},
          {
-            'datalakes': ['1234567890123'],
-            'buckets': ['1234567890123']
+             'datalakes': ['1234567890123'],
+             'buckets': ['1234567890123']
         }),
         (['-n', '9876543210987', '--dataset', 'train:1600000000000'],
          {},
          {
-            'datasets': {'train': '1600000000000'}
+             'datasets': {'train': '1600000000000'}
         }),
         (['-n', '9876543210987'],
          {
@@ -289,8 +289,8 @@ def test_start_notebook(
     [
         (['--description', 'dummy description'],
          {
-            'handler': 'train:handler',
-            'image': 'abeja-inc/all-cpu:18.10'
+             'handler': 'train:handler',
+             'image': 'abeja-inc/all-cpu:18.10'
         },
             {
              'handler': 'train:handler',
@@ -303,10 +303,10 @@ def test_start_notebook(
         ],
             {},
             {
-                'handler': 'train:handler',
-                'image': 'abeja-inc/all-cpu:18.10',
-                'description': 'dummy description',
-                'environment': {'BATCH_SIZE': '32'}
+            'handler': 'train:handler',
+            'image': 'abeja-inc/all-cpu:18.10',
+            'description': 'dummy description',
+            'environment': {'BATCH_SIZE': '32'}
         }),
         (['--description', 'dummy description'],
          {
@@ -315,10 +315,10 @@ def test_start_notebook(
              'params': {'key9': 'value9'}
         },
             {
-                'handler': 'train:handler',
-                'image': 'abeja-inc/all-cpu:18.10',
-                'description': 'dummy description',
-                'environment': {'key9': 'value9'}
+             'handler': 'train:handler',
+             'image': 'abeja-inc/all-cpu:18.10',
+             'description': 'dummy description',
+             'environment': {'key9': 'value9'}
         }),
         (['--description', 'dummy description'],
          {
@@ -327,10 +327,10 @@ def test_start_notebook(
              'environment': {'key1': 'value1', 'key2': 'value2'}
         },
             {
-                'handler': 'train:handler',
-                'image': 'abeja-inc/all-cpu:18.10',
-                'description': 'dummy description',
-                'environment': {'key1': 'value1', 'key2': 'value2'}
+             'handler': 'train:handler',
+             'image': 'abeja-inc/all-cpu:18.10',
+             'description': 'dummy description',
+             'environment': {'key1': 'value1', 'key2': 'value2'}
         }),
         (['--description', 'dummy description'],
          {
@@ -340,10 +340,10 @@ def test_start_notebook(
              'params': {'key9': 'value9'}
         },
             {
-                'handler': 'train:handler',
-                'image': 'abeja-inc/all-cpu:18.10',
-                'description': 'dummy description',
-                'environment': {'key1': 'value1', 'key2': 'value2'}
+             'handler': 'train:handler',
+             'image': 'abeja-inc/all-cpu:18.10',
+             'description': 'dummy description',
+             'environment': {'key1': 'value1', 'key2': 'value2'}
         }),
         ([
             '--datasets', 'train:1600000000000',
@@ -354,12 +354,12 @@ def test_start_notebook(
              'image': 'abeja-inc/all-cpu:18.10',
         },
             {
-                'handler': 'train:handler',
-                'image': 'abeja-inc/all-cpu:18.10',
-                'datasets': {'train': '1600000000000'},
-                'dataset_premounted': False,
-                'datalakes': ['1234567890123'],
-                'buckets': ['2345678901234']
+             'handler': 'train:handler',
+             'image': 'abeja-inc/all-cpu:18.10',
+             'datasets': {'train': '1600000000000'},
+             'dataset_premounted': False,
+             'datalakes': ['1234567890123'],
+             'buckets': ['2345678901234']
         }),
         (['--datalake', '1234567890123', '--bucket', '2345678901234', '--dataset-premounted'],
          {
@@ -368,12 +368,12 @@ def test_start_notebook(
              'datasets': {'train': '1600000000000'},
         },
             {
-                'handler': 'train:handler',
-                'image': 'abeja-inc/all-cpu:18.10',
-                'datasets': {'train': '1600000000000'},
-                'dataset_premounted': True,
-                'datalakes': ['1234567890123'],
-                'buckets': ['2345678901234']
+             'handler': 'train:handler',
+             'image': 'abeja-inc/all-cpu:18.10',
+             'datasets': {'train': '1600000000000'},
+             'dataset_premounted': True,
+             'datalakes': ['1234567890123'],
+             'buckets': ['2345678901234']
         })
     ]
 )
@@ -414,20 +414,20 @@ def test_create_training_version(
     [
         ([],
          {
-            'handler': 'train',
-            'image': 'abeja-inc/all-cpu:20.02a'
+             'handler': 'train',
+             'image': 'abeja-inc/all-cpu:20.02a'
         },
             {
-                'handler': 'train',
-                'image': 'abeja-inc/all-cpu:20.02a'
+             'handler': 'train',
+             'image': 'abeja-inc/all-cpu:20.02a'
         }),
         ([
             '--handler', 'train', '--image', 'abeja-inc/all-cpu:20.02a'
         ],
             {},
             {
-                'handler': 'train',
-                'image': 'abeja-inc/all-cpu:20.02a'
+            'handler': 'train',
+            'image': 'abeja-inc/all-cpu:20.02a'
         })
     ]
 )
@@ -469,8 +469,8 @@ def test_create_training_version_for_2002_image(
     [
         ([],
          {
-            'handler': 'train',
-            'image': 'abeja-inc/all-cpu:18.10'
+             'handler': 'train',
+             'image': 'abeja-inc/all-cpu:18.10'
         }),
         ([
             '--handler', 'train', '--image', 'abeja-inc/all-cpu:18.10'
@@ -507,8 +507,8 @@ def test_create_training_version_for_2002_image_invalid(
         (['--git-url', 'https://github.com/abeja-inc/platform-template-image-classification.git',
           '--description', 'dummy description'],
          {
-            'handler': 'train:handler',
-            'image': 'abeja-inc/all-cpu:18.10'
+             'handler': 'train:handler',
+             'image': 'abeja-inc/all-cpu:18.10'
         },
             {
              'handler': 'train:handler',

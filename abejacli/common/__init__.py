@@ -14,7 +14,9 @@ from pygments import formatters, highlight, lexers
 from pygments.styles import get_style_by_name
 
 from abejacli.config import ORGANIZATION_ENDPOINT
+from abejacli.exceptions import ConfigFileNotFoundError
 from abejacli.session import api_get
+from abejacli.training import TrainingConfig
 
 
 def json_output_formatter(parsed_json):
@@ -140,3 +142,18 @@ def __try_get_organization_id(ctx, param, value):
             raise MissingParameter(ctx=ctx, param=param)
         return organization_id
     return value
+
+
+def __get_job_definition_name(job_definition_name: str, training_config: TrainingConfig) -> str:
+    if job_definition_name:
+        return job_definition_name
+    else:
+        config_data = training_config.read(training_config.default_schema)
+        if 'name' in config_data:
+            return config_data['name']
+        else:
+            click.echo(
+                'configuration file not found. '
+                'Please specify job-definition-name or set config file.'
+            )
+            raise ConfigFileNotFoundError('configuration file not found')
