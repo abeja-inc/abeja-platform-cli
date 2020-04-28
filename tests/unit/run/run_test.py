@@ -699,7 +699,7 @@ class RunTest(TestCase):
 
             r = self.runner.invoke(create_training_version, [])
             self.assertEqual(
-                r.output, 'training configuration file does not exists.\n')
+                r.output, 'Please specify job-definition-name or set config file.\ntraining configuration file does not exists.\n')
 
     @requests_mock.Mocker()
     @patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())

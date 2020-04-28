@@ -153,7 +153,6 @@ def __get_job_definition_name(job_definition_name: str, training_config: Trainin
             return config_data['name']
         else:
             click.echo(
-                'configuration file not found. '
                 'Please specify job-definition-name or set config file.'
             )
             raise ConfigFileNotFoundError('configuration file not found')
