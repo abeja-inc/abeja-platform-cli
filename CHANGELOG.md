@@ -1,3 +1,10 @@
+# 1.0.5
+- Relax restriction config.yaml for training (#26)
+- Add help message for `training` sub-command (#24)
+- Change var's name from `config/params` to `config_data` (#25)
+- Relax the restriction of specifying `name` on `train-local` (#23)
+- Update training config schema (#22)
+
 # 1.0.4
 - Convert to dict format (#17)
 - add stop training job command (#18)
