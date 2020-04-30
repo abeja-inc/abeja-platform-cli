@@ -95,70 +95,125 @@ def test_update_training_version(req_mock, runner):
 
 
 @pytest.mark.parametrize(
-    'cmd,additional_config,expected_payload',
+    'cmd,config_data,expected_payload',
     [
         ([],
-         {},
          {
-             'notebook_type': 'notebook'
+             'name': 'training-1',
+             'image': 'abeja-inc/all-gpu:19.10'
+        },
+            {
+             'notebook_type': 'notebook',
+             'image': 'abeja-inc/all-gpu:19.10'
         }),
         (['-t', 'lab'],
-         {},
          {
-             'notebook_type': 'lab'
+             'name': 'training-1',
+             'image': 'abeja-inc/all-gpu:19.10'
+        },
+            {
+             'notebook_type': 'lab',
+             'image': 'abeja-inc/all-gpu:19.10'
         }),
         (['--instance-type', 'gpu-1'],
+         {
+             'name': 'training-1',
+             'image': 'abeja-inc/all-gpu:19.10'
+        },
+            {
+             'notebook_type': 'notebook',
+             'image': 'abeja-inc/all-gpu:19.10',
+             'instance_type': 'gpu-1'
+        }),
+        (['--job-definition-name', 'training-1', '--image', 'abeja-inc/all-gpu:19.10'],
          {},
          {
              'notebook_type': 'notebook',
-             'instance_type': 'gpu-1'
-        }),
-        (['--image', 'abeja-inc/all-gpu:19.10'],
-         {},
-         {
              'image': 'abeja-inc/all-gpu:19.10'
         }),
         (['--datalake', '1234567890123'],
-         {},
          {
+             'name': 'training-1',
+             'image': 'abeja-inc/all-gpu:19.10'
+        },
+            {
              'notebook_type': 'notebook',
+             'image': 'abeja-inc/all-gpu:19.10',
              'datalakes': ['1234567890123']
         }),
         (['--bucket', '1234567890123'],
-         {},
          {
+             'name': 'training-1',
+             'image': 'abeja-inc/all-gpu:19.10'
+        },
+            {
              'notebook_type': 'notebook',
+             'image': 'abeja-inc/all-gpu:19.10',
              'buckets': ['1234567890123']
         }),
         (['--datalake', '1234567890123', '--bucket', '1234567890123'],
-         {},
          {
+             'name': 'training-1',
+             'image': 'abeja-inc/all-gpu:19.10'
+        },
+            {
              'notebook_type': 'notebook',
+             'image': 'abeja-inc/all-gpu:19.10',
              'datalakes': ['1234567890123'],
              'buckets': ['1234567890123']
         }),
         (['--dataset', 'train:1600000000000'],
-         {},
          {
+             'name': 'training-1',
+             'image': 'abeja-inc/all-gpu:19.10'
+        },
+            {
              'notebook_type': 'notebook',
+             'image': 'abeja-inc/all-gpu:19.10',
              'datasets': {'train': '1600000000000'}
-        })
+        }),
+        (['--job-definition-name', 'training-1', '--image', 'abeja-inc/all-gpu:18.10'],
+         {
+             'name': 'training-2',
+             'image': 'abeja-inc/all-gpu:19.10'
+        },
+            {
+             'notebook_type': 'notebook',
+             'image': 'abeja-inc/all-gpu:18.10'
+        }),
+        ([],
+         {
+             'name': 'training-1',
+             'image': 'abeja-inc/all-gpu:19.10',
+             'instance_type': 'gpu-1'
+        },
+            {
+             'notebook_type': 'notebook',
+             'image': 'abeja-inc/all-gpu:19.10',
+             'instance_type': 'gpu-1'
+        }),
+        ([],
+         {
+             'name': 'training-1',
+             'image': 'abeja-inc/all-gpu:19.10',
+             'dummy': 'dummy'
+        },
+            {
+             'notebook_type': 'notebook',
+             'image': 'abeja-inc/all-gpu:19.10'
+        }),
     ]
 )
 @patch('abejacli.training.commands.CONFIG', TEST_CONFIG)
 @patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
 def test_create_notebook(
-        req_mock, runner, cmd, additional_config, expected_payload):
-    config_data = {
-        'name': 'training-1',
-        'image': 'abeja-inc/all-cpu:18.10'
-    }
-    config_data = {**config_data, **additional_config}
+        req_mock, runner, cmd, config_data, expected_payload):
     with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
         yaml.dump(config_data, configfile)
 
+    name = 'training-1'
     url = "{}/training/definitions/{}/notebooks".format(
-        ORGANIZATION_ENDPOINT, config_data['name'])
+        ORGANIZATION_ENDPOINT, name)
 
     req_mock.register_uri(
         'POST', url,
@@ -170,72 +225,56 @@ def test_create_notebook(
 
 
 @pytest.mark.parametrize(
-    'cmd,additional_config,expected_payload',
+    'cmd,config_data,expected_payload',
     [
-        (['-n', '9876543210987'],
+        (['--job-definition-name', 'training-1', '-n', '9876543210987'],
          {},
-         {
-            'image': 'abeja-inc/all-cpu:18.10'
-        }),
-        (['-n', '9876543210987', '--instance-type', 'gpu-1'],
-         {},
-         {
-            'image': 'abeja-inc/all-cpu:18.10',
-            'instance_type': 'gpu-1'
-        }),
-        (['-n', '9876543210987', '--image', 'abeja-inc/all-gpu:19.10'],
-         {},
-         {
-            'image': 'abeja-inc/all-gpu:19.10'
-        }),
+         {}),
         (['-n', '9876543210987', '-t', 'lab'],
-         {},
+         {'name': 'training-1'},
          {
-            'image': 'abeja-inc/all-cpu:18.10',
-            'notebook_type': 'lab'
+             'notebook_type': 'lab'
         }),
-        (['-n', '9876543210987', '--datalake', '1234567890123'],
-         {},
+        (['--job-definition-name', 'training-1', '-n', '9876543210987', '--datalake', '1234567890123'],
+         {'name': 'training-2'},
          {
-            'image': 'abeja-inc/all-cpu:18.10',
-            'datalakes': ['1234567890123']
+             'datalakes': ['1234567890123']
         }),
         (['-n', '9876543210987', '--bucket', '1234567890123'],
-         {},
+         {'name': 'training-1'},
          {
-            'image': 'abeja-inc/all-cpu:18.10',
-            'buckets': ['1234567890123']
+             'buckets': ['1234567890123']
         }),
         (['-n', '9876543210987', '--datalake', '1234567890123', '--bucket', '1234567890123'],
-         {},
+         {'name': 'training-1'},
          {
-            'image': 'abeja-inc/all-cpu:18.10',
-            'datalakes': ['1234567890123'],
-            'buckets': ['1234567890123']
+             'datalakes': ['1234567890123'],
+             'buckets': ['1234567890123']
         }),
         (['-n', '9876543210987', '--dataset', 'train:1600000000000'],
-         {},
+         {'name': 'training-1'},
          {
-            'image': 'abeja-inc/all-cpu:18.10',
-            'datasets': {'train': '1600000000000'}
-        })
+             'datasets': {'train': '1600000000000'}
+        }),
+        (['-n', '9876543210987'],
+         {
+             'name': 'training-1',
+             'dummy': 'dummy'
+        },
+            {}),
     ]
 )
 @patch('abejacli.training.commands.CONFIG', TEST_CONFIG)
 @patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
 def test_start_notebook(
-        req_mock, runner, cmd, additional_config, expected_payload):
+        req_mock, runner, cmd, config_data, expected_payload):
     notebook_id = '9876543210987'
-    config_data = {
-        'name': 'training-1',
-        'image': 'abeja-inc/all-cpu:18.10'
-    }
-    config_data = {**config_data, **additional_config}
     with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
         yaml.dump(config_data, configfile)
 
+    name = 'training-1'
     url = "{}/training/definitions/{}/notebooks/{}/start".format(
-        ORGANIZATION_ENDPOINT, config_data['name'], notebook_id)
+        ORGANIZATION_ENDPOINT, name, notebook_id)
 
     def match_request_text(request):
         return json.loads(request.text) == expected_payload
@@ -251,54 +290,100 @@ def test_start_notebook(
 
 
 @pytest.mark.parametrize(
-    'cmd,additional_config,expected_payload',
+    'cmd,config_data,expected_payload',
     [
         (['--description', 'dummy description'],
-         {},
          {
+             'name': 'training-1',
+             'handler': 'train:handler',
+             'image': 'abeja-inc/all-cpu:18.10'
+        },
+            {
+             'handler': 'train:handler',
+             'image': 'abeja-inc/all-cpu:18.10',
              'description': 'dummy description'
         }),
-        (['--description', 'dummy description', '--environment', 'BATCH_SIZE:32'],
-         {},
-         {
-             'description': 'dummy description',
-             'environment': {'BATCH_SIZE': '32'}
+        ([
+            '--job-definition-name', 'training-1',
+            '--handler', 'train:handler', '--image', 'abeja-inc/all-cpu:18.10',
+            '--description', 'dummy description', '--environment', 'BATCH_SIZE:32'
+        ],
+            {},
+            {
+            'handler': 'train:handler',
+            'image': 'abeja-inc/all-cpu:18.10',
+            'description': 'dummy description',
+            'environment': {'BATCH_SIZE': '32'}
         }),
         (['--description', 'dummy description'],
          {
-             'datasets': {'train': '1600000000000'},
+             'name': 'training-1',
+             'handler': 'train:handler',
+             'image': 'abeja-inc/all-cpu:18.10',
              'params': {'key9': 'value9'}
         },
             {
+             'handler': 'train:handler',
+             'image': 'abeja-inc/all-cpu:18.10',
              'description': 'dummy description',
              'environment': {'key9': 'value9'}
         }),
-        (['--description', 'dummy description'],
+        (['--job-definition-name', 'training-1', '--description', 'dummy description'],
          {
-             'datasets': {'train': '1600000000000'},
+             'name': 'training-2',
+             'handler': 'train:handler',
+             'image': 'abeja-inc/all-cpu:18.10',
              'environment': {'key1': 'value1', 'key2': 'value2'}
         },
-            {'description': 'dummy description', 'environment': {'key1': 'value1', 'key2': 'value2'}}),
+            {
+             'handler': 'train:handler',
+             'image': 'abeja-inc/all-cpu:18.10',
+             'description': 'dummy description',
+             'environment': {'key1': 'value1', 'key2': 'value2'}
+        }),
         (['--description', 'dummy description'],
          {
-             'datasets': {'train': '1600000000000'},
+             'name': 'training-1',
+             'handler': 'train:handler',
+             'image': 'abeja-inc/all-cpu:18.10',
              'environment': {'key1': 'value1', 'key2': 'value2'},
              'params': {'key9': 'value9'}
         },
-            {'description': 'dummy description', 'environment': {'key1': 'value1', 'key2': 'value2'}}),
-        (['--datalake', '1234567890123'],
-         {},
-         {
-             'datalakes': ['1234567890123']
+            {
+             'handler': 'train:handler',
+             'image': 'abeja-inc/all-cpu:18.10',
+             'description': 'dummy description',
+             'environment': {'key1': 'value1', 'key2': 'value2'}
         }),
-        (['--bucket', '2345678901234'],
-         {},
+        ([
+            '--datasets', 'train:1600000000000',
+            '--datalake', '1234567890123',
+            '--bucket', '2345678901234'],
          {
+             'name': 'training-1',
+             'handler': 'train:handler',
+             'image': 'abeja-inc/all-cpu:18.10',
+        },
+            {
+             'handler': 'train:handler',
+             'image': 'abeja-inc/all-cpu:18.10',
+             'datasets': {'train': '1600000000000'},
+             'dataset_premounted': False,
+             'datalakes': ['1234567890123'],
              'buckets': ['2345678901234']
         }),
-        (['--datalake', '1234567890123', '--bucket', '2345678901234'],
-         {},
+        (['--datalake', '1234567890123', '--bucket', '2345678901234', '--dataset-premounted'],
          {
+             'name': 'training-1',
+             'handler': 'train:handler',
+             'image': 'abeja-inc/all-cpu:18.10',
+             'datasets': {'train': '1600000000000'},
+        },
+            {
+             'handler': 'train:handler',
+             'image': 'abeja-inc/all-cpu:18.10',
+             'datasets': {'train': '1600000000000'},
+             'dataset_premounted': True,
              'datalakes': ['1234567890123'],
              'buckets': ['2345678901234']
         })
@@ -308,18 +393,13 @@ def test_start_notebook(
 @patch('abejacli.training.commands.CONFIG', TEST_CONFIG)
 @patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
 def test_create_training_version(
-        req_mock, runner, cmd, additional_config, expected_payload):
-    config_data = {
-        'name': 'training-1',
-        'handler': 'train:handler',
-        'image': 'abeja-inc/all-cpu:18.10'
-    }
-    config_data = {**config_data, **additional_config}
+        req_mock, runner, cmd, config_data, expected_payload):
     with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
         yaml.dump(config_data, configfile)
 
+    name = 'training-1'
     url = "{}/training/definitions/{}/versions".format(
-        ORGANIZATION_ENDPOINT, config_data['name'])
+        ORGANIZATION_ENDPOINT, name)
 
     def match_request_text(request):
         return json.loads(request.text) == expected_payload
@@ -329,62 +409,6 @@ def test_create_training_version(
         json=expected_payload,
         additional_matcher=match_request_text)
 
-    expected_payload = {**expected_payload, **{'handler': config_data['handler'], 'image': config_data['image']}}
-    with patch('abejacli.training.commands._create_training_version') as mock:
-        mock.return_value = {}  # dummy response
-        r = runner.invoke(create_training_version, cmd)
-        args = mock.call_args[0]
-        assert args[0] == url
-        assert args[1] == expected_payload
-    assert not r.exception
-
-    # For 20.02 image.
-    # Invalid pair of "image" and "handler".
-    config_data = {
-        'name': 'training-1',
-        'handler': 'train',
-        'image': 'abeja-inc/all-cpu:18.10'
-    }
-    config_data = {**config_data, **additional_config}
-    with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
-        yaml.dump(config_data, configfile)
-
-    url = "{}/training/definitions/{}/versions".format(
-        ORGANIZATION_ENDPOINT, config_data['name'])
-
-    def match_request_text(request):
-        return json.loads(request.text) == expected_payload
-
-    req_mock.register_uri(
-        'POST', url,
-        json=expected_payload,
-        additional_matcher=match_request_text)
-    r = runner.invoke(create_training_version, cmd)
-    assert r.exception
-
-    # Valid pair of "image" and "handler".
-    # "handler" does not need to specify METHOD field.
-    config_data = {
-        'name': 'training-1',
-        'handler': 'train',
-        'image': 'abeja-inc/all-cpu:20.02a'
-    }
-    config_data = {**config_data, **additional_config}
-    with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
-        yaml.dump(config_data, configfile)
-
-    url = "{}/training/definitions/{}/versions".format(
-        ORGANIZATION_ENDPOINT, config_data['name'])
-
-    def match_request_text(request):
-        return json.loads(request.text) == expected_payload
-
-    req_mock.register_uri(
-        'POST', url,
-        json=expected_payload,
-        additional_matcher=match_request_text)
-
-    expected_payload = {**expected_payload, **{'handler': config_data['handler'], 'image': config_data['image']}}
     with patch('abejacli.training.commands._create_training_version') as mock:
         mock.return_value = {}  # dummy response
         r = runner.invoke(create_training_version, cmd)
@@ -395,84 +419,237 @@ def test_create_training_version(
 
 
 @pytest.mark.parametrize(
-    'cmd,additional_config,expected_payload',
+    'cmd,config_data,expected_payload',
     [
-        (['--git-url', 'https://github.com/abeja-inc/platform-template-image-classification.git',
-          '--description', 'dummy description'],
-         {},
+        ([],
          {
+             'name': 'training-1',
+             'handler': 'train',
+             'image': 'abeja-inc/all-cpu:20.02a'
+        },
+            {
+             'handler': 'train',
+             'image': 'abeja-inc/all-cpu:20.02a'
+        }),
+        ([
+            '--job-definition-name', 'training-1',
+            '--handler', 'train',
+            '--image', 'abeja-inc/all-cpu:20.02a'
+        ],
+            {},
+            {
+            'handler': 'train',
+            'image': 'abeja-inc/all-cpu:20.02a'
+        }),
+        (['--job-definition-name', 'training-1'],
+         {
+             'name': 'training-2',
+             'handler': 'train',
+             'image': 'abeja-inc/all-cpu:20.02a'
+        },
+            {
+             'handler': 'train',
+             'image': 'abeja-inc/all-cpu:20.02a'
+        }),
+    ]
+)
+@patch('abejacli.training.commands.version_archive', MagicMock(return_value=None))
+@patch('abejacli.training.commands.CONFIG', TEST_CONFIG)
+@patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
+def test_create_training_version_for_2002_image(
+        req_mock, runner, cmd, config_data, expected_payload):
+
+    def match_request_text(request):
+        return json.loads(request.text) == expected_payload
+
+    with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
+        yaml.dump(config_data, configfile)
+
+    name = 'training-1'
+    url = "{}/training/definitions/{}/versions".format(
+        ORGANIZATION_ENDPOINT, name)
+
+    req_mock.register_uri(
+        'POST', url,
+        json=expected_payload,
+        additional_matcher=match_request_text)
+
+    with patch('abejacli.training.commands._create_training_version') as mock:
+        mock.return_value = {}  # dummy response
+        r = runner.invoke(create_training_version, cmd)
+        args = mock.call_args[0]
+        assert args[0] == url
+        assert args[1] == expected_payload
+    assert not r.exception
+
+
+@pytest.mark.parametrize(
+    'cmd,config_data',
+    [
+        ([],
+         {
+             'name': 'training-1',
+             'handler': 'train',
+             'image': 'abeja-inc/all-cpu:18.10'
+        }),
+        ([
+            '--job-definition-name', 'training-1',
+            '--handler', 'train',
+            '--image', 'abeja-inc/all-cpu:18.10'
+        ],
+            {}),
+        ([
+            '--job-definition-name', 'training-1',
+            '--handler', 'train',
+            '--image', 'abeja-inc/all-cpu:18.10'
+        ],
+            {'name': 'training-2'})
+    ]
+)
+@patch('abejacli.training.commands.version_archive', MagicMock(return_value=None))
+@patch('abejacli.training.commands.CONFIG', TEST_CONFIG)
+@patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
+def test_create_training_version_for_2002_image_invalid(
+        req_mock, runner, cmd, config_data):
+
+    with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
+        yaml.dump(config_data, configfile)
+
+    name = 'training-1'
+    url = "{}/training/definitions/{}/versions".format(
+        ORGANIZATION_ENDPOINT, name)
+
+    req_mock.register_uri(
+        'POST', url,
+        json={})
+    r = runner.invoke(create_training_version, cmd)
+    assert r.exception
+
+
+@pytest.mark.parametrize(
+    'cmd,config_data,expected_payload',
+    [
+        (['--job-definition-name', 'training-1',
+          '--git-url', 'https://github.com/abeja-inc/platform-template-image-classification.git',
+          '--description', 'dummy description'],
+         {
+             'handler': 'train:handler',
+             'image': 'abeja-inc/all-cpu:18.10'
+        },
+            {
+             'handler': 'train:handler',
+             'image': 'abeja-inc/all-cpu:18.10',
              'git_url': 'https://github.com/abeja-inc/platform-template-image-classification.git',
              'description': 'dummy description'
         }),
         (['--git-url', 'https://github.com/abeja-inc/platform-template-image-classification.git',
           '--git-branch', 'develop',
+          '--handler', 'train:handler', '--image', 'abeja-inc/all-cpu:18.10',
           '--description', 'dummy description'],
-         {},
          {
+             'name': 'training-1'
+        },
+            {
              'git_url': 'https://github.com/abeja-inc/platform-template-image-classification.git',
              'git_branch': 'develop',
+             'handler': 'train:handler',
+             'image': 'abeja-inc/all-cpu:18.10',
              'description': 'dummy description'
         }),
-        (['--git-url', 'https://github.com/abeja-inc/platform-template-image-classification.git',
+        (['--job-definition-name', 'training-1',
+          '--git-url', 'https://github.com/abeja-inc/platform-template-image-classification.git',
           '--description', 'dummy description', '--environment', 'BATCH_SIZE:32'],
-         {},
          {
+             'name': 'training-2',
+             'handler': 'train:handler',
+             'image': 'abeja-inc/all-cpu:18.10'
+        },
+            {
              'git_url': 'https://github.com/abeja-inc/platform-template-image-classification.git',
+             'handler': 'train:handler',
+             'image': 'abeja-inc/all-cpu:18.10',
              'description': 'dummy description',
              'environment': {'BATCH_SIZE': '32'}
         }),
         (['--git-url', 'https://github.com/abeja-inc/platform-template-image-classification.git',
           '--description', 'dummy description'],
          {
-             'datasets': {'train': '1600000000000'},
+             'name': 'training-1',
+             'handler': 'train:handler',
+             'image': 'abeja-inc/all-cpu:18.10',
              'params': {'key9': 'value9'}
         },
             {
              'git_url': 'https://github.com/abeja-inc/platform-template-image-classification.git',
+             'handler': 'train:handler',
+             'image': 'abeja-inc/all-cpu:18.10',
              'description': 'dummy description',
              'environment': {'key9': 'value9'}
         }),
         (['--git-url', 'https://github.com/abeja-inc/platform-template-image-classification.git',
           '--description', 'dummy description'],
          {
-             'datasets': {'train': '1600000000000'},
+             'name': 'training-1',
+             'handler': 'train:handler',
+             'image': 'abeja-inc/all-cpu:18.10',
              'environment': {'key1': 'value1', 'key2': 'value2'}
         },
             {
              'git_url': 'https://github.com/abeja-inc/platform-template-image-classification.git',
+             'handler': 'train:handler',
+             'image': 'abeja-inc/all-cpu:18.10',
              'description': 'dummy description',
              'environment': {'key1': 'value1', 'key2': 'value2'}
         }),
         (['--git-url', 'https://github.com/abeja-inc/platform-template-image-classification.git',
           '--description', 'dummy description'],
          {
-             'datasets': {'train': '1600000000000'},
+             'name': 'training-1',
+             'handler': 'train:handler',
+             'image': 'abeja-inc/all-cpu:18.10',
              'environment': {'key1': 'value1', 'key2': 'value2'},
              'params': {'key9': 'value9'}
         },
             {
              'git_url': 'https://github.com/abeja-inc/platform-template-image-classification.git',
+             'handler': 'train:handler',
+             'image': 'abeja-inc/all-cpu:18.10',
              'description': 'dummy description', 'environment': {'key1': 'value1', 'key2': 'value2'}
         }),
-        (['--git-url', 'https://github.com/abeja-inc/platform-template-image-classification.git',
-          '--datalake', '1234567890123'],
-         {},
+        ([
+            '--git-url', 'https://github.com/abeja-inc/platform-template-image-classification.git',
+            '--datasets', 'train:1600000000000',
+            '--datalake', '1234567890123',
+            '--bucket', '2345678901234'],
          {
+             'name': 'training-1',
+             'handler': 'train:handler',
+             'image': 'abeja-inc/all-cpu:18.10',
+        },
+            {
              'git_url': 'https://github.com/abeja-inc/platform-template-image-classification.git',
-             'datalakes': ['1234567890123']
-        }),
-        (['--git-url', 'https://github.com/abeja-inc/platform-template-image-classification.git',
-          '--bucket', '2345678901234'],
-         {},
-         {
-             'git_url': 'https://github.com/abeja-inc/platform-template-image-classification.git',
+             'handler': 'train:handler',
+             'image': 'abeja-inc/all-cpu:18.10',
+             'datasets': {'train': '1600000000000'},
+             'dataset_premounted': False,
+             'datalakes': ['1234567890123'],
              'buckets': ['2345678901234']
         }),
-        (['--git-url', 'https://github.com/abeja-inc/platform-template-image-classification.git',
-          '--datalake', '1234567890123', '--bucket', '2345678901234'],
-         {},
+        ([
+            '--git-url', 'https://github.com/abeja-inc/platform-template-image-classification.git',
+            '--datalake', '1234567890123', '--bucket', '2345678901234', '--dataset-premounted'],
          {
+             'name': 'training-1',
+             'handler': 'train:handler',
+             'image': 'abeja-inc/all-cpu:18.10',
+             'datasets': {'train': '1600000000000'},
+        },
+            {
              'git_url': 'https://github.com/abeja-inc/platform-template-image-classification.git',
+             'handler': 'train:handler',
+             'image': 'abeja-inc/all-cpu:18.10',
+             'datasets': {'train': '1600000000000'},
+             'dataset_premounted': True,
              'datalakes': ['1234567890123'],
              'buckets': ['2345678901234']
         })
@@ -482,18 +659,13 @@ def test_create_training_version(
 @patch('abejacli.training.commands.CONFIG', TEST_CONFIG)
 @patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
 def test_create_training_version_from_git(
-        req_mock, runner, cmd, additional_config, expected_payload):
-    config_data = {
-        'name': 'training-1',
-        'handler': 'train:handler',
-        'image': 'abeja-inc/all-cpu:18.10'
-    }
-    config_data = {**config_data, **additional_config}
+        req_mock, runner, cmd, config_data, expected_payload):
     with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
         yaml.dump(config_data, configfile)
 
+    name = 'training-1'
     url = "{}/training/definitions/{}/git/versions".format(
-        ORGANIZATION_ENDPOINT, config_data['name'])
+        ORGANIZATION_ENDPOINT, name)
 
     def match_request_text(request):
         return json.loads(request.text) == expected_payload
@@ -503,28 +675,20 @@ def test_create_training_version_from_git(
         json=expected_payload,
         additional_matcher=match_request_text)
 
-    expected_payload = {**expected_payload, **{'handler': config_data['handler'], 'image': config_data['image']}}
-
-    def match_request_text(request):
-        return json.loads(request.text) == expected_payload
-
-    req_mock.register_uri(
-        'POST', url,
-        json=expected_payload,
-        additional_matcher=match_request_text)
     r = runner.invoke(create_training_version_from_git, cmd)
     assert not r.exception
 
 
 @pytest.mark.parametrize(
-    'cmd,additional_config,expected_payload',
+    'cmd,config_data,expected_payload',
     [
         (['--version', '1', '--description', 'dummy description'],
-         {},
+         {'name': 'training-1'},
          {
              'description': 'dummy description'
         }),
-        (['--version', '1', '--description', 'dummy description',
+        (['--job-definition-name', 'training-1',
+          '--version', '1', '--description', 'dummy description',
           '--environment', 'BATCH_SIZE:32', '--datasets', 'train:1600000000000'],
          {},
          {
@@ -533,8 +697,9 @@ def test_create_training_version_from_git(
              'dataset_premounted': False,
              'environment': {'BATCH_SIZE': '32'}
         }),
-        (['--version', '1', '--description', 'dummy description'],
+        (['--job-definition-name', 'training-1', '--version', '1', '--description', 'dummy description'],
          {
+             'name': 'training-2',
              'datasets': {'train': '1600000000000'},
              'environment': {'key1': 'value1', 'key2': 'value2'},
              'params': {'key9': 'value9'}
@@ -548,6 +713,7 @@ def test_create_training_version_from_git(
         (['--version', '1', '--description', 'dummy description',
           '--environment', 'BATCH_SIZE:32'],
          {
+             'name': 'training-1',
              'datasets': {'train': '1600000000000'},
              'environment': {'key1': 'value1', 'key2': 'value2'},
              'params': {'key9': 'value9'}
@@ -561,6 +727,7 @@ def test_create_training_version_from_git(
         (['--version', '1', '--description', 'dummy description',
           '--environment', 'BATCH_SIZE:32', '--datasets', 'train:1600000000001'],
          {
+             'name': 'training-1',
              'datasets': {'train': '1600000000000'},
              'environment': {'key1': 'value1', 'key2': 'value2'},
              'params': {'key9': 'value9'}
@@ -575,6 +742,7 @@ def test_create_training_version_from_git(
           '--environment', 'BATCH_SIZE:32', '--datasets', 'val:1600000000001',
           '--datasets', 'test:1600000000002'],
          {
+             'name': 'training-1',
              'datasets': {'train': '1600000000000'},
              'environment': {'key1': 'value1', 'key2': 'value2'},
              'params': {'key9': 'value9'}
@@ -589,6 +757,7 @@ def test_create_training_version_from_git(
           '--environment', 'BATCH_SIZE:32', '--datasets', 'val:1600000000001',
           '--datasets', 'test:1600000000002', '--instance-type', 'cpu-4'],
          {
+             'name': 'training-1',
              'datasets': {'train': '1600000000000'},
              'environment': {'key1': 'value1', 'key2': 'value2'},
              'params': {'key9': 'value9'}
@@ -605,6 +774,7 @@ def test_create_training_version_from_git(
           '--datasets', 'test:1600000000002', '--instance-type', 'cpu-4',
           '--dataset-premounted'],
          {
+             'name': 'training-1',
              'datasets': {'train': '1600000000000'},
              'environment': {'key1': 'value1', 'key2': 'value2'},
              'params': {'key9': 'value9'}
@@ -617,41 +787,52 @@ def test_create_training_version_from_git(
              'instance_type': 'cpu-4'
         }),
         (['--version', '1', '--description', 'dummy description', '--datalake', '1234567890123'],
-         {},
+         {'name': 'training-1'},
          {
              'description': 'dummy description',
              'datalakes': ['1234567890123']
         }),
         (['--version', '1', '--description', 'dummy description', '--bucket', '2345678901234'],
-         {},
+         {'name': 'training-1'},
          {
              'description': 'dummy description',
              'buckets': ['2345678901234']
         }),
         (['--version', '1', '--description', 'dummy description',
           '--datalake', '1234567890123', '--bucket', '2345678901234'],
-         {},
+         {'name': 'training-1'},
          {
              'description': 'dummy description',
              'datalakes': ['1234567890123'],
              'buckets': ['2345678901234']
-        })
+        }),
+        (['--version', '1'],
+         {
+             'name': 'training-1',
+             'instance_type': 'gpu-1'
+        },
+            {
+             'instance_type': 'gpu-1'
+        }),
+        (['--version', '1', '--instance-type', 'cpu-4'],
+         {
+             'name': 'training-1',
+             'instance_type': 'gpu-1'
+        },
+            {
+             'instance_type': 'cpu-4'
+        }),
     ]
 )
 @patch('abejacli.training.commands.CONFIG', TEST_CONFIG)
 @patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
-def test_create_training_job(req_mock, runner, cmd, additional_config, expected_payload):
-    config_data = {
-        'name': 'training-1',
-        'handler': 'train:handler',
-        'image': 'abeja-inc/all-cpu:18.10'
-    }
-    config_data = {**config_data, **additional_config}
+def test_create_training_job(req_mock, runner, cmd, config_data, expected_payload):
     with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
         yaml.dump(config_data, configfile)
 
+    name = 'training-1'
     url = "{}/training/definitions/{}/versions/{}/jobs".format(
-        ORGANIZATION_ENDPOINT, config_data['name'], 1)
+        ORGANIZATION_ENDPOINT, name, 1)
 
     def match_request_text(request):
         return json.loads(request.text) == expected_payload
@@ -692,19 +873,31 @@ def test_stop_training_job(req_mock, runner):
 
 
 @pytest.mark.parametrize(
-    'cmd,additional_config,expected_environment,expected_datasets',
+    'cmd,config_data,expected_environment,expected_datasets',
     [
-        ([], {}, {}, {}),
-        ([], {'environment': {'key1': 'value1'}}, {'key1': 'value1'}, {}),
+        (['--handler', 'train:handler', '--image', 'abeja-inc/all-cpu:18.10'], {}, {}, {}),
+        (['--handler', 'train:handler', '--image', 'abeja-inc/all-cpu:18.10'],
+         {'environment': {'key1': 'value1'}}, {'key1': 'value1'},
+         {}),
         (['--environment', 'key1:updated'],
-         {'environment': {'key1': 'value1', 'key2': 'value2'}},
+         {
+             'handler': 'train',
+             'image': 'abeja-inc/all-cpu:18.10',
+             'environment': {'key1': 'value1', 'key2': 'value2'}},
          {'key1': 'updated', 'key2': 'value2'},
          {}),
         ([],
-         {'environment': {'key1': 'value1'}, 'datasets': {'train': '1600000000000'}},
+         {
+             'handler': 'train',
+             'image': 'abeja-inc/all-cpu:18.10',
+             'environment': {'key1': 'value1'},
+             'datasets': {'train': '1600000000000'}},
          {'key1': 'value1'}, {'train': '1600000000000'}),
         (['--datasets', 'val:1600000000001'],
-         {'environment': {'key1': 'value1'}, 'datasets': {'train': '1600000000000'}},
+         {
+             'handler': 'train',
+             'image': 'abeja-inc/all-cpu:18.10',
+             'environment': {'key1': 'value1'}, 'datasets': {'train': '1600000000000'}},
          {'key1': 'value1'}, {'train': '1600000000000', 'val': '1600000000001'}),
     ]
 )
@@ -712,18 +905,12 @@ def test_stop_training_job(req_mock, runner):
 @patch('abejacli.training.CONFIGFILE_NAME', get_tmp_training_file_name())
 @patch('abejacli.training.commands.TrainingJobDebugRun')
 def test_debug_local_params(
-        mock_debug_job, runner, cmd, additional_config,
+        mock_debug_job, runner, cmd, config_data,
         expected_environment, expected_datasets):
     mock_job = MagicMock()
     mock_debug_job.return_value = mock_job
 
-    config_data = {
-        'name': 'training-1',
-        'handler': 'train:handler',
-        'image': 'abeja-inc/all-cpu:18.10',
-        'ignores': ['.gitignore']
-    }
-    config_data = {**config_data, **additional_config}
+    config_data = {**config_data, 'ignores': ['.gitignore']}
     with open(abejacli.training.CONFIGFILE_NAME, 'w') as configfile:
         yaml.dump(config_data, configfile)
 
@@ -944,6 +1131,7 @@ def test_train_local_environment(mock_train_local, mock_get_organization_id, run
     assert r.exit_code == 0, r.output
     mock_get_organization_id.assert_called_once_with()
     args = mock_train_local.call_args[1]
+    assert args['job_definition_name'] == 'training_def_version_1'
     expect_environment = {
         'param1': 'value1',
         'param2': 'value2',
@@ -952,6 +1140,21 @@ def test_train_local_environment(mock_train_local, mock_get_organization_id, run
         'foo': 'bar'
     }
     assert args['environment'] == expect_environment
+
+    # Test without `--name`
+    url = "{}/training/definitions/{}/versions/{}".format(
+        ORGANIZATION_ENDPOINT, 'training-1', 1)
+    req_mock.register_uri(
+        'GET', url,
+        json=version_info)
+    cmd = [
+        '--version', '1',
+        '--config', abejacli.training.CONFIGFILE_NAME,
+    ]
+    r = runner.invoke(train_local, cmd)
+    assert r.exit_code == 0, r.output
+    args = mock_train_local.call_args[1]
+    assert args['job_definition_name'] == 'training-1'
 
 # Job definitions
 

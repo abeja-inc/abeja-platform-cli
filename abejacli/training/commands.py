@@ -17,6 +17,7 @@ from abejacli.click_custom import (
     convert_to_local_image_callback
 )
 from abejacli.common import (
+    __get_job_definition_name,
     __try_get_organization_id,
     json_output_formatter,
     progress_status,
@@ -82,11 +83,14 @@ def initialize_training(name):
 # job definition
 # ---------------------------------------------------
 @training.command(name='create-job-definition', help='Create training job definition')
-def create_job_definition():
+@click.option('-n', '--name', 'name', type=str,
+              help='Training job definition name',
+              required=False, default=None)
+def create_job_definition(name):
     try:
-        config_data = training_config.read(training_config.default_schema)
+        name = __get_job_definition_name(name, training_config)
         params = {
-            "name": config_data['name']
+            "name": name
         }
         url = "{}/training/definitions".format(ORGANIZATION_ENDPOINT)
         json_data = json.dumps(params)
@@ -136,12 +140,14 @@ def describe_job_definitions(job_definition_name, include_archived, limit, offse
         sys.exit(ERROR_EXITCODE)
     click.echo(json_output_formatter(r))
 
+
 # ---------------------------------------------------
 # notebook
 # ---------------------------------------------------
-
-
-@training.command(name='create-notebook')
+@training.command(name='create-notebook', help='Create Jupyter Notebook/Lab.')
+@click.option('-j', '--job_definition_name', '--job-definition-name', 'job_definition_name', type=str,
+              help='Training job definition name',
+              required=False, default=None)
 @click.option('-t', '--notebook-type', type=str, default='notebook', required=False,
               help='Jupyter type. Choose from "notebook" or "lab". Default is "notebook".')
 @click.option('--instance-type', type=str, required=False,
@@ -156,11 +162,12 @@ def describe_job_definitions(job_definition_name, include_archived, limit, offse
 @click.option('--dataset', '--datasets', 'datasets', type=DATASET_PARAM_STR,
               help='[Alpha stage option] Dataset ID for premount.', default=None,
               required=False, multiple=True)
-def create_notebook(notebook_type, instance_type, image, datalakes, buckets, datasets):
+def create_notebook(job_definition_name, notebook_type, instance_type, image, datalakes, buckets, datasets):
     try:
-        params = training_config.read(training_config.create_notebook_schema)
+        name = __get_job_definition_name(job_definition_name, training_config)
+        config_data = training_config.read(training_config.create_notebook_schema)
 
-        image = image or params.get('image')
+        image = image or config_data.get('image')
         if not image:
             raise InvalidConfigException('need to specify image')
 
@@ -168,6 +175,8 @@ def create_notebook(notebook_type, instance_type, image, datalakes, buckets, dat
             'image': image,
             'notebook_type': notebook_type
         }
+
+        instance_type = instance_type or config_data.get('instance_type')
         if instance_type is not None:
             payload['instance_type'] = instance_type
         if datalakes:
@@ -178,7 +187,7 @@ def create_notebook(notebook_type, instance_type, image, datalakes, buckets, dat
             payload['datasets'] = dict(datasets)
 
         url = "{}/training/definitions/{}/notebooks".format(
-            ORGANIZATION_ENDPOINT, params['name'])
+            ORGANIZATION_ENDPOINT, name)
 
         r = api_post(url, json.dumps(payload))
     except ConfigFileNotFoundError:
@@ -196,15 +205,13 @@ def create_notebook(notebook_type, instance_type, image, datalakes, buckets, dat
     click.echo(json_output_formatter(r))
 
 
-@training.command(name='start-notebook')
+@training.command(name='start-notebook', help='Start an existing Jupyter Notebook/Lab.')
+@click.option('-j', '--job_definition_name', '--job-definition-name', 'job_definition_name', type=str,
+              help='Training job definition name',
+              required=False, default=None)
 @click.option('-n', '--notebook_id', '--notebook-id', 'notebook_id', type=str, help='notebook id', required=True)
 @click.option('-t', '--notebook-type', type=str, required=False,
               help='Jupyter type. Choose from "notebook" or "lab".')
-@click.option('--instance-type', type=str, required=False,
-              help='Instance Type of the machine where notebook is started. '
-                   'By default, cpu-1 and gpu-1 is used for all-cpu and all-gpu images respectively.')
-@click.option('-i', '--image', 'image', type=str, required=False,
-              help='Specify base image name and tag in the "name:tag" format. ex) abeja-inc/all-gpu:19.10')
 @click.option('--datalake', '--datalakes', 'datalakes', type=str, default=None, required=False, multiple=True,
               help='[Alpha stage option] Datalake channel ID for premount.')
 @click.option('--bucket', '--buckets', 'buckets', type=str, default=None, required=False, multiple=True,
@@ -212,21 +219,13 @@ def create_notebook(notebook_type, instance_type, image, datalakes, buckets, dat
 @click.option('--dataset', '--datasets', 'datasets', type=DATASET_PARAM_STR,
               help='[Alpha stage option] Dataset ID for premount.', default=None,
               required=False, multiple=True)
-def start_notebook(notebook_id, notebook_type, instance_type, image, datalakes, buckets, datasets):
+def start_notebook(job_definition_name, notebook_id, notebook_type, datalakes, buckets, datasets):
     try:
-        params = training_config.read(training_config.create_notebook_schema)
+        name = __get_job_definition_name(job_definition_name, training_config)
 
-        image = image or params.get('image')
-        if not image:
-            raise InvalidConfigException('need to specify image')
-
-        payload = {
-            'image': image
-        }
+        payload = dict()
         if notebook_type is not None:
             payload['notebook_type'] = notebook_type
-        if instance_type is not None:
-            payload['instance_type'] = instance_type
         if datalakes:
             payload['datalakes'] = list(datalakes)
         if buckets:
@@ -235,7 +234,7 @@ def start_notebook(notebook_id, notebook_type, instance_type, image, datalakes, 
             payload['datasets'] = dict(datasets)
 
         url = "{}/training/definitions/{}/notebooks/{}/start".format(
-            ORGANIZATION_ENDPOINT, params['name'], notebook_id)
+            ORGANIZATION_ENDPOINT, name, notebook_id)
 
         r = api_post(url, json.dumps(payload))
     except ConfigFileNotFoundError:
@@ -256,7 +255,13 @@ def start_notebook(notebook_id, notebook_type, instance_type, image, datalakes, 
 # ---------------------------------------------------
 # job definition version
 # ---------------------------------------------------
-@training.command(name='create-version')
+@training.command(name='create-version', help='Create a version of Training Job Definition.')
+@click.option('-j', '--job_definition_name', '--job-definition-name', 'job_definition_name', type=str,
+              help='Training job definition name',
+              required=False, default=None)
+@click.option('-h', '--handler', 'handler', type=str, help='Training handler', required=False)
+@click.option('-i', '--image', 'image', type=str, required=False,
+              help='Specify base image name and tag in the "name:tag" format. ex) abeja-inc/all-gpu:19.10')
 @click.option('-d', '--description', type=str, required=False,
               help='Description for the training job, which must be less than or equal to 256 characters.')
 @click.option('-e', '--environment', type=ENVIRONMENT_STR, default=None, required=False, multiple=True,
@@ -267,7 +272,14 @@ def start_notebook(notebook_id, notebook_type, instance_type, image, datalakes, 
               help='[Alpha stage option] Datalake channel ID for premount.')
 @click.option('--bucket', '--buckets', 'buckets', type=str, default=None, required=False, multiple=True,
               help='[Alpha stage option] Datalake bucket ID for premount.')
-def create_training_version(description, environment, exclude, datalakes, buckets):
+@click.option('-d', '--dataset', '--datasets', 'datasets', type=DATASET_PARAM_STR,
+              help='Datasets name', default=None,
+              required=False, multiple=True)
+@click.option('--dataset-premounted', is_flag=True, type=bool, required=False,
+              help='[Alpha stage option] Flag for pre-mounting datasets. Use this along with "--datasets" option.')
+def create_training_version(
+        job_definition_name, handler, image, description, environment, exclude,
+        datalakes, buckets, datasets, dataset_premounted):
     if exclude is None:
         excludes = []
     else:
@@ -275,10 +287,11 @@ def create_training_version(description, environment, exclude, datalakes, bucket
 
     archive = None
     try:
-        params = dict(training_config.read(training_config.create_version_schema))
+        name = __get_job_definition_name(job_definition_name, training_config)
+        config_data = training_config.read(training_config.create_version_schema)
 
-        handler = params.get('handler')
-        image = params.get('image')
+        handler = handler or config_data.get('handler')
+        image = image or config_data.get('image')
         if not handler or not image:
             raise InvalidConfigException('need to specify handler and image both')
 
@@ -294,7 +307,7 @@ def create_training_version(description, environment, exclude, datalakes, bucket
         if description is not None:
             payload['description'] = description
 
-        environment = {**params.get('environment', {}), **dict(environment)}
+        environment = {**dict(config_data.get('environment', {})), **dict(environment)}
         if environment:
             payload['environment'] = environment
 
@@ -303,13 +316,19 @@ def create_training_version(description, environment, exclude, datalakes, bucket
         if buckets:
             payload['buckets'] = list(buckets)
 
-        user_exclude_files = params.pop('ignores', [])
+        _datasets = dict(config_data.get('datasets', {}))
+        datasets = {**_datasets, **dict(datasets)}
+        if datasets:
+            payload['datasets'] = datasets
+            payload['dataset_premounted'] = dataset_premounted or False
+
+        user_exclude_files = config_data.pop('ignores', [])
         exclude_files = set(user_exclude_files + DEFAULT_EXCLUDE_FILES + excludes)
 
-        archive = version_archive(params['name'], exclude_files)
+        archive = version_archive(name, exclude_files)
 
         url = "{}/training/definitions/{}/versions".format(
-            ORGANIZATION_ENDPOINT, params['name'])
+            ORGANIZATION_ENDPOINT, name)
 
         r = _create_training_version(url, payload, archive)
     except ConfigFileNotFoundError:
@@ -345,11 +364,18 @@ def _create_training_version(url: str, payload: Dict[str, str], archive):
         return api_post(url, files=files)
 
 
-@training.command(name='create-version-from-git')
+@training.command(name='create-version-from-git',
+                  help='Create a version of Training Job Definition from GitHub repository.')
+@click.option('-j', '--job_definition_name', '--job-definition-name', 'job_definition_name', type=str,
+              help='Training job definition name',
+              required=False, default=None)
 @click.option('--git-url', type=str, required=True,
               help='GitHub URL, which must start with "https://".')
 @click.option('--git-branch', type=str, required=False,
               help='GitHub branch. Default "master"')
+@click.option('-h', '--handler', 'handler', type=str, help='Training handler', required=False)
+@click.option('-i', '--image', 'image', type=str, required=False,
+              help='Specify base image name and tag in the "name:tag" format. ex) abeja-inc/all-gpu:19.10')
 @click.option('-d', '--description', type=str, required=False,
               help='Description for the training job, which must be less than or equal to 256 characters.')
 @click.option('-e', '--environment', type=ENVIRONMENT_STR, default=None, required=False, multiple=True,
@@ -358,12 +384,20 @@ def _create_training_version(url: str, payload: Dict[str, str], archive):
               help='[Alpha stage option] Datalake channel ID for premount.')
 @click.option('--bucket', '--buckets', 'buckets', type=str, default=None, required=False, multiple=True,
               help='[Alpha stage option] Datalake bucket ID for premount.')
-def create_training_version_from_git(git_url, git_branch, description, environment, datalakes, buckets):
+@click.option('-d', '--dataset', '--datasets', 'datasets', type=DATASET_PARAM_STR,
+              help='Datasets name', default=None,
+              required=False, multiple=True)
+@click.option('--dataset-premounted', is_flag=True, type=bool, required=False,
+              help='[Alpha stage option] Flag for pre-mounting datasets. Use this along with "--datasets" option.')
+def create_training_version_from_git(
+        job_definition_name, git_url, git_branch, handler, image, description, environment,
+        datalakes, buckets, datasets, dataset_premounted):
     try:
-        params = dict(training_config.read(training_config.create_version_schema))
+        name = __get_job_definition_name(job_definition_name, training_config)
+        config_data = training_config.read(training_config.create_version_schema)
 
-        handler = params.get('handler')
-        image = params.get('image')
+        handler = handler or config_data.get('handler')
+        image = image or config_data.get('image')
         if not handler or not image:
             raise InvalidConfigException('need to specify handler and image both')
 
@@ -383,7 +417,7 @@ def create_training_version_from_git(git_url, git_branch, description, environme
         if description is not None:
             payload['description'] = description
 
-        environment = {**params.get('environment', {}), **dict(environment)}
+        environment = {**dict(config_data.get('environment', {})), **dict(environment)}
         if environment:
             payload['environment'] = environment
 
@@ -392,8 +426,14 @@ def create_training_version_from_git(git_url, git_branch, description, environme
         if buckets:
             payload['buckets'] = list(buckets)
 
+        _datasets = dict(config_data.get('datasets', {}))
+        datasets = {**_datasets, **dict(datasets)}
+        if datasets:
+            payload['datasets'] = datasets
+            payload['dataset_premounted'] = dataset_premounted or False
+
         url = "{}/training/definitions/{}/git/versions".format(
-            ORGANIZATION_ENDPOINT, params['name'])
+            ORGANIZATION_ENDPOINT, name)
 
         r = api_post(url, json.dumps(payload))
     except ConfigFileNotFoundError:
@@ -411,14 +451,17 @@ def create_training_version_from_git(git_url, git_branch, description, environme
     click.echo(json_output_formatter(r))
 
 
-@training.command(name='update-version')
+@training.command(name='update-version', help='Update a description of Training Job Definition Version.')
+@click.option('-j', '--job_definition_name', '--job-definition-name', 'job_definition_name', type=str,
+              help='Training job definition name',
+              required=False, default=None)
 @click.option('-v', '--version', type=str, required=False,
               help='Job definition version. By default, latest version is used')
 @click.option('-d', '--description', type=str, required=False,
               help='Description for the training job, which must be less than or equal to 256 characters.')
-def update_training_version(version, description):
+def update_training_version(job_definition_name, version, description):
     try:
-        config = training_config.read(training_config.create_version_schema)
+        name = __get_job_definition_name(job_definition_name, training_config)
     except ConfigFileNotFoundError:
         logger.error('training configuration file does not exists.')
         click.echo('training configuration file does not exists.')
@@ -439,7 +482,7 @@ def update_training_version(version, description):
     try:
         if version is None:
             try:
-                version = _get_latest_training_version(config['name'])
+                version = _get_latest_training_version(name)
             except ResourceNotFound:
                 logger.error('there is no available training versions.')
                 click.echo(
@@ -447,7 +490,7 @@ def update_training_version(version, description):
                 sys.exit(ERROR_EXITCODE)
 
         url = "{}/training/definitions/{}/versions/{}".format(
-            ORGANIZATION_ENDPOINT, config['name'], version)
+            ORGANIZATION_ENDPOINT, name, version)
         r = api_patch(url, json.dumps(params))
         click.echo(json_output_formatter(r))
     except Exception as e:
@@ -456,26 +499,20 @@ def update_training_version(version, description):
         sys.exit(ERROR_EXITCODE)
 
 
-@training.command(name='describe-versions')
+@training.command(name='describe-versions', help='Describe Training Job Definition Versions')
 @click.option('-j', '--job_definition_name', '--job-definition-name', 'job_definition_name', type=str,
               help='Training job definition name',
               required=False, default=None)
 @click.option('--include-archived', 'include_archived', is_flag=True,
               help="Includes archived training versions.")
 def describe_training_versions(job_definition_name, include_archived):
-    if job_definition_name:
-        name = job_definition_name
-    else:
-        try:
-            config_data = training_config.read(training_config.default_schema)
-        except ConfigFileNotFoundError:
-            click.echo(
-                'Trainining config file not found. Please specify job-definition-name or set training config file.'
-            )
-            sys.exit(ERROR_EXITCODE)
-        name = config_data['name']
     try:
+        name = __get_job_definition_name(job_definition_name, training_config)
         r = _describe_training_versions(name, include_archived)
+    except ConfigFileNotFoundError:
+        logger.error('training configuration file does not exists.')
+        click.echo('training configuration file does not exists.')
+        sys.exit(ERROR_EXITCODE)
     except InvalidConfigException as e:
         logger.error('invalid training configuration file: {}'.format(e))
         click.echo('invalid training configuration file.')
@@ -510,6 +547,9 @@ def _get_latest_training_version(name: str):
 # job
 # ---------------------------------------------------
 @training.command(name='create-job', help='Create training job')
+@click.option('-j', '--job_definition_name', '--job-definition-name', 'job_definition_name', type=str,
+              help='Training job definition name',
+              required=False, default=None)
 @click.option('-v', '--version', type=str, required=False,
               help='Job definition version. By default, latest version is used')
 @click.option('-e', '--environment', type=ENVIRONMENT_STR, default=None, required=False, multiple=True,
@@ -532,13 +572,14 @@ def _get_latest_training_version(name: str):
               help='[Alpha stage option] Datalake bucket ID for premount.')
 @click.option('--dataset-premounted', is_flag=True, type=bool, required=False,
               help='[Alpha stage option] Flag for pre-mounting datasets. Use this along with "--datasets" option.')
-def create_training_job(version, environment, params, instance_type, description,
+def create_training_job(job_definition_name, version, environment, params, instance_type, description,
                         datasets, datalakes, buckets, dataset_premounted):
     try:
-        config_data = training_config.read(training_config.default_schema)
+        name = __get_job_definition_name(job_definition_name, training_config)
+        config_data = training_config.read(training_config.create_job_schema)
         if version is None:
             try:
-                version = _get_latest_training_version(config_data['name'])
+                version = _get_latest_training_version(name)
             except ResourceNotFound:
                 logger.error('there is no available training versions.')
                 click.echo(
@@ -546,7 +587,7 @@ def create_training_job(version, environment, params, instance_type, description
                 sys.exit(ERROR_EXITCODE)
 
         url = "{}/training/definitions/{}/versions/{}/jobs".format(
-            ORGANIZATION_ENDPOINT, config_data['name'], version)
+            ORGANIZATION_ENDPOINT, name, version)
 
         environment = dict(environment) or dict(params)
         env_vars = {**dict(config_data.get('environment', {})), **environment}
@@ -557,6 +598,7 @@ def create_training_job(version, environment, params, instance_type, description
         data = {}
         if env_vars:
             data['environment'] = env_vars
+        instance_type = instance_type or config_data.get('instance_type')
         if instance_type is not None:
             data['instance_type'] = instance_type
         if datasets:
@@ -595,18 +637,8 @@ def create_training_job(version, environment, params, instance_type, description
 @click.option('-o', '--offset', 'offset', type=int,
               help='Paging start index', default=None, required=False)
 def describe_jobs(job_definition_name, include_archived, limit, offset):
-    if job_definition_name:
-        name = job_definition_name
-    else:
-        try:
-            config_data = training_config.read(training_config.default_schema)
-        except ConfigFileNotFoundError:
-            click.echo(
-                'Trainining config file not found. Please specify job-definition-name or set training config file.'
-            )
-            sys.exit(ERROR_EXITCODE)
-        name = config_data['name']
     try:
+        name = __get_job_definition_name(job_definition_name, training_config)
         url = "{}/training/definitions/{}/jobs".format(ORGANIZATION_ENDPOINT, name)
         params = {}
         params["filter_archived"] = 'include_archived' if include_archived else 'exclude_archived'
@@ -615,6 +647,10 @@ def describe_jobs(job_definition_name, include_archived, limit, offset):
         if offset:
             params["offset"] = offset
         r = api_get_data(url, params)
+    except ConfigFileNotFoundError:
+        logger.error('training configuration file does not exists.')
+        click.echo('training configuration file does not exists.')
+        sys.exit(ERROR_EXITCODE)
     except InvalidConfigException as e:
         logger.error('invalid training configuration file: {}'.format(e))
         click.echo('invalid training configuration file.')
@@ -655,26 +691,26 @@ def _download_result(job_definition_id, job_id):
 
 def __training_config_provider(yaml_path, _cmd_name):
     try:
-        config = read_training_config(yaml_path)
-        if not config:
+        config_data = read_training_config(yaml_path)
+        if not config_data:
             return {}
 
         # DEPRECATED: datasets will be removed
         datasets = [
             '{}:{}'.format(k, v)
-            for k, v in config.pop('datasets', {}).items()
+            for k, v in config_data.pop('datasets', {}).items()
         ]
-        config['datasets'] = datasets
+        config_data['datasets'] = datasets
 
         environment = []
-        for k, v in config.pop('environment', config.pop('params', {})).items():
+        for k, v in config_data.pop('environment', config_data.pop('params', {})).items():
             if v is None:
                 v = ''
             environment.append('{}:{}'.format(k, v))
-        if 'params' in config:
-            config.pop('params', None)
-        config['environment'] = environment
-        return config
+        if 'params' in config_data:
+            config_data.pop('params', None)
+        config_data['environment'] = environment
+        return config_data
     except ConfigFileNotFoundError:
         return {}
     except InvalidConfigException as e:
@@ -688,13 +724,16 @@ def __training_config_provider(yaml_path, _cmd_name):
 
 
 @training.command(name='archive-job', help='Archive training job')
+@click.option('-j', '--job_definition_name', '--job-definition-name', 'job_definition_name', type=str,
+              help='Training job definition name',
+              required=False, default=None)
 @click.option('--job-id', '--job_id', type=str, required=True,
               help='Training Job identifier')
-def archive_job(job_id):
+def archive_job(job_definition_name, job_id):
     try:
-        config_data = training_config.read(training_config.default_schema)
+        name = __get_job_definition_name(job_definition_name, training_config)
         url = "{}/training/definitions/{}/jobs/{}/archive".format(
-            ORGANIZATION_ENDPOINT, config_data['name'], job_id)
+            ORGANIZATION_ENDPOINT, name, job_id)
         r = api_post(url)
     except ConfigFileNotFoundError:
         logger.error('training configuration file does not exists.')
@@ -712,13 +751,16 @@ def archive_job(job_id):
 
 
 @training.command(name='unarchive-job', help='Unarchive training job')
+@click.option('-j', '--job_definition_name', '--job-definition-name', 'job_definition_name', type=str,
+              help='Training job definition name',
+              required=False, default=None)
 @click.option('--job-id', '--job_id', type=str, required=True,
               help='Training Job identifier')
-def unarchive_job(job_id):
+def unarchive_job(job_definition_name, job_id):
     try:
-        config_data = training_config.read(training_config.default_schema)
+        name = __get_job_definition_name(job_definition_name, training_config)
         url = "{}/training/definitions/{}/jobs/{}/unarchive".format(
-            ORGANIZATION_ENDPOINT, config_data['name'], job_id)
+            ORGANIZATION_ENDPOINT, name, job_id)
         r = api_post(url)
     except ConfigFileNotFoundError:
         logger.error('training configuration file does not exists.')
@@ -736,13 +778,16 @@ def unarchive_job(job_id):
 
 
 @training.command(name='archive-version', help='Archive training job definition version')
+@click.option('-j', '--job_definition_name', '--job-definition-name', 'job_definition_name', type=str,
+              help='Training job definition name',
+              required=False, default=None)
 @click.option('-v', '--version-id', '--version_id', type=str, required=True,
               help='Training job version identifier')
-def archive_version(version_id):
+def archive_version(job_definition_name, version_id):
     try:
-        config_data = training_config.read(training_config.default_schema)
+        name = __get_job_definition_name(job_definition_name, training_config)
         url = "{}/training/definitions/{}/versions/{}/archive".format(
-            ORGANIZATION_ENDPOINT, config_data['name'], version_id)
+            ORGANIZATION_ENDPOINT, name, version_id)
         r = api_post(url)
     except ConfigFileNotFoundError:
         logger.error('training configuration file does not exists.')
@@ -760,13 +805,16 @@ def archive_version(version_id):
 
 
 @training.command(name='unarchive-version', help='Unarchive training job definition version')
+@click.option('-j', '--job_definition_name', '--job-definition-name', 'job_definition_name', type=str,
+              help='Training job definition name',
+              required=False, default=None)
 @click.option('-v', '--version-id', '--version_id', type=str, required=True,
               help='Training job version identifier')
-def unarchive_version(version_id):
+def unarchive_version(job_definition_name, version_id):
     try:
-        config_data = training_config.read(training_config.default_schema)
+        name = __get_job_definition_name(job_definition_name, training_config)
         url = "{}/training/definitions/{}/versions/{}/unarchive".format(
-            ORGANIZATION_ENDPOINT, config_data['name'], version_id)
+            ORGANIZATION_ENDPOINT, name, version_id)
         r = api_post(url)
     except ConfigFileNotFoundError:
         logger.error('training configuration file does not exists.')
@@ -784,13 +832,16 @@ def unarchive_version(version_id):
 
 
 @training.command(name='stop-job', help='Stop training job')
+@click.option('-j', '--job_definition_name', '--job-definition-name', 'job_definition_name', type=str,
+              help='Training job definition name',
+              required=False, default=None)
 @click.option('--job-id', '--job_id', type=str, required=True,
               help='Training Job identifier')
-def stop_training_job(job_id):
+def stop_training_job(job_definition_name, job_id):
     try:
-        config_data = training_config.read(training_config.default_schema)
+        name = __get_job_definition_name(job_definition_name, training_config)
         url = "{}/training/definitions/{}/jobs/{}/stop".format(
-            ORGANIZATION_ENDPOINT, config_data['name'], job_id)
+            ORGANIZATION_ENDPOINT, name, job_id)
         r = api_post(url, json.dumps({}))
     except ConfigFileNotFoundError:
         logger.error('training configuration file does not exists.')
@@ -819,20 +870,20 @@ def stop_training_job(job_id):
 @click.option('--include-archived', 'include_archived', is_flag=True,
               help="Includes archived training models.")
 def describe_training_models(job_definition_name, model_id, include_archived):
-    if job_definition_name:
-        name = job_definition_name
-    else:
-        try:
-            config_data = training_config.read(training_config.default_schema)
-        except ConfigFileNotFoundError:
-            click.echo(
-                'Trainining config file not found. Please specify job-definition-name or set training config file.'
-            )
-            sys.exit(ERROR_EXITCODE)
-        name = config_data['name']
     try:
+        name = __get_job_definition_name(job_definition_name, training_config)
         r = _describe_training_models(name, model_id, include_archived)
-    except:
+    except ConfigFileNotFoundError:
+        logger.error('training configuration file does not exists.')
+        click.echo('training configuration file does not exists.')
+        sys.exit(ERROR_EXITCODE)
+    except InvalidConfigException as e:
+        logger.error('invalid training configuration file: {}'.format(e))
+        click.echo('invalid training configuration file.')
+        sys.exit(ERROR_EXITCODE)
+    except Exception as e:
+        logger.error('describe_training_models operation aborted: {}'.format(e))
+        click.echo('describe_training_models operation aborted.')
         sys.exit(ERROR_EXITCODE)
     click.echo(json_output_formatter(r))
 
@@ -852,7 +903,7 @@ def _describe_training_models(job_definition_name, model_id, include_archived=No
 
 @training.command(name='create-training-model', help='Create training model')
 @click.option('-j', '--job_definition_name', '--job-definition-name', 'job_definition_name', type=str,
-              help='Training job definition name', required=True)
+              help='Training job definition name', required=False, default=None)
 @click.option('-f', '--filepath', 'filepath', type=str, help='Model filepath', required=True)
 @click.option('-d', '--description', 'description', type=str, required=False,
               help='Description for the training model, which must be less than or equal to 256 characters.')
@@ -861,8 +912,19 @@ def _describe_training_models(job_definition_name, model_id, include_archived=No
               required=False, multiple=True)
 def create_training_model(job_definition_name, filepath, description, user_parameters):
     try:
-        r = _create_training_model(job_definition_name, filepath, description, user_parameters)
-    except:
+        name = __get_job_definition_name(job_definition_name, training_config)
+        r = _create_training_model(name, filepath, description, user_parameters)
+    except ConfigFileNotFoundError:
+        logger.error('training configuration file does not exists.')
+        click.echo('training configuration file does not exists.')
+        sys.exit(ERROR_EXITCODE)
+    except InvalidConfigException as e:
+        logger.error('invalid training configuration file: {}'.format(e))
+        click.echo('invalid training configuration file.')
+        sys.exit(ERROR_EXITCODE)
+    except Exception as e:
+        logger.error('create_training_model operation aborted: {}'.format(e))
+        click.echo('create_training_model operation aborted.')
         sys.exit(ERROR_EXITCODE)
 
     click.echo(json_output_formatter(r))
@@ -900,14 +962,25 @@ def _create_training_model(job_definition_name, filepath, description=None, user
 
 @training.command(name='update-training-model', help='Update training model')
 @click.option('-j', '--job_definition_name', '--job-definition-name', 'job_definition_name', type=str,
-              help='Training job definition name', required=True)
+              help='Training job definition name', required=False, default=None)
 @click.option('-m', '--model_id', '--model-id', 'model_id', type=str, help='Model identifier', required=True)
 @click.option('-d', '--description', 'description', type=str, required=False,
               help='Description for the training model, which must be less than or equal to 256 characters.')
 def update_training_model(job_definition_name, model_id, description):
     try:
-        r = _update_training_model(job_definition_name, model_id, description)
-    except:
+        name = __get_job_definition_name(job_definition_name, training_config)
+        r = _update_training_model(name, model_id, description)
+    except ConfigFileNotFoundError:
+        logger.error('training configuration file does not exists.')
+        click.echo('training configuration file does not exists.')
+        sys.exit(ERROR_EXITCODE)
+    except InvalidConfigException as e:
+        logger.error('invalid training configuration file: {}'.format(e))
+        click.echo('invalid training configuration file.')
+        sys.exit(ERROR_EXITCODE)
+    except Exception as e:
+        logger.error('update_training_model operation aborted: {}'.format(e))
+        click.echo('update_training_model operation aborted.')
         sys.exit(ERROR_EXITCODE)
 
     click.echo(json_output_formatter(r))
@@ -925,12 +998,23 @@ def _update_training_model(job_definition_name, model_id, description):
 
 @training.command(name='download-training-model', help='Download training model')
 @click.option('-j', '--job_definition_name', '--job-definition-name', 'job_definition_name', type=str,
-              help='Training job definition name', required=True)
+              help='Training job definition name', required=False, default=None)
 @click.option('-m', '--model_id', '--model-id', 'model_id', type=str, help='Model identifier', required=True)
 def download_training_model(job_definition_name, model_id):
     try:
-        r = _download_training_model(job_definition_name, model_id)
-    except:
+        name = __get_job_definition_name(job_definition_name, training_config)
+        r = _download_training_model(name, model_id)
+    except ConfigFileNotFoundError:
+        logger.error('training configuration file does not exists.')
+        click.echo('training configuration file does not exists.')
+        sys.exit(ERROR_EXITCODE)
+    except InvalidConfigException as e:
+        logger.error('invalid training configuration file: {}'.format(e))
+        click.echo('invalid training configuration file.')
+        sys.exit(ERROR_EXITCODE)
+    except Exception as e:
+        logger.error('download_training_model operation aborted: {}'.format(e))
+        click.echo('download_training_model operation aborted.')
         sys.exit(ERROR_EXITCODE)
 
     click.echo(json_output_formatter(r))
@@ -946,12 +1030,23 @@ def _download_training_model(job_definition_name, model_id):
 
 @training.command(name='archive-training-model', help='Archive training model')
 @click.option('-j', '--job_definition_name', '--job-definition-name', 'job_definition_name', type=str,
-              help='Training job definition name', required=True)
+              help='Training job definition name', required=False, default=None)
 @click.option('-m', '--model_id', '--model-id', 'model_id', type=str, help='Model identifier', required=True)
 def archive_training_model(job_definition_name, model_id):
     try:
-        r = _archive_training_model(job_definition_name, model_id)
-    except:
+        name = __get_job_definition_name(job_definition_name, training_config)
+        r = _archive_training_model(name, model_id)
+    except ConfigFileNotFoundError:
+        logger.error('training configuration file does not exists.')
+        click.echo('training configuration file does not exists.')
+        sys.exit(ERROR_EXITCODE)
+    except InvalidConfigException as e:
+        logger.error('invalid training configuration file: {}'.format(e))
+        click.echo('invalid training configuration file.')
+        sys.exit(ERROR_EXITCODE)
+    except Exception as e:
+        logger.error('archive_training_model operation aborted: {}'.format(e))
+        click.echo('archive_training_model operation aborted.')
         sys.exit(ERROR_EXITCODE)
 
     click.echo(json_output_formatter(r))
@@ -967,12 +1062,23 @@ def _archive_training_model(job_definition_name, model_id):
 
 @training.command(name='unarchive-training-model', help='Unarchive training model')
 @click.option('-j', '--job_definition_name', '--job-definition-name', 'job_definition_name', type=str,
-              help='Training job definition name', required=True)
+              help='Training job definition name', required=False, default=None)
 @click.option('-m', '--model_id', '--model-id', 'model_id', type=str, help='Model identifier', required=True)
 def unarchive_training_model(job_definition_name, model_id):
     try:
-        r = _unarchive_training_model(job_definition_name, model_id)
-    except:
+        name = __get_job_definition_name(job_definition_name, training_config)
+        r = _unarchive_training_model(name, model_id)
+    except ConfigFileNotFoundError:
+        logger.error('training configuration file does not exists.')
+        click.echo('training configuration file does not exists.')
+        sys.exit(ERROR_EXITCODE)
+    except InvalidConfigException as e:
+        logger.error('invalid training configuration file: {}'.format(e))
+        click.echo('invalid training configuration file.')
+        sys.exit(ERROR_EXITCODE)
+    except Exception as e:
+        logger.error('unarchive_training_model operation aborted: {}'.format(e))
+        click.echo('unarchive_training_model operation aborted.')
         sys.exit(ERROR_EXITCODE)
 
     click.echo(json_output_formatter(r))
@@ -991,8 +1097,8 @@ def _unarchive_training_model(job_definition_name, model_id):
 # ---------------------------------------------------
 @training.command(name='debug-local', help='Local train commands', context_settings=dict(
     ignore_unknown_options=True, allow_extra_args=True))
-@click.option('-h', '--handler', 'handler', type=str, help='Training handler', required=True)
-@click.option('-i', '--image', 'image', type=str, required=True,
+@click.option('-h', '--handler', 'handler', type=str, help='Training handler', required=False)
+@click.option('-i', '--image', 'image', type=str, required=False,
               callback=convert_to_local_image_callback,
               help='Specify base image name and tag in the "name:tag" format. ex) abeja-inc/all-gpu:19.10')
 @click.option('-o', '--organization_id', '--organization-id', 'organization_id', type=str, required=False,
@@ -1024,11 +1130,16 @@ def debug_local(
         handler, image, organization_id, datasets, environment, volume,
         no_cache, quiet, v1, runtime=None, build_only=False):
     try:
-        config = training_config.read(training_config.default_schema)
+        config_data = training_config.read(training_config.debug_schema)
 
-        datasets = {**dict(config.get('datasets', {})), **dict(datasets)}
+        handler = handler or config_data.get('handler')
+        image = image or config_data.get('image')
+        if not handler or not image:
+            raise InvalidConfigException('need to specify handler and image both')
 
-        environment = {**dict(config.get('environment', {})), **dict(environment)}
+        datasets = {**dict(config_data.get('datasets', {})), **dict(datasets)}
+
+        environment = {**dict(config_data.get('environment', {})), **dict(environment)}
 
         volume = build_volumes(volume) if volume else {}
 
@@ -1042,9 +1153,17 @@ def debug_local(
             if job.build_only:
                 sys.exit(SUCCESS_EXITCODE)
             job.watch()
+    except ConfigFileNotFoundError:
+        logger.error('training configuration file does not exists.')
+        click.echo('training configuration file does not exists.')
+        sys.exit(ERROR_EXITCODE)
+    except InvalidConfigException as e:
+        logger.error('invalid training configuration file: {}'.format(e))
+        click.echo('invalid training configuration file.')
+        sys.exit(ERROR_EXITCODE)
     except Exception as e:
-        logger.error('debug local aborted: {}'.format(e))
-        click.echo('debug local aborted.')
+        logger.error('debug_local operation aborted: {}'.format(e))
+        click.echo('debug_local operation aborted.')
         sys.exit(ERROR_EXITCODE)
 
 
@@ -1054,7 +1173,7 @@ def debug_local(
               help='Organization ID, organization_id of current credential organization is used by default. '
                    'this value is set as an environment variable named `ABEJA_ORGANIZATION_ID`.',
               callback=__try_get_organization_id)
-@click.option('--name', 'name', type=str, help='Training Job Definition Name', required=True)
+@click.option('--name', 'name', type=str, help='Training Job Definition Name', required=False)
 @click.option('--version', 'version', type=str, help='Training Job Definition Version', required=True)
 @click.option('--description', 'description', type=str, help='Training Job description', required=False)
 @click.option('-d', '--datasets', type=DATASET_PARAM_STR, help='Datasets name', default=None,
@@ -1075,7 +1194,8 @@ def debug_local(
     help='Read Configuration from PATH. By default read from `{}`'.format(CONFIGFILE_NAME))
 def train_local(organization_id, name, version, description, datasets, environment, volume, v1, runtime=None):
     try:
-        config = training_config.read(training_config.default_schema)
+        name = __get_job_definition_name(name, training_config)
+        config_data = training_config.read(training_config.local_schema)
 
         job_definition_version = _describe_training_version(name, version)
         version_datasets = job_definition_version.get('datasets')
@@ -1085,9 +1205,9 @@ def train_local(organization_id, name, version, description, datasets, environme
         if not version_environment:
             version_environment = {}
 
-        datasets = {**version_datasets, **dict(**config.get('datasets', {})), **dict(datasets)}
+        datasets = {**version_datasets, **dict(config_data.get('datasets', {})), **dict(datasets)}
 
-        environment = {**version_environment, **dict(**config.get('environment', {})), **dict(environment)}
+        environment = {**version_environment, **dict(config_data.get('environment', {})), **dict(environment)}
 
         volume = build_volumes(volume) if volume else {}
 
@@ -1099,9 +1219,17 @@ def train_local(organization_id, name, version, description, datasets, environme
             platform_personal_access_token=ABEJA_PLATFORM_TOKEN, v1flag=v1
         ) as job:
             job.watch()
+    except ConfigFileNotFoundError:
+        logger.error('training configuration file does not exists.')
+        click.echo('training configuration file does not exists.')
+        sys.exit(ERROR_EXITCODE)
+    except InvalidConfigException as e:
+        logger.error('invalid training configuration file: {}'.format(e))
+        click.echo('invalid training configuration file.')
+        sys.exit(ERROR_EXITCODE)
     except Exception as e:
-        logger.error('train local aborted: {}'.format(e))
-        click.echo('train local aborted.')
+        logger.error('train_local operation aborted: {}'.format(e))
+        click.echo('train_local operation aborted.')
         sys.exit(ERROR_EXITCODE)
 
 
