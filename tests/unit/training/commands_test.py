@@ -822,6 +822,11 @@ def test_create_training_version_from_git(
             {
              'instance_type': 'cpu-4'
         }),
+        (
+            ['--version', '1', '--export-log'],
+            {'name': 'training-1'},
+            {'export_log': True}
+        ),
     ]
 )
 @patch('abejacli.training.commands.CONFIG', TEST_CONFIG)

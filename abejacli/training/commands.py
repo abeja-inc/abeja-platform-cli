@@ -572,8 +572,10 @@ def _get_latest_training_version(name: str):
               help='[Alpha stage option] Datalake bucket ID for premount.')
 @click.option('--dataset-premounted', is_flag=True, type=bool, required=False,
               help='[Alpha stage option] Flag for pre-mounting datasets. Use this along with "--datasets" option.')
+@click.option('--export-log', is_flag=True, type=bool, required=False,
+              help='Include the log in the model file. This feature is only available with 19.04 or later images.')
 def create_training_job(job_definition_name, version, environment, params, instance_type, description,
-                        datasets, datalakes, buckets, dataset_premounted):
+                        datasets, datalakes, buckets, dataset_premounted, export_log):
     try:
         name = __get_job_definition_name(job_definition_name, training_config)
         config_data = training_config.read(training_config.create_job_schema)
@@ -610,6 +612,9 @@ def create_training_job(job_definition_name, version, environment, params, insta
             data['datalakes'] = list(datalakes)
         if buckets:
             data['buckets'] = list(buckets)
+        if export_log is not None:
+            data['export_log'] = export_log
+
         r = api_post(url, json.dumps(data))
     except ConfigFileNotFoundError:
         logger.error('training configuration file does not exists.')

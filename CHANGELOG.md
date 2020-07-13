@@ -1,3 +1,6 @@
+# 1.0.6
+- add option export-log on training create-training-job command (#27)
+
 # 1.0.5
 - Relax restriction config.yaml for training (#26)
 - Add help message for `training` sub-command (#24)
