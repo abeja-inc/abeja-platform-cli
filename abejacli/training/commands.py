@@ -561,7 +561,7 @@ def _get_latest_training_version(name: str):
 @click.option('--instance-type', type=str, required=False,
               help='Instance Type of the machine where training job is executed. '
                    'By default, cpu-1 and gpu-1 is used for all-cpu and all-gpu images respectively.')
-@click.option('--description', type=str, required=False,
+@click.option('-d', '--description', type=str, required=False,
               help='Description for the training job, which must be less than or equal to 256 characters.')
 @click.option('--dataset', '--datasets', 'datasets', type=DATASET_PARAM_STR,
               help='Datasets name', default=None,
