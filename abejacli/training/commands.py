@@ -272,7 +272,7 @@ def start_notebook(job_definition_name, notebook_id, notebook_type, datalakes, b
               help='[Alpha stage option] Datalake channel ID for premount.')
 @click.option('--bucket', '--buckets', 'buckets', type=str, default=None, required=False, multiple=True,
               help='[Alpha stage option] Datalake bucket ID for premount.')
-@click.option('-d', '--dataset', '--datasets', 'datasets', type=DATASET_PARAM_STR,
+@click.option('--dataset', '--datasets', 'datasets', type=DATASET_PARAM_STR,
               help='Datasets name', default=None,
               required=False, multiple=True)
 @click.option('--dataset-premounted', is_flag=True, type=bool, required=False,
@@ -384,7 +384,7 @@ def _create_training_version(url: str, payload: Dict[str, str], archive):
               help='[Alpha stage option] Datalake channel ID for premount.')
 @click.option('--bucket', '--buckets', 'buckets', type=str, default=None, required=False, multiple=True,
               help='[Alpha stage option] Datalake bucket ID for premount.')
-@click.option('-d', '--dataset', '--datasets', 'datasets', type=DATASET_PARAM_STR,
+@click.option('--dataset', '--datasets', 'datasets', type=DATASET_PARAM_STR,
               help='Datasets name', default=None,
               required=False, multiple=True)
 @click.option('--dataset-premounted', is_flag=True, type=bool, required=False,
@@ -561,9 +561,9 @@ def _get_latest_training_version(name: str):
 @click.option('--instance-type', type=str, required=False,
               help='Instance Type of the machine where training job is executed. '
                    'By default, cpu-1 and gpu-1 is used for all-cpu and all-gpu images respectively.')
-@click.option('--description', type=str, required=False,
+@click.option('-d', '--description', type=str, required=False,
               help='Description for the training job, which must be less than or equal to 256 characters.')
-@click.option('-d', '--dataset', '--datasets', 'datasets', type=DATASET_PARAM_STR,
+@click.option('--dataset', '--datasets', 'datasets', type=DATASET_PARAM_STR,
               help='Datasets name', default=None,
               required=False, multiple=True)
 @click.option('--datalake', '--datalakes', 'datalakes', type=str, default=None, required=False, multiple=True,
@@ -1110,7 +1110,7 @@ def _unarchive_training_model(job_definition_name, model_id):
               help='Organization ID, organization_id of current credential organization is used by default. '
                    'this value is set as an environment variable named `ABEJA_ORGANIZATION_ID`.',
               callback=__try_get_organization_id)
-@click.option('-d', '--datasets', type=DATASET_PARAM_STR, help='Datasets name', default=None,
+@click.option('--datasets', type=DATASET_PARAM_STR, help='Datasets name', default=None,
               required=False, multiple=True)
 @click.option('-e', '--environment', type=ENVIRONMENT_STR, help='Environment variables', default=None,
               required=False, multiple=True)
@@ -1180,8 +1180,8 @@ def debug_local(
               callback=__try_get_organization_id)
 @click.option('--name', 'name', type=str, help='Training Job Definition Name', required=False)
 @click.option('--version', 'version', type=str, help='Training Job Definition Version', required=True)
-@click.option('--description', 'description', type=str, help='Training Job description', required=False)
-@click.option('-d', '--datasets', type=DATASET_PARAM_STR, help='Datasets name', default=None,
+@click.option('-d', '--description', 'description', type=str, help='Training Job description', required=False)
+@click.option('--datasets', type=DATASET_PARAM_STR, help='Datasets name', default=None,
               required=False, multiple=True)
 @click.option('-e', '--environment', type=ENVIRONMENT_STR, help='Environment variables', default=None,
               required=False, multiple=True)
