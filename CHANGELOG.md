@@ -1,3 +1,7 @@
+# 1.1.0
+- fix a duplicate short hand options (#28)
+- add shorthand option for description on create-job command (#29)
+
 # 1.0.6
 - add option export-log on training create-training-job command (#27)
 
