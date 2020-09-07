@@ -81,7 +81,6 @@ workflows:
   version: 2
   build_and_test:
     jobs:
-      - codetest35
       - codetest36
       - release_package:
           filters:
@@ -89,7 +88,6 @@ workflows:
               only:
                 - master
           requires:
-            - codetest35
             - codetest36
       - release_rc_package:
           filters:
@@ -97,5 +95,4 @@ workflows:
               only:
                 - /^release\/.*/
           requires:
-            - codetest35
             - codetest36
