@@ -45,13 +45,6 @@ test_step: &test_step
 
 version: 2
 jobs:
-  codetest35:
-    <<: *default
-    docker:
-      - image: circleci/python:3.5
-    environment:
-      - ABEJA_CLI_PYTHON_VERSION: "3.5"
-    steps: *test_step
   codetest36:
     <<: *default
     environment:
@@ -88,7 +81,6 @@ workflows:
   version: 2
   build_and_test:
     jobs:
-      - codetest35
       - codetest36
       - release_package:
           filters:
@@ -96,7 +88,6 @@ workflows:
               only:
                 - master
           requires:
-            - codetest35
             - codetest36
       - release_rc_package:
           filters:
@@ -104,5 +95,4 @@ workflows:
               only:
                 - /^release\/.*/
           requires:
-            - codetest35
             - codetest36
