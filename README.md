@@ -4,7 +4,6 @@ This package provides a unified command line interface to ABEJA Platform.
 
 [![CircleCI](https://circleci.com/gh/abeja-inc/abeja-platform-cli/tree/master.svg?style=svg)](https://circleci.com/gh/abeja-inc/abeja-platform-cli/tree/master)
 
-[![python3.5](https://img.shields.io/badge/python-3.5-blue.svg?style=flat-square)]()
 [![python3.6](https://img.shields.io/badge/python-3.6-blue.svg?style=flat-square)]()
 
 # Development
