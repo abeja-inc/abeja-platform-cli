@@ -1,3 +1,6 @@
+# 2.0.0
+- Switch python version to 3.6 (#30)
+
 # 1.1.0
 - fix a duplicate short hand options (#28)
 - add shorthand option for description on create-job command (#29)
