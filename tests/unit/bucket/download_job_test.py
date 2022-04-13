@@ -17,9 +17,9 @@ from abejacli.bucket.process_file_job import (
 from abejacli.config import ORGANIZATION_ENDPOINT
 
 try:
-    from unittest.mock import MagicMock, ANY
+    from unittest.mock import ANY, MagicMock
 except ImportError:
-    from mock import MagicMock, ANY
+    from mock import ANY, MagicMock
 
 
 ORGANIZATION_ID = '1122334455667'
