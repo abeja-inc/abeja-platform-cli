@@ -1,7 +1,4 @@
+[flake8]
 max-line-length = 160
-ignore = 
-  # E252 missing whitespace around parameter equals
-  # -----------------------------------------------
-  # The warning is suppressed because this pattern is used in too many places. (e.g. 
-  # function parameter like `param=None`).
-  E252
+max-complexity = 25
+ignore = E121,E722,E741,F523
