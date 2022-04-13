@@ -28,7 +28,7 @@ LOCAL_TRAIN_TYPE_VALUE = 'train'
 
 
 class LocalServer:
-    def __init__(self, container: Container, port: Optional[int]=None) -> None:
+    def __init__(self, container: Container, port: Optional[int] = None) -> None:
         self._container = container
         self.endpoint = 'http://localhost:{}'.format(port)
 
@@ -42,8 +42,8 @@ class LocalServer:
             return
 
     def logs(
-            self, follow: bool=True, stream: bool=True,
-            since: str=None) -> Generator[bytes, None, None]:
+            self, follow: bool = True, stream: bool = True,
+            since: str = None) -> Generator[bytes, None, None]:
         return self._container.logs(follow=follow, stream=stream, since=since)
 
 
@@ -100,8 +100,8 @@ class LocalModelHandler:
         return False
 
     def build_run_image(
-            self, image: str, tag: str, model_type: str=None,
-            no_cache: bool=False, stdout=None) -> Image:
+            self, image: str, tag: str, model_type: str = None,
+            no_cache: bool = False, stdout=None) -> Image:
         """
         build docker image adding label to be able to find it
 
@@ -129,7 +129,7 @@ class LocalModelHandler:
         self._build_image(image_name, dockerfile, model_type, stdout)
         return self._find_built_image()
 
-    def _build_image(self, name: str, dockerfile: str, type_value: str, stdout: Callable=None) -> None:
+    def _build_image(self, name: str, dockerfile: str, type_value: str, stdout: Callable = None) -> None:
         with tempfile.NamedTemporaryFile(mode='w+t') as f:
             f.write(dockerfile)
             f.seek(0)  # put file pointer back the initial position for being read

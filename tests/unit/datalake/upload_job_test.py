@@ -14,9 +14,9 @@ from abejacli.datalake.upload_job import upload_job
 from abejacli.fs_utils import UploadFile
 
 try:
-    from unittest.mock import MagicMock, ANY
+    from unittest.mock import ANY, MagicMock
 except ImportError:
-    from mock import MagicMock, ANY
+    from mock import ANY, MagicMock
 
 
 CHANNEL_ID = '1282495447337'

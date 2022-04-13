@@ -524,7 +524,7 @@ def describe_training_versions(job_definition_name, include_archived):
     click.echo(json_output_formatter(r))
 
 
-def _describe_training_versions(name: str, include_archived: Optional[bool]=None):
+def _describe_training_versions(name: str, include_archived: Optional[bool] = None):
     url = "{}/training/definitions/{}/versions".format(
         ORGANIZATION_ENDPOINT, name)
     url = '{}?filter_archived=include_archived'.format(
