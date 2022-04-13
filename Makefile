@@ -27,10 +27,10 @@ lint: check-fmt
 	poetry run flake8 abejacli tests --max-line-length=120 --max-complexity=25 --ignore E402,E121
 
 fmt:
-	poetry run isort -rc -sl $(FMT_TARGET)
+	poetry run isort -sl $(FMT_TARGET)
 	poetry run autopep8 -i -r --max-line-length=120 --exclude=abejacli/template/* $(FMT_TARGET)
 	poetry run autoflake -i -r --remove-all-unused-imports --remove-unused-variables $(FMT_TARGET)
-	poetry run isort -rc -m 3 $(FMT_TARGET)
+	poetry run isort -m 3 $(FMT_TARGET)
 
 check-fmt:
 	poetry run isort --check-only .
