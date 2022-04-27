@@ -1,0 +1,109 @@
+name: Continuous Integration / Delivery for application
+
+on:
+  pull_request:
+    branches:
+      - master
+      - release/*
+      - develop
+    types: [opened, synchronize, closed]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+          architecture: 'x64'
+
+      - name: Install dependencies
+        run: |
+          pip install --user poetry==1.0.9
+          poetry env use 3.8
+          poetry install
+
+#      - name: Setup variables for Dev environment
+#        if: ${{ github.base_ref == 'develop' }}
+#        run: |
+#          echo "PLATFORM_ORG=$ORGANIZATION_NAME_DEV" >> $GITHUB_ENV
+#          echo "ORGANIZATION_NAME=$ORGANIZATION_NAME_DEV" >> $GITHUB_ENV
+#          echo "PLATFORM_USER_ID=$PLATFORM_USER_ID_DEV" >> $GITHUB_ENV
+#          echo "PLATFORM_USER_TOKEN=$PLATFORM_USER_TOKEN_DEV" >> $GITHUB_ENV
+#          echo "DATALAKE_CHANNEL_ID=$DATALAKE_CHANNEL_ID_DEV" >> $GITHUB_ENV
+#          echo "DATALAKE_BUCKET_ID=$DATALAKE_BUCKET_ID_DEV" >> $GITHUB_ENV
+#          echo "TRIGGER_INPUT_DATALAKE_ID=$TRIGGER_INPUT_DATALAKE_ID_DEV" >> $GITHUB_ENV
+#          echo "TRIGGER_OUTPUT_DATALAKE_ID=$TRIGGER_OUTPUT_DATALAKE_ID_DEV" >> $GITHUB_ENV
+#          echo "ABEJA_API_URL=https://api.dev.abeja.io" >> $GITHUB_ENV
+#        env:
+#          ORGANIZATION_NAME_DEV: ${{ secrets.ORGANIZATION_NAME_DEV }}
+#          PLATFORM_USER_ID_DEV: ${{ secrets.PLATFORM_USER_ID_DEV }}
+#          PLATFORM_USER_TOKEN_DEV: ${{ secrets.PLATFORM_USER_TOKEN_DEV }}
+#          DATALAKE_CHANNEL_ID_DEV: ${{ secrets.DATALAKE_CHANNEL_ID_DEV }}
+#          DATALAKE_BUCKET_ID_DEV: ${{ secrets.DATALAKE_BUCKET_ID_DEV }}
+#          TRIGGER_INPUT_DATALAKE_ID_DEV: ${{ secrets.TRIGGER_INPUT_DATALAKE_ID_DEV }}
+#          TRIGGER_OUTPUT_DATALAKE_ID_DEV: ${{ secrets.TRIGGER_OUTPUT_DATALAKE_ID_DEV }}
+#
+#      - name: Setup variables for Prod environment
+#        if: ${{ github.base_ref == 'master' }}
+#        run: |
+#          echo "PLATFORM_ORG=$ORGANIZATION_NAME_PROD" >> $GITHUB_ENV
+#          echo "ORGANIZATION_NAME=$ORGANIZATION_NAME_PROD" >> $GITHUB_ENV
+#          echo "PLATFORM_USER_ID=$PLATFORM_USER_ID_PROD" >> $GITHUB_ENV
+#          echo "PLATFORM_USER_TOKEN=$PLATFORM_USER_TOKEN_PROD" >> $GITHUB_ENV
+#          echo "DATALAKE_CHANNEL_ID=$DATALAKE_CHANNEL_ID_PROD" >> $GITHUB_ENV
+#          echo "DATALAKE_BUCKET_ID=$DATALAKE_BUCKET_ID_PROD" >> $GITHUB_ENV
+#          echo "TRIGGER_INPUT_DATALAKE_ID=$TRIGGER_INPUT_DATALAKE_ID_PROD" >> $GITHUB_ENV
+#          echo "TRIGGER_OUTPUT_DATALAKE_ID=$TRIGGER_OUTPUT_DATALAKE_ID_PROD" >> $GITHUB_ENV
+#          echo "ABEJA_API_URL=https://api.dev.abeja.io" >> $GITHUB_ENV
+#        env:
+#          ORGANIZATION_NAME_PROD: ${{ secrets.ORGANIZATION_NAME_PROD }}
+#          PLATFORM_USER_ID_PROD: ${{ secrets.PLATFORM_USER_ID_PROD }}
+#          PLATFORM_USER_TOKEN_PROD: ${{ secrets.PLATFORM_USER_TOKEN_PROD }}
+#          DATALAKE_CHANNEL_ID_PROD: ${{ secrets.DATALAKE_CHANNEL_ID_PROD }}
+#          DATALAKE_BUCKET_ID: ${{ secrets.DATALAKE_BUCKET_ID_PROD }}
+#          TRIGGER_INPUT_DATALAKE_ID_PROD: ${{ secrets.TRIGGER_INPUT_DATALAKE_ID_PROD }}
+#          TRIGGER_OUTPUT_DATALAKE_ID_PROD: ${{ secrets.TRIGGER_OUTPUT_DATALAKE_ID_PROD }}
+
+      - name: Unit test
+        run: | 
+          make prepare_ci
+          make test
+#          make integration_test
+
+  cd:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.pull_request.merged == true && github.base_ref != 'develop' }}
+    needs:
+      - ci
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+          architecture: 'x64'
+
+      - name: Install dependencies
+        run: |
+          pip install --user poetry
+          poetry install
+
+      - name: Deploy_RC
+        if: ${{ github.event.pull_request.merged == true && startsWith(github.base_ref, 'release/') }}
+        run: |
+          poetry version $(PYTHONPATH=./ poetry run python tools/add_rc_version.py)
+          make release
+
+      - name: Deploy
+        if: ${{ github.event.pull_request.merged == true && github.base_ref == 'master' }}
+        run: |
+          make release
