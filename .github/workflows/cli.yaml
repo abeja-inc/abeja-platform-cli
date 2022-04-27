@@ -67,14 +67,13 @@ jobs:
         run: | 
           make prepare_ci
           make test
-#          make integration_test
+          make integration_test
         env:
           NUM_TEST_PROCESS: 1
 
   cd:
     runs-on: ubuntu-latest
-    # if: ${{ startsWith(github.ref_name, 'release/') || github.ref_name == 'master' }}
-    if: ${{ startsWith(github.ref_name, 'release/') || github.ref_name == 'master-test' }}
+    if: ${{ startsWith(github.ref_name, 'release/') || github.ref_name == 'master' }}
     needs:
       - ci
 
@@ -97,18 +96,15 @@ jobs:
         if: ${{ startsWith(github.ref_name, 'release/') }}
         run: |
           poetry version $(PYTHONPATH=./ poetry run python tools/add_rc_version.py)
-          # make release
-          make release-test
+          make release
         env:
           TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
           TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
 
       - name: Deploy
-        # if: ${{ github.ref_name== 'master' }}
-        if: ${{ github.ref_name == 'master-test' }}
+        if: ${{ github.ref_name== 'master' }}
         run: |
-          # make release
-          make release-test
+          make release
         env:
           TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
           TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
