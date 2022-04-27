@@ -3,10 +3,13 @@ name: Continuous Integration / Delivery for application
 on:
   pull_request:
     branches:
-      - master
-      - release/*
       - develop
     types: [opened, synchronize, closed]
+  push:
+    branches:
+      - master
+      - release/*
+      - master-test
 
 jobs:
   ci:
@@ -31,44 +34,34 @@ jobs:
 #      - name: Setup variables for Dev environment
 #        if: ${{ github.base_ref == 'develop' }}
 #        run: |
-#          echo "PLATFORM_ORG=$ORGANIZATION_NAME_DEV" >> $GITHUB_ENV
-#          echo "ORGANIZATION_NAME=$ORGANIZATION_NAME_DEV" >> $GITHUB_ENV
+#          echo "PLATFORM_ORG=1113407535106" >> $GITHUB_ENV
+#          echo "ORGANIZATION_NAME=1113407535106" >> $GITHUB_ENV
 #          echo "PLATFORM_USER_ID=$PLATFORM_USER_ID_DEV" >> $GITHUB_ENV
 #          echo "PLATFORM_USER_TOKEN=$PLATFORM_USER_TOKEN_DEV" >> $GITHUB_ENV
-#          echo "DATALAKE_CHANNEL_ID=$DATALAKE_CHANNEL_ID_DEV" >> $GITHUB_ENV
-#          echo "DATALAKE_BUCKET_ID=$DATALAKE_BUCKET_ID_DEV" >> $GITHUB_ENV
-#          echo "TRIGGER_INPUT_DATALAKE_ID=$TRIGGER_INPUT_DATALAKE_ID_DEV" >> $GITHUB_ENV
-#          echo "TRIGGER_OUTPUT_DATALAKE_ID=$TRIGGER_OUTPUT_DATALAKE_ID_DEV" >> $GITHUB_ENV
+#          echo "DATALAKE_CHANNEL_ID=1292391500090" >> $GITHUB_ENV
+#          echo "DATALAKE_BUCKET_ID=1995370125318" >> $GITHUB_ENV
+#          echo "TRIGGER_INPUT_DATALAKE_ID=2054933523197" >> $GITHUB_ENV
+#          echo "TRIGGER_OUTPUT_DATALAKE_ID=2054933618430" >> $GITHUB_ENV
 #          echo "ABEJA_API_URL=https://api.dev.abeja.io" >> $GITHUB_ENV
 #        env:
-#          ORGANIZATION_NAME_DEV: ${{ secrets.ORGANIZATION_NAME_DEV }}
 #          PLATFORM_USER_ID_DEV: ${{ secrets.PLATFORM_USER_ID_DEV }}
 #          PLATFORM_USER_TOKEN_DEV: ${{ secrets.PLATFORM_USER_TOKEN_DEV }}
-#          DATALAKE_CHANNEL_ID_DEV: ${{ secrets.DATALAKE_CHANNEL_ID_DEV }}
-#          DATALAKE_BUCKET_ID_DEV: ${{ secrets.DATALAKE_BUCKET_ID_DEV }}
-#          TRIGGER_INPUT_DATALAKE_ID_DEV: ${{ secrets.TRIGGER_INPUT_DATALAKE_ID_DEV }}
-#          TRIGGER_OUTPUT_DATALAKE_ID_DEV: ${{ secrets.TRIGGER_OUTPUT_DATALAKE_ID_DEV }}
 #
 #      - name: Setup variables for Prod environment
 #        if: ${{ github.base_ref == 'master' }}
 #        run: |
-#          echo "PLATFORM_ORG=$ORGANIZATION_NAME_PROD" >> $GITHUB_ENV
-#          echo "ORGANIZATION_NAME=$ORGANIZATION_NAME_PROD" >> $GITHUB_ENV
+#          echo "PLATFORM_ORG=1285934979127" >> $GITHUB_ENV
+#          echo "ORGANIZATION_NAME=1285934979127" >> $GITHUB_ENV
 #          echo "PLATFORM_USER_ID=$PLATFORM_USER_ID_PROD" >> $GITHUB_ENV
 #          echo "PLATFORM_USER_TOKEN=$PLATFORM_USER_TOKEN_PROD" >> $GITHUB_ENV
-#          echo "DATALAKE_CHANNEL_ID=$DATALAKE_CHANNEL_ID_PROD" >> $GITHUB_ENV
-#          echo "DATALAKE_BUCKET_ID=$DATALAKE_BUCKET_ID_PROD" >> $GITHUB_ENV
-#          echo "TRIGGER_INPUT_DATALAKE_ID=$TRIGGER_INPUT_DATALAKE_ID_PROD" >> $GITHUB_ENV
-#          echo "TRIGGER_OUTPUT_DATALAKE_ID=$TRIGGER_OUTPUT_DATALAKE_ID_PROD" >> $GITHUB_ENV
+#          echo "DATALAKE_CHANNEL_ID=1293163161758" >> $GITHUB_ENV
+#          echo "DATALAKE_BUCKET_ID=1995371681794" >> $GITHUB_ENV
+#          echo "TRIGGER_INPUT_DATALAKE_ID=2054929723742" >> $GITHUB_ENV
+#          echo "TRIGGER_OUTPUT_DATALAKE_ID=2054929811807" >> $GITHUB_ENV
 #          echo "ABEJA_API_URL=https://api.dev.abeja.io" >> $GITHUB_ENV
 #        env:
-#          ORGANIZATION_NAME_PROD: ${{ secrets.ORGANIZATION_NAME_PROD }}
 #          PLATFORM_USER_ID_PROD: ${{ secrets.PLATFORM_USER_ID_PROD }}
 #          PLATFORM_USER_TOKEN_PROD: ${{ secrets.PLATFORM_USER_TOKEN_PROD }}
-#          DATALAKE_CHANNEL_ID_PROD: ${{ secrets.DATALAKE_CHANNEL_ID_PROD }}
-#          DATALAKE_BUCKET_ID: ${{ secrets.DATALAKE_BUCKET_ID_PROD }}
-#          TRIGGER_INPUT_DATALAKE_ID_PROD: ${{ secrets.TRIGGER_INPUT_DATALAKE_ID_PROD }}
-#          TRIGGER_OUTPUT_DATALAKE_ID_PROD: ${{ secrets.TRIGGER_OUTPUT_DATALAKE_ID_PROD }}
 
       - name: Unit test
         run: | 
@@ -80,7 +73,8 @@ jobs:
 
   cd:
     runs-on: ubuntu-latest
-    if: ${{ github.event.pull_request.merged == true && github.base_ref != 'develop' }}
+    # if: ${{ startsWith(github.base_ref, 'release/') || github.base_ref == 'master' }}
+    if: ${{ startsWith(github.base_ref, 'release/') || github.base_ref == 'master-test' }}
     needs:
       - ci
 
@@ -100,12 +94,21 @@ jobs:
           poetry install
 
       - name: Deploy_RC
-        if: ${{ github.event.pull_request.merged == true && startsWith(github.base_ref, 'release/') }}
+        if: ${{ startsWith(github.base_ref, 'release/') }}
         run: |
           poetry version $(PYTHONPATH=./ poetry run python tools/add_rc_version.py)
-          make release
+          # make release
+          make release-test
+        env:
+          TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
 
       - name: Deploy
-        if: ${{ github.event.pull_request.merged == true && github.base_ref == 'master' }}
+        # if: ${{ github.base_ref == 'master' }}
+        if: ${{ github.base_ref == 'master-test' }}
         run: |
-          make release
+          # make release
+          make release-test
+        env:
+          TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
