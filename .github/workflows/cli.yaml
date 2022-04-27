@@ -32,7 +32,7 @@ jobs:
           poetry install
 
 #      - name: Setup variables for Dev environment
-#        if: ${{ github.base_ref == 'develop' }}
+#        if: ${{ github.ref_name != 'master' }}
 #        run: |
 #          echo "PLATFORM_ORG=1113407535106" >> $GITHUB_ENV
 #          echo "ORGANIZATION_NAME=1113407535106" >> $GITHUB_ENV
@@ -48,7 +48,7 @@ jobs:
 #          PLATFORM_USER_TOKEN_DEV: ${{ secrets.PLATFORM_USER_TOKEN_DEV }}
 #
 #      - name: Setup variables for Prod environment
-#        if: ${{ github.base_ref == 'master' }}
+#        if: ${{ github.ref_name == 'master' }}
 #        run: |
 #          echo "PLATFORM_ORG=1285934979127" >> $GITHUB_ENV
 #          echo "ORGANIZATION_NAME=1285934979127" >> $GITHUB_ENV
@@ -73,8 +73,8 @@ jobs:
 
   cd:
     runs-on: ubuntu-latest
-    # if: ${{ startsWith(github.base_ref, 'release/') || github.base_ref == 'master' }}
-    if: ${{ startsWith(github.base_ref, 'release/') || github.base_ref == 'master-test' }}
+    # if: ${{ startsWith(github.ref_name, 'release/') || github.ref_name == 'master' }}
+    if: ${{ startsWith(github.ref_name, 'release/') || github.ref_name == 'master-test' }}
     needs:
       - ci
 
@@ -94,7 +94,7 @@ jobs:
           poetry install
 
       - name: Deploy_RC
-        if: ${{ startsWith(github.base_ref, 'release/') }}
+        if: ${{ startsWith(github.ref_name, 'release/') }}
         run: |
           poetry version $(PYTHONPATH=./ poetry run python tools/add_rc_version.py)
           # make release
@@ -104,8 +104,8 @@ jobs:
           TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
 
       - name: Deploy
-        # if: ${{ github.base_ref == 'master' }}
-        if: ${{ github.base_ref == 'master-test' }}
+        # if: ${{ github.ref_name== 'master' }}
+        if: ${{ github.ref_name == 'master-test' }}
         run: |
           # make release
           make release-test
