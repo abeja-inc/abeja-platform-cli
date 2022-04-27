@@ -75,6 +75,8 @@ jobs:
           make prepare_ci
           make test
 #          make integration_test
+        env:
+          NUM_TEST_PROCESS: 1
 
   cd:
     runs-on: ubuntu-latest
