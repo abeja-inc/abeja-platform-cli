@@ -37,3 +37,6 @@ check-fmt:
 
 release: dist
 	poetry publish -u ${TWINE_USERNAME} -p ${TWINE_PASSWORD}
+
+release-test:
+	echo 'release-test called.'

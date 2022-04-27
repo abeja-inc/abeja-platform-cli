@@ -31,37 +31,37 @@ jobs:
           poetry env use 3.8
           poetry install
 
-#      - name: Setup variables for Dev environment
-#        if: ${{ github.ref_name != 'master' }}
-#        run: |
-#          echo "PLATFORM_ORG=1113407535106" >> $GITHUB_ENV
-#          echo "ORGANIZATION_NAME=1113407535106" >> $GITHUB_ENV
-#          echo "PLATFORM_USER_ID=$PLATFORM_USER_ID_DEV" >> $GITHUB_ENV
-#          echo "PLATFORM_USER_TOKEN=$PLATFORM_USER_TOKEN_DEV" >> $GITHUB_ENV
-#          echo "DATALAKE_CHANNEL_ID=1292391500090" >> $GITHUB_ENV
-#          echo "DATALAKE_BUCKET_ID=1995370125318" >> $GITHUB_ENV
-#          echo "TRIGGER_INPUT_DATALAKE_ID=2054933523197" >> $GITHUB_ENV
-#          echo "TRIGGER_OUTPUT_DATALAKE_ID=2054933618430" >> $GITHUB_ENV
-#          echo "ABEJA_API_URL=https://api.dev.abeja.io" >> $GITHUB_ENV
-#        env:
-#          PLATFORM_USER_ID_DEV: ${{ secrets.PLATFORM_USER_ID_DEV }}
-#          PLATFORM_USER_TOKEN_DEV: ${{ secrets.PLATFORM_USER_TOKEN_DEV }}
-#
-#      - name: Setup variables for Prod environment
-#        if: ${{ github.ref_name == 'master' }}
-#        run: |
-#          echo "PLATFORM_ORG=1285934979127" >> $GITHUB_ENV
-#          echo "ORGANIZATION_NAME=1285934979127" >> $GITHUB_ENV
-#          echo "PLATFORM_USER_ID=$PLATFORM_USER_ID_PROD" >> $GITHUB_ENV
-#          echo "PLATFORM_USER_TOKEN=$PLATFORM_USER_TOKEN_PROD" >> $GITHUB_ENV
-#          echo "DATALAKE_CHANNEL_ID=1293163161758" >> $GITHUB_ENV
-#          echo "DATALAKE_BUCKET_ID=1995371681794" >> $GITHUB_ENV
-#          echo "TRIGGER_INPUT_DATALAKE_ID=2054929723742" >> $GITHUB_ENV
-#          echo "TRIGGER_OUTPUT_DATALAKE_ID=2054929811807" >> $GITHUB_ENV
-#          echo "ABEJA_API_URL=https://api.dev.abeja.io" >> $GITHUB_ENV
-#        env:
-#          PLATFORM_USER_ID_PROD: ${{ secrets.PLATFORM_USER_ID_PROD }}
-#          PLATFORM_USER_TOKEN_PROD: ${{ secrets.PLATFORM_USER_TOKEN_PROD }}
+      - name: Setup variables for Dev environment
+        if: ${{ github.ref_name != 'master' }}
+        run: |
+          echo "PLATFORM_ORG=1113407535106" >> $GITHUB_ENV
+          echo "ORGANIZATION_NAME=1113407535106" >> $GITHUB_ENV
+          echo "PLATFORM_USER_ID=$PLATFORM_USER_ID_DEV" >> $GITHUB_ENV
+          echo "PLATFORM_USER_TOKEN=$PLATFORM_USER_TOKEN_DEV" >> $GITHUB_ENV
+          echo "DATALAKE_CHANNEL_ID=1292391500090" >> $GITHUB_ENV
+          echo "DATALAKE_BUCKET_ID=1995370125318" >> $GITHUB_ENV
+          echo "TRIGGER_INPUT_DATALAKE_ID=2054933523197" >> $GITHUB_ENV
+          echo "TRIGGER_OUTPUT_DATALAKE_ID=2054933618430" >> $GITHUB_ENV
+          echo "ABEJA_API_URL=https://api.dev.abeja.io" >> $GITHUB_ENV
+        env:
+          PLATFORM_USER_ID_DEV: ${{ secrets.PLATFORM_USER_ID_DEV }}
+          PLATFORM_USER_TOKEN_DEV: ${{ secrets.PLATFORM_USER_TOKEN_DEV }}
+
+      - name: Setup variables for Prod environment
+        if: ${{ github.ref_name == 'master' }}
+        run: |
+          echo "PLATFORM_ORG=1285934979127" >> $GITHUB_ENV
+          echo "ORGANIZATION_NAME=1285934979127" >> $GITHUB_ENV
+          echo "PLATFORM_USER_ID=$PLATFORM_USER_ID_PROD" >> $GITHUB_ENV
+          echo "PLATFORM_USER_TOKEN=$PLATFORM_USER_TOKEN_PROD" >> $GITHUB_ENV
+          echo "DATALAKE_CHANNEL_ID=1293163161758" >> $GITHUB_ENV
+          echo "DATALAKE_BUCKET_ID=1995371681794" >> $GITHUB_ENV
+          echo "TRIGGER_INPUT_DATALAKE_ID=2054929723742" >> $GITHUB_ENV
+          echo "TRIGGER_OUTPUT_DATALAKE_ID=2054929811807" >> $GITHUB_ENV
+          echo "ABEJA_API_URL=https://api.dev.abeja.io" >> $GITHUB_ENV
+        env:
+          PLATFORM_USER_ID_PROD: ${{ secrets.PLATFORM_USER_ID_PROD }}
+          PLATFORM_USER_TOKEN_PROD: ${{ secrets.PLATFORM_USER_TOKEN_PROD }}
 
       - name: Unit test
         run: | 
