@@ -15,15 +15,15 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9, 3.10]
+        python-version: ['3.6', '3.7', '3.8', '3.9', '3.10']
       max-parallel: 4
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Setup Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v3
         with:
           python-version: ${{ matrix.python-version }}
           architecture: 'x64'
@@ -31,7 +31,6 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --user poetry~=1.1.13
-          poetry env use 3.8
           poetry install
 
       - name: Setup variables for Dev environment
