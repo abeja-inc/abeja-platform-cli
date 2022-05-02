@@ -12,9 +12,9 @@ from abejacli.config import ORGANIZATION_ENDPOINT
 from abejacli.fs_utils import UploadBucketFile
 
 try:
-    from unittest.mock import MagicMock, ANY
+    from unittest.mock import ANY, MagicMock
 except ImportError:
-    from mock import MagicMock, ANY
+    from mock import ANY, MagicMock
 
 
 BUCKET_ID = '1282495447337'

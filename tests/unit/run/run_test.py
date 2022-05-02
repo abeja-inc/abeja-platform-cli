@@ -495,7 +495,7 @@ class RunTest(TestCase):
             '--version_id={}'.format(version_id),
             '--input_service_name={}'.format(input_service_name),
             '--input_service_id={}'.format(input_service_id),
-            '--output_service_name'.format(output_service_name),
+            '--output_service_name={}'.format(output_service_name),
             '--retry_count={}'.format(retry_count),
             '--environment={}'.format(environment)
         ]

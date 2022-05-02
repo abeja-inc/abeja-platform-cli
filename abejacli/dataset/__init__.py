@@ -90,9 +90,9 @@ def register_dataset_items(dataset_id, items):
     """
     url = '{}/datasets/{}/items'.format(ORGANIZATION_ENDPOINT, dataset_id)
 
-    def _chunked(l, n):
-        for i in range(0, len(l), n):
-            yield l[i:i + n]
+    def _chunked(items, n):
+        for i in range(0, len(items), n):
+            yield items[i:i + n]
 
     # max number of items for add items should is 500 (by default)
     for chunked_items in _chunked(items, DATASET_CHUNK_SIZE):

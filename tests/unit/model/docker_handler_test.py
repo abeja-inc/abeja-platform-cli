@@ -111,6 +111,6 @@ class LocalModelHandlerTest(TestCase):
     @patch('abejacli.model.docker_handler.docker')
     def test_parser_stream(self, m):
         dummy_logs = [{'test': 'dummy_{}'.format(i)} for i in range(10)]
-        output_text = '\r\n'.join([json.dumps(l) for l in dummy_logs])
+        output_text = '\r\n'.join([json.dumps(log) for log in dummy_logs])
         log_gen = self.local_model._parse_stream(output_text.encode('utf-8'))
         self.assertListEqual(list(log_gen), dummy_logs)

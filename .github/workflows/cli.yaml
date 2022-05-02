@@ -1,0 +1,112 @@
+name: Continuous Integration / Delivery for application
+
+on:
+  pull_request:
+    branches:
+      - develop
+    types: [opened, synchronize, closed]
+  push:
+    branches:
+      - master
+      - release/*
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.6', '3.7', '3.8', '3.9', '3.10']
+      max-parallel: 4
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: 'x64'
+
+      - name: Install dependencies
+        run: |
+          pip install --user poetry~=1.1.13
+          poetry install
+
+      - name: Setup variables for Dev environment
+        if: ${{ github.ref_name != 'master' }}
+        run: |
+          echo "PLATFORM_ORG=1113407535106" >> $GITHUB_ENV
+          echo "ORGANIZATION_NAME=1113407535106" >> $GITHUB_ENV
+          echo "PLATFORM_USER_ID=$PLATFORM_USER_ID_DEV" >> $GITHUB_ENV
+          echo "PLATFORM_USER_TOKEN=$PLATFORM_USER_TOKEN_DEV" >> $GITHUB_ENV
+          echo "DATALAKE_CHANNEL_ID=1292391500090" >> $GITHUB_ENV
+          echo "DATALAKE_BUCKET_ID=1995370125318" >> $GITHUB_ENV
+          echo "TRIGGER_INPUT_DATALAKE_ID=2054933523197" >> $GITHUB_ENV
+          echo "TRIGGER_OUTPUT_DATALAKE_ID=2054933618430" >> $GITHUB_ENV
+          echo "ABEJA_API_URL=https://api.dev.abeja.io" >> $GITHUB_ENV
+        env:
+          PLATFORM_USER_ID_DEV: ${{ secrets.PLATFORM_USER_ID_DEV }}
+          PLATFORM_USER_TOKEN_DEV: ${{ secrets.PLATFORM_USER_TOKEN_DEV }}
+
+      - name: Setup variables for Prod environment
+        if: ${{ github.ref_name == 'master' }}
+        run: |
+          echo "PLATFORM_ORG=1285934979127" >> $GITHUB_ENV
+          echo "ORGANIZATION_NAME=1285934979127" >> $GITHUB_ENV
+          echo "PLATFORM_USER_ID=$PLATFORM_USER_ID_PROD" >> $GITHUB_ENV
+          echo "PLATFORM_USER_TOKEN=$PLATFORM_USER_TOKEN_PROD" >> $GITHUB_ENV
+          echo "DATALAKE_CHANNEL_ID=1293163161758" >> $GITHUB_ENV
+          echo "DATALAKE_BUCKET_ID=1995371681794" >> $GITHUB_ENV
+          echo "TRIGGER_INPUT_DATALAKE_ID=2054929723742" >> $GITHUB_ENV
+          echo "TRIGGER_OUTPUT_DATALAKE_ID=2054929811807" >> $GITHUB_ENV
+          echo "ABEJA_API_URL=https://api.dev.abeja.io" >> $GITHUB_ENV
+        env:
+          PLATFORM_USER_ID_PROD: ${{ secrets.PLATFORM_USER_ID_PROD }}
+          PLATFORM_USER_TOKEN_PROD: ${{ secrets.PLATFORM_USER_TOKEN_PROD }}
+
+      - name: Unit test
+        run: | 
+          make prepare_ci
+          make test
+          make integration_test
+        env:
+          NUM_TEST_PROCESS: 1
+
+  cd:
+    runs-on: ubuntu-latest
+    if: ${{ startsWith(github.ref_name, 'release/') || github.ref_name == 'master' }}
+    needs:
+      - ci
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+          architecture: 'x64'
+
+      - name: Install dependencies
+        run: |
+          pip install --user poetry
+          poetry install
+
+      - name: Deploy_RC
+        if: ${{ startsWith(github.ref_name, 'release/') }}
+        run: |
+          poetry version $(PYTHONPATH=./ poetry run python tools/add_rc_version.py)
+          make release
+        env:
+          TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
+
+      - name: Deploy
+        if: ${{ github.ref_name== 'master' }}
+        run: |
+          make release
+        env:
+          TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}

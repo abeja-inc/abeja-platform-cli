@@ -115,11 +115,11 @@ def add_default_env_vars(env_vars: dict) -> dict:
 
 class RunCommand:
     def __init__(
-            self, image: str, working_dir: str=None,
-            environment: List[str]=None, volumes: dict=None, ports: dict=None,
-            command: List[str]=None, remove: bool=True, detach: bool=True,
-            privileged: bool=False,
-            stderr: bool=True, runtime: str=None) -> None:
+            self, image: str, working_dir: str = None,
+            environment: List[str] = None, volumes: dict = None, ports: dict = None,
+            command: List[str] = None, remove: bool = True, detach: bool = True,
+            privileged: bool = False,
+            stderr: bool = True, runtime: str = None) -> None:
         self.image = image
         self.working_dir = working_dir
         self.environment = environment
@@ -165,10 +165,10 @@ class RunCommand:
 class TrainRunCommand(RunCommand):
     @classmethod
     def create(
-            cls, image: str, handler: str, datasets: dict=None,
-            runtime: str=None, env_vars: dict=None, volume: dict=None,
-            platform_user_id: str=None, platform_personal_access_token: str=None,
-            platform_organization_id: str=None, command: list = None,
+            cls, image: str, handler: str, datasets: dict = None,
+            runtime: str = None, env_vars: dict = None, volume: dict = None,
+            platform_user_id: str = None, platform_personal_access_token: str = None,
+            platform_organization_id: str = None, command: list = None,
             remove=True) -> 'TrainRunCommand':
         if volume is None:
             volume = {}

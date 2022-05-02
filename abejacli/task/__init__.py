@@ -6,7 +6,7 @@ import click
 
 
 class ClickLogger:
-    def __init__(self, disable: bool=False):
+    def __init__(self, disable: bool = False):
         self.disable = disable
 
     def raw(self, msg):
