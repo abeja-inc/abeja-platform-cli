@@ -60,7 +60,7 @@ jobs:
           echo "DATALAKE_BUCKET_ID=1995371681794" >> $GITHUB_ENV
           echo "TRIGGER_INPUT_DATALAKE_ID=2054929723742" >> $GITHUB_ENV
           echo "TRIGGER_OUTPUT_DATALAKE_ID=2054929811807" >> $GITHUB_ENV
-          echo "ABEJA_API_URL=https://api.dev.abeja.io" >> $GITHUB_ENV
+          echo "ABEJA_API_URL=https://api.abeja.io" >> $GITHUB_ENV
         env:
           PLATFORM_USER_ID_PROD: ${{ secrets.PLATFORM_USER_ID_PROD }}
           PLATFORM_USER_TOKEN_PROD: ${{ secrets.PLATFORM_USER_TOKEN_PROD }}
