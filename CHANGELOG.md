@@ -1,3 +1,8 @@
+# 2.1.0
+- update ruamel.yaml version (#35)
+- add github actions workflow file (#36)
+- update requests version for update urllib3 version (#38)
+
 # 2.0.0
 - Switch python version to 3.6 (#30)
 
