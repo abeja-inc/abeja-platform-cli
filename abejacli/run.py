@@ -84,6 +84,7 @@ from abejacli.model.runtime_utils import (
     get_runtime_command
 )
 from abejacli.registry.commands import registry
+from abejacli.sample_cli.commands import sample_cli
 from abejacli.session import (
     api_delete,
     api_get,
@@ -139,10 +140,10 @@ def bucket(ctx):
 def config(ctx):
     pass
 
-
 # ---------------------------------------------------
 # Configure
 # ---------------------------------------------------
+
 
 def __ensure_name_in_config_set(ctx, name: str, config_set: ConfigSet) -> Config:
     if name not in config_set:
@@ -1898,7 +1899,7 @@ main.add_command(training)
 main.add_command(registry)
 main.add_command(startapp)
 main.add_command(dataset)
-
+main.add_command(sample_cli)
 
 if __name__ == '__main__':
     main()

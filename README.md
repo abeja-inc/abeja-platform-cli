@@ -14,11 +14,13 @@ This package provides a unified command line interface to ABEJA Platform.
 $ poetry install
 
 # configure pre-commit
+$ git config --unset-all core.hooksPath
+$ git config --global --unset-all core.hooksPath
 $ poetry run pre-commit install
 
 # install git-flow
 $ brew install git-flow-avh # for macOS
-$ apt-get install git-flow # for Linux
+$ sudo apt-get install git-flow # for Linux
 ```
 
 ## Run command locally
