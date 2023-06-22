@@ -1,7 +1,7 @@
 default: &default
   working_directory: ~/abeja-platform-cli
   docker:
-    - image: circleci/python:3.6
+    - image: circleci/python:3.9
 
 test_step: &test_step
   - checkout
@@ -48,7 +48,7 @@ jobs:
   codetest36:
     <<: *default
     environment:
-      - ABEJA_CLI_PYTHON_VERSION: "3.6"
+      - ABEJA_CLI_PYTHON_VERSION: "3.9"
     steps: *test_step
   release_package:
     <<: *default
