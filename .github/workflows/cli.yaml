@@ -30,7 +30,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install --user poetry~=1.1.13
+          pip install --user poetry~=1.5.1
           poetry install
 
       - name: Setup variables for Dev environment
