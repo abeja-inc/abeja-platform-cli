@@ -62,7 +62,7 @@ class LocalModelHandler:
         tcp://127.0.0.1:2376       : windows
 
         judge operation system using by os.name
-        cf. https://docs.python.org/3.6/library/os.html#os.name
+        cf. https://docs.python.org/3.9/library/os.html#os.name
 
         """
         if os.name == 'nt':
