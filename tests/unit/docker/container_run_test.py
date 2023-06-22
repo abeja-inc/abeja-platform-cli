@@ -30,7 +30,7 @@ class TestContainerBuildAndRun:
             container_build_and_run._find_or_build_image()
 
     @pytest.mark.parametrize("test_dir, expected", [
-        ('tests/unit/resources/container_run_test/exist_pipfile', 'a5130242a66c078a610bbef9951a7ae9'),
+        ('tests/unit/resources/container_run_test/exist_pipfile', 'a7251a3b0a5586a6301d450b9bab8501'),
         ('tests/unit/resources/container_run_test/exist_requirements', 'abdc069736ab4b295de3d8581dc050bd'),
         ('tests/unit/resources/container_run_test/no_requirements', 'a83daf73508de5f3294cd744dc2b06f1'),
     ])
