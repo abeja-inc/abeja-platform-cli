@@ -33,7 +33,7 @@ def dx_template(ctx):
                    'This value is set as an environment variable named `ABEJA_ORGANIZATION_ID`. '
                    '`ABEJA_ORGANIZATION_ID` from this arg takes priority over one in `--environment`.',
               callback=__try_get_organization_id)
-@click.option('-s', '--skeleton_file', '--skeleton-file', 'skeleton_file', type=click.Choice(['Y', 'n']), default='n',
+@click.option('-s', '--skeleton_file', '--skeleton-file', 'skeleton_file', type=click.Choice(['Y', 'n']), default='Y',
               prompt='want DX template definition skeleton files?',
               help='get (or not get) skeleton files')
 def init(name, organization_id, skeleton_file):
