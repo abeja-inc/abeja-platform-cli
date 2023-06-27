@@ -148,28 +148,21 @@ def push(directory_path):
         files = []
         for file_name, file_path in upload_files.items():
             file = open(file_path, 'rb')
-            # files.append(('files', (file_name, file, 'multipart/form-data')))
-            files.append((file_name, (f'{file_name}.md', file, 'application/octet-stream')))
+            if file_name == "template_yaml":
+                files.append((file_name, (os.path.basename(file_path), file, 'application/yaml')))
+            elif file_name == "handler":
+                files.append((file_name, (os.path.basename(file_path), file, 'application/zip')))
+            elif file_name == "thumbnail":
+                files.append((file_name, (os.path.basename(file_path), file, 'image/jpeg')))
+            else:
+                files.append((file_name, (os.path.basename(file_path), file, 'text/markdown')))
 
         # TODO: デバッグ用後で削除
         for f in files:
             click.echo(f)
 
-        """
-        $ curl -X POST -u "user-2778435122950":cbfec955d67dd231c95b4a9d8d083a98f162823d \
-        >   -F template_yaml=@/home/ogawa/platform/abeja-platform-cli/ogawa-template/template.yaml \
-        >   -F handler=@/home/ogawa/platform/abeja-platform-cli/ogawa-template/src/abeja_platform/deployments/handler.zip \
-        >   -F thumbnail=@/home/ogawa/platform/abeja-platform-cli/ogawa-template/Thumbnail.jpg \
-        >   -F how_to_use=@/home/ogawa/platform/abeja-platform-cli/ogawa-template/DxTemplate.md \
-        >   -F how_to_use_jp=@/home/ogawa/platform/abeja-platform-cli/ogawa-template/DxTemplate_JP.md \
-        >   "https://api.dev.abeja.io/organizations/2964344169041/dx-templates" | jq .
-        """
-
         with generate_user_session(False) as session:
             # session.auth = HTTPBasicAuth(ABEJA_PLATFORM_USER_ID, ABEJA_PLATFORM_TOKEN)
-            session.headers.update({
-                "Content-Type": "multipart/form-data",
-            })
             click.echo(session.headers)
             response = session.post(url, files=files, timeout=None)
 
