@@ -2,14 +2,28 @@ import os
 import re
 import subprocess
 import sys
+import zipfile
 
 import click
+import requests
 import yaml
 
 from abejacli.common import __try_get_organization_id
-from abejacli.config import ERROR_EXITCODE, SUCCESS_EXITCODE
+from abejacli.config import (
+    ABEJA_PLATFORM_TOKEN,
+    ABEJA_PLATFORM_USER_ID,
+    ERROR_EXITCODE,
+    ORGANIZATION_ENDPOINT,
+    SUCCESS_EXITCODE
+)
 from abejacli.configuration import __ensure_configuration_exists
 from abejacli.logger import get_logger
+from abejacli.session import generate_user_session
+
+# for Debug
+# import http
+# http.client.HTTPConnection.debuglevel=1
+
 
 DX_TEMPLATE_SKELETON_REPO = 'https://github.com/abeja-inc/platform-dx-template-samples.git'
 
@@ -25,7 +39,7 @@ def dx_template(ctx):
 # ---------------------------------------------------
 # dx_template command
 # ---------------------------------------------------
-@dx_template.command(name='init', help='DX template difinition files create commands')
+@dx_template.command(name='init', help='Prepare and create your own DX template definition files')
 @click.option('-n', '--name', 'name', prompt='Please enter your DX template name', type=str, required=False,
               help='DX template name')
 @click.option('-o', '--organization_id', '--organization-id', 'organization_id', type=str, required=False,
@@ -81,6 +95,100 @@ def init(name, organization_id, skeleton_file):
     # 処理正常終了
     click.echo('✨✨✨✨ It\'s done!! Happy DX! ✨✨✨✨\n')
     sys.exit(SUCCESS_EXITCODE)
+
+
+# type 引数で渡しているclick.Path指定されたパスが実際に存在するかどうかを検証する
+@dx_template.command(name='push', help='Upload your own DX template definition files')
+@click.option('-d', '--directory_path', 'directory_path', type=click.Path(exists=True, file_okay=False),
+              help='Directory path where your own DX template definition file is located. '
+              f'The directory structure should be the same as {DX_TEMPLATE_SKELETON_REPO}',
+              default=None, required=True)
+def push(directory_path):
+    """dx-template push コマンド
+    ローカルで作成したDX テンプレート定義ファイルを ABEJA Platform にアップロードする
+
+    Args:
+        directory_path(click.Path) : アップロードしたいDX テンプレート定義ファイルが格納されているディレクトリ
+    """
+    url = '{}/dx-templates'.format(ORGANIZATION_ENDPOINT)
+    click.echo(f'url is {url}')
+    click.echo(f'ABEJA_PLATFORM_TOKEN is {ABEJA_PLATFORM_TOKEN}')
+    click.echo(f'ABEJA_PLATFORM_USER_ID is {ABEJA_PLATFORM_USER_ID}')
+
+    # 必要ファイルの存在確認
+    upload_files = {
+        'template_yaml': os.path.join(directory_path, 'template.yaml'),
+        'handler': os.path.join(directory_path, 'src/abeja_platform/deployments/run/handler.py'),
+        'thumbnail': os.path.join(directory_path, 'Thumbnail.jpg'),
+        'how_to_use': os.path.join(directory_path, 'DxTemplate.md'),
+        'how_to_use_jp': os.path.join(directory_path, 'DxTemplate_JP.md'),
+    }
+    for path in upload_files.values():
+        if not os.path.isfile(path):
+            click.echo(f'A required file is missing: {path}')
+            sys.exit(ERROR_EXITCODE)
+
+    # handler.py をrun ディレクトリごとzip で固める
+    # TODO: ネスト深すぎるので後で直す
+    try:
+        handler_dire_path = os.path.join(directory_path, 'src/abeja_platform/deployments/run')
+        zip_path = os.path.join(directory_path, 'src/abeja_platform/deployments/handler.zip')
+        with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            for root, _, files in os.walk(handler_dire_path):
+                for file in files:
+                    file_path = os.path.join(root, file)
+                    zipf.write(file_path, os.path.relpath(file_path, directory_path))
+        upload_files['handler'] = zip_path
+    except Exception as e:
+        print(f"Failed to create zip file: {zip_path}\nError: {str(e)}")
+
+    try:
+        # upload_files をまとめてアップロードする
+        # TODO:
+        files = []
+        for file_name, file_path in upload_files.items():
+            file = open(file_path, 'rb')
+            # files.append(('files', (file_name, file, 'multipart/form-data')))
+            files.append((file_name, (f'{file_name}.md', file, 'application/octet-stream')))
+
+        # TODO: デバッグ用後で削除
+        for f in files:
+            click.echo(f)
+
+        """
+        $ curl -X POST -u "user-2778435122950":cbfec955d67dd231c95b4a9d8d083a98f162823d \
+        >   -F template_yaml=@/home/ogawa/platform/abeja-platform-cli/ogawa-template/template.yaml \
+        >   -F handler=@/home/ogawa/platform/abeja-platform-cli/ogawa-template/src/abeja_platform/deployments/handler.zip \
+        >   -F thumbnail=@/home/ogawa/platform/abeja-platform-cli/ogawa-template/Thumbnail.jpg \
+        >   -F how_to_use=@/home/ogawa/platform/abeja-platform-cli/ogawa-template/DxTemplate.md \
+        >   -F how_to_use_jp=@/home/ogawa/platform/abeja-platform-cli/ogawa-template/DxTemplate_JP.md \
+        >   "https://api.dev.abeja.io/organizations/2964344169041/dx-templates" | jq .
+        """
+
+        with generate_user_session(False) as session:
+            # session.auth = HTTPBasicAuth(ABEJA_PLATFORM_USER_ID, ABEJA_PLATFORM_TOKEN)
+            session.headers.update({
+                "Content-Type": "multipart/form-data",
+            })
+            click.echo(session.headers)
+            response = session.post(url, files=files, timeout=None)
+
+        if response.status_code == 200:
+            click.echo('Files uploaded successfully.')
+            click.echo(response.json())
+        else:
+            click.echo(f'Failed to upload files. Status code: {response.status_code}')
+            click.echo(response.text)
+
+    except FileNotFoundError:
+        click.echo('File not found.')
+    except requests.exceptions.RequestException as e:
+        click.echo(f'An error occurred during the request: {e}')
+    finally:
+        # io.BufferedReader を全てclose する
+        for _, file in files:
+            # click.echo(file[1])
+            file[1].close()
 
 
 def create_and_save_template_yaml(organization_id, name, publish_type, abeja_user_only):
