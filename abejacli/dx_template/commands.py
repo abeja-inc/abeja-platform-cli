@@ -1,3 +1,4 @@
+import json
 import os
 import re
 import subprocess
@@ -5,13 +6,10 @@ import sys
 import zipfile
 
 import click
-import requests
 import yaml
 
 from abejacli.common import __try_get_organization_id
 from abejacli.config import (
-    ABEJA_PLATFORM_TOKEN,
-    ABEJA_PLATFORM_USER_ID,
     ERROR_EXITCODE,
     ORGANIZATION_ENDPOINT,
     SUCCESS_EXITCODE
@@ -19,11 +17,6 @@ from abejacli.config import (
 from abejacli.configuration import __ensure_configuration_exists
 from abejacli.logger import get_logger
 from abejacli.session import generate_user_session
-
-# for Debug
-# import http
-# http.client.HTTPConnection.debuglevel=1
-
 
 DX_TEMPLATE_SKELETON_REPO = 'https://github.com/abeja-inc/platform-dx-template-samples.git'
 
@@ -111,11 +104,8 @@ def push(directory_path):
         directory_path(click.Path) : アップロードしたいDX テンプレート定義ファイルが格納されているディレクトリ
     """
     url = '{}/dx-templates'.format(ORGANIZATION_ENDPOINT)
-    click.echo(f'url is {url}')
-    click.echo(f'ABEJA_PLATFORM_TOKEN is {ABEJA_PLATFORM_TOKEN}')
-    click.echo(f'ABEJA_PLATFORM_USER_ID is {ABEJA_PLATFORM_USER_ID}')
 
-    # 必要ファイルの存在確認
+    # 必要なファイルの存在を確認する
     upload_files = {
         'template_yaml': os.path.join(directory_path, 'template.yaml'),
         'handler': os.path.join(directory_path, 'src/abeja_platform/deployments/run/handler.py'),
@@ -129,22 +119,17 @@ def push(directory_path):
             sys.exit(ERROR_EXITCODE)
 
     # handler.py をrun ディレクトリごとzip で固める
-    # TODO: ネスト深すぎるので後で直す
+    handler_dire_path = os.path.join(directory_path, 'src/abeja_platform/deployments/run')
+    zip_path = os.path.join(directory_path, 'src/abeja_platform/deployments/handler.zip')
     try:
-        handler_dire_path = os.path.join(directory_path, 'src/abeja_platform/deployments/run')
-        zip_path = os.path.join(directory_path, 'src/abeja_platform/deployments/handler.zip')
-        with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
-            for root, _, files in os.walk(handler_dire_path):
-                for file in files:
-                    file_path = os.path.join(root, file)
-                    zipf.write(file_path, os.path.relpath(file_path, directory_path))
-        upload_files['handler'] = zip_path
+        files_and_directorys_to_zip(handler_dire_path, zip_path)
     except Exception as e:
         print(f"Failed to create zip file: {zip_path}\nError: {str(e)}")
+        sys.exit(ERROR_EXITCODE)
+    upload_files['handler'] = zip_path
 
     try:
-        # upload_files をまとめてアップロードする
-        # TODO:
+        # アップロード対象のファイルをリスト化してAPI に送信する
         files = []
         for file_name, file_path in upload_files.items():
             file = open(file_path, 'rb')
@@ -156,32 +141,29 @@ def push(directory_path):
                 files.append((file_name, (os.path.basename(file_path), file, 'image/jpeg')))
             else:
                 files.append((file_name, (os.path.basename(file_path), file, 'text/markdown')))
-
-        # TODO: デバッグ用後で削除
-        for f in files:
-            click.echo(f)
-
         with generate_user_session(False) as session:
-            # session.auth = HTTPBasicAuth(ABEJA_PLATFORM_USER_ID, ABEJA_PLATFORM_TOKEN)
-            click.echo(session.headers)
             response = session.post(url, files=files, timeout=None)
 
-        if response.status_code == 200:
-            click.echo('Files uploaded successfully.')
-            click.echo(response.json())
-        else:
-            click.echo(f'Failed to upload files. Status code: {response.status_code}')
-            click.echo(response.text)
+        response.raise_for_status()
+        content = response.json()
 
-    except FileNotFoundError:
-        click.echo('File not found.')
-    except requests.exceptions.RequestException as e:
-        click.echo(f'An error occurred during the request: {e}')
+        click.echo('Upload succeeded')
+        click.echo(json.dumps(content, indent=4))
+
+    except Exception as e:
+        click.echo('Error: Failed to upload {} to DX template repository (Reason: {})'.format(file_path, e))
+        sys.exit(ERROR_EXITCODE)
     finally:
         # io.BufferedReader を全てclose する
         for _, file in files:
-            # click.echo(file[1])
             file[1].close()
+        # 一時的に作成したZIPファイルの削除
+        if os.path.exists(zip_path):
+            os.remove(zip_path)
+
+    # 処理正常終了
+    click.echo('✨✨✨✨ It\'s done!! Happy DX! ✨✨✨✨\n')
+    sys.exit(SUCCESS_EXITCODE)
 
 
 def create_and_save_template_yaml(organization_id, name, publish_type, abeja_user_only):
@@ -238,3 +220,21 @@ def git_clone_skeleton_files(repository_url, destination_path, git_branch='main'
     except Exception as e:
         click.echo(f'An error occurred: {e}\n')
         sys.exit(ERROR_EXITCODE)
+
+
+def files_and_directorys_to_zip(directory_path, zip_path):
+    """引数で渡されたディレクトリパス配下のファイルを一つのzip ファイルに圧縮する
+    Args:
+        directory_path (str): 圧縮する対象のファイルが格納されているディレクトリのパス
+        zip_path (str): 圧縮後のzip ファイルパス
+    """
+    with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        for root, dirs, files in os.walk(directory_path):
+            for f in files:
+                file_path = os.path.join(root, f)
+                rel_path = os.path.relpath(file_path, directory_path)
+                zipf.write(file_path, rel_path)
+            for d in dirs:
+                dir_path = os.path.join(root, d)
+                rel_path = os.path.relpath(dir_path, directory_path)
+                zipf.write(dir_path, rel_path)
