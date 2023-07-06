@@ -64,7 +64,7 @@ def init(name, organization_id, skeleton_file):
 
     # Future Work: 公開/非公開設定
     click.echo('This DX template is used only inside your organization.')
-    publish_type = 'private'
+    template_scope = 'private'
 
     # Future Work: ABEJA only　設定
     click.echo('This DX template is used only inside ABEJA inc.')
@@ -82,8 +82,8 @@ def init(name, organization_id, skeleton_file):
     if skeleton_file == 'Y':
         git_clone_skeleton_files(DX_TEMPLATE_SKELETON_REPO, name)
 
-    # template.yaml の作成
-    create_and_save_template_yaml(organization_id, name, publish_type, abeja_user_only)
+    # template.yaml の更新
+    update_template_yaml(name, template_scope, abeja_user_only)
 
     # 処理正常終了
     click.echo('✨✨✨✨ It\'s done!! Happy DX! ✨✨✨✨\n')
@@ -166,36 +166,38 @@ def push(directory_path):
     sys.exit(SUCCESS_EXITCODE)
 
 
-def create_and_save_template_yaml(organization_id, name, publish_type, abeja_user_only):
-    """引数で渡された内容をもとにtemplate.yaml を作成して保存する
+def update_template_yaml(name, template_scope='private', abeja_user_only=True):
+    """引数で渡された内容をもとにtemplate.yaml を更新する
+    template.yaml は`./{name}/template.yml` に配置されていることを想定している
+
     Args:
-        organization_id (str): オーガニゼーションID
         name (str): DX テンプレート名
-        publish_type (str): DX テンプレートの公開設定 'public' or 'private'
+        template_scope (str): DX テンプレートの公開設定 'public' or 'private'
         abeja_user_only (bool): ABEJA Only か否か
     """
 
-    # YAML 生成に使う辞書作成
-    yaml_data = {
-        'organization_id': organization_id,
-        'name': name,
-        'descripton': '',
-        'type': publish_type,
-        'abeja_user_only': abeja_user_only
-    }
+    file_path = f'./{name}/template.yaml'
 
-    # ディレクトリ作成しYAML ファイルを保存する（既に同名ディレクトリ、ファイルがある場合は上書き）
-    output_dir = f'./{name}'
-    os.makedirs(output_dir, exist_ok=True)
-    output_file = f'./{name}/template.yaml'
     try:
-        with open(output_file, 'w') as file:
-            yaml.dump(yaml_data, file)
-    except FileNotFoundError:
-        click.echo('failed to create the directory or yaml file. check DX template name you input.\n')
-        sys.exit(ERROR_EXITCODE)
+        # YAML ファイルを読み込み
+        with open(file_path, 'r') as file:
+            data = yaml.safe_load(file)
 
-    click.echo(f'YAML file saved as: {output_file}\n')
+        # 内容を編集
+        data['metadata']['templateName'] = name
+        data['metadata']['templateScope'] = template_scope
+        data['metadata']['abejaUserOnly'] = abeja_user_only
+
+        # 編集後の内容をYAMLファイルに書き込み
+        with open(file_path, 'w') as file:
+            yaml.dump(data, file)
+
+    except yaml.YAMLError as e:
+        click.echo(f"YAML Error: {str(e)}")
+        sys.exit(ERROR_EXITCODE)
+    except Exception as e:
+        click.echo(f"An unexpected error has occurred.: {str(e)}")
+        sys.exit(ERROR_EXITCODE)
 
 
 def git_clone_skeleton_files(repository_url, destination_path, git_branch='main'):
