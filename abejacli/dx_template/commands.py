@@ -1,6 +1,7 @@
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import zipfile
@@ -155,7 +156,7 @@ def push(directory_path):
 
 def update_template_yaml(name, template_scope='private', abeja_user_only=True):
     """引数で渡された内容をもとにtemplate.yaml を更新する
-    template.yaml は`./{name}/template.yml` に配置されていることを想定している
+    template.yaml は`./{name}/template.yaml` に配置されていることを想定している
 
     Args:
         name (str): DX テンプレート名
@@ -163,11 +164,15 @@ def update_template_yaml(name, template_scope='private', abeja_user_only=True):
         abeja_user_only (bool): ABEJA Only か否か
     """
 
-    file_path = f'./{name}/template.yaml'
+    template_yaml_path = f'./{name}/template.yaml'
+    template_usage_yaml_path = f'./{name}/templateUsage.yaml'
 
     try:
+        # 元のtemplate.yaml は上書きする時に開発者向けの説明コメントが消えてしまうので、別名保存しておく。（マニュアルがわりに使う）
+        shutil.copy(template_yaml_path, template_usage_yaml_path)
+
         # YAML ファイルを読み込み
-        with open(file_path, 'r') as file:
+        with open(template_yaml_path, 'r') as file:
             data = yaml.safe_load(file)
 
         # 内容を編集
@@ -176,7 +181,7 @@ def update_template_yaml(name, template_scope='private', abeja_user_only=True):
         data['metadata']['abejaUserOnly'] = abeja_user_only
 
         # 編集後の内容をYAMLファイルに書き込み
-        with open(file_path, 'w') as file:
+        with open(template_yaml_path, 'w') as file:
             yaml.dump(data, file)
 
     except yaml.YAMLError as e:
