@@ -8,7 +8,6 @@ import zipfile
 import click
 import yaml
 
-from abejacli.common import __try_get_organization_id
 from abejacli.config import (
     ERROR_EXITCODE,
     ORGANIZATION_ENDPOINT,
@@ -35,20 +34,13 @@ def dx_template(ctx):
 @dx_template.command(name='init', help='Prepare and create your own DX template definition files')
 @click.option('-n', '--name', 'name', prompt='Please enter your DX template name', type=str, required=False,
               help='DX template name')
-@click.option('-o', '--organization_id', '--organization-id', 'organization_id', type=str, required=False,
-              help='Organization ID, organization_id of current credential organization is used by default. '
-                   'This value is set as an environment variable named `ABEJA_ORGANIZATION_ID`. '
-                   '`ABEJA_ORGANIZATION_ID` from this arg takes priority over one in `--environment`.',
-              callback=__try_get_organization_id)
-@click.option('-s', '--skeleton_file', '--skeleton-file', 'skeleton_file', type=click.Choice(['Y', 'n']), default='Y',
-              prompt='want DX template definition skeleton files?',
-              help='get (or not get) skeleton files')
-def init(name, organization_id, skeleton_file):
+def init(name):
     """dx-template init コマンド
+    DX テンプレート開発者に開発環境を提供するコマンド。
+    git hub で管理しているDX テンプレート用のskeleton ファイルを元に各種定義ファイルを用意する。
+
     Args:
         name(str) : DX テンプレート名
-        organization_id(str) : オーガニゼーションID
-        skeleton_file(str) : skeleton ファイルの要否（Y or n）
     """
     click.echo('\n==== Your Settings ============================')
 
@@ -57,10 +49,7 @@ def init(name, organization_id, skeleton_file):
     click.echo(f'DX Template name: {name}')
 
     # DX テンプレートのサンプルファイル取得要否
-    if skeleton_file == 'Y':
-        click.echo(f'Download the skeleton file from {DX_TEMPLATE_SKELETON_REPO}.')
-    else:
-        click.echo('Skeleton files will not be downloaded.')
+    click.echo(f'Download the skeleton file from {DX_TEMPLATE_SKELETON_REPO}.')
 
     # Future Work: 公開/非公開設定
     click.echo('This DX template is used only inside your organization.')
@@ -78,9 +67,7 @@ def init(name, organization_id, skeleton_file):
         click.echo('Aborted!')
         sys.exit(ERROR_EXITCODE)
 
-    # skeleton ファイルの取得と保存
-    if skeleton_file == 'Y':
-        git_clone_skeleton_files(DX_TEMPLATE_SKELETON_REPO, name)
+    git_clone_skeleton_files(DX_TEMPLATE_SKELETON_REPO, name)
 
     # template.yaml の更新
     update_template_yaml(name, template_scope, abeja_user_only)
@@ -205,7 +192,7 @@ def git_clone_skeleton_files(repository_url, destination_path, git_branch='main'
     Args:
         repository_url (str): git hub リポジトリ のhttps のURL
         destination_path (str): git clone するローカルのパス
-        git_branch (str): 取得先のリポジトリのブランチ名（していなければmain）
+        git_branch (str): 取得先のリポジトリのブランチ名（指定がなければmain）
     """
     try:
         click.echo('================================')
