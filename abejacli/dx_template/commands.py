@@ -17,7 +17,7 @@ from abejacli.configuration import __ensure_configuration_exists
 from abejacli.logger import get_logger
 from abejacli.session import generate_user_session
 
-DX_TEMPLATE_SKELETON_REPO = 'https://github.com/abeja-inc/platform-dx-template-samples.git'
+DX_TEMPLATE_SKELETON_REPO = 'https://github.com/abeja-inc/platform-dx-template-skeleton-v1.git'
 
 logger = get_logger()
 
