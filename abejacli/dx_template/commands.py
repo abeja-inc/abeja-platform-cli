@@ -1,7 +1,6 @@
 import json
 import os
 import re
-import shutil
 import subprocess
 import sys
 import zipfile
@@ -165,12 +164,8 @@ def update_template_yaml(name, template_scope='private', abeja_user_only=True):
     """
 
     template_yaml_path = f'./{name}/template.yaml'
-    template_usage_yaml_path = f'./{name}/templateUsage.yaml'
 
     try:
-        # 元のtemplate.yaml は上書きする時に開発者向けの説明コメントが消えてしまうので、別名保存しておく。（マニュアルがわりに使う）
-        shutil.copy(template_yaml_path, template_usage_yaml_path)
-
         # YAML ファイルを読み込み
         with open(template_yaml_path, 'r') as file:
             data = yaml.safe_load(file)
