@@ -112,15 +112,21 @@ def push(directory_path):
     # Thumbnail.jpg の解像度を確認する
     thumbnail_img = Image.open(upload_files["thumbnail"])
     if thumbnail_img.width > DX_TEMPLATE_THUMBNAIL_WIDTH_MAX or thumbnail_img.height > DX_TEMPLATE_THUMBNAIL_HEIGHT_MAX:
-        click.echo(f'Resolution of "{upload_files["thumbnail"]}" is {thumbnail_img.width}x{thumbnail_img.height}. \
-            Please fix thumbnail resolution under {DX_TEMPLATE_THUMBNAIL_WIDTH_MAX}x{DX_TEMPLATE_THUMBNAIL_HEIGHT_MAX}.')
+        click.echo('Resolution of "{}" is {}x{}. Please fix thumbnail resolution under {}x{}.'.format(
+            upload_files["thumbnail"],
+            thumbnail_img.width, thumbnail_img.height,
+            DX_TEMPLATE_THUMBNAIL_WIDTH_MAX, DX_TEMPLATE_THUMBNAIL_HEIGHT_MAX
+        ))
         sys.exit(ERROR_EXITCODE)
 
     # Thumbnail.jpg のファイルサイズを確認する
     thumbnail_size_kb = int(round(os.path.getsize(upload_files["thumbnail"]) / 1024, 0))
     if thumbnail_size_kb > DX_TEMPLATE_THUMBNAIL_SIZE_KB_MAX:
-        click.echo(
-            f'File size of "{upload_files["thumbnail"]}" is {thumbnail_size_kb}KB. Please fix thumbnail file size under {DX_TEMPLATE_THUMBNAIL_SIZE_KB_MAX}KB.')
+        click.echo('File size of "{}" is {}KB. Please fix thumbnail file size under {}KB.'.format(
+            upload_files["thumbnail"],
+            thumbnail_size_kb,
+            DX_TEMPLATE_THUMBNAIL_SIZE_KB_MAX
+        ))
         sys.exit(ERROR_EXITCODE)
 
     # handler.py をrun ディレクトリごとzip で固める
