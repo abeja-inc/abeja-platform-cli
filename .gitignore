@@ -209,4 +209,7 @@ ENV/
 # Pytest
 .pytest_cache
 
+# for debug
+.debug
+
 # End of https://www.gitignore.io/api/macos,python,pycharm
