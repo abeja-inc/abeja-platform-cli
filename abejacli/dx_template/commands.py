@@ -7,8 +7,8 @@ import zipfile
 
 import click
 import yaml
+from PIL import Image
 
-from abejacli.common import __try_get_organization_id
 from abejacli.config import (
     ERROR_EXITCODE,
     ORGANIZATION_ENDPOINT,
@@ -18,7 +18,10 @@ from abejacli.configuration import __ensure_configuration_exists
 from abejacli.logger import get_logger
 from abejacli.session import generate_user_session
 
-DX_TEMPLATE_SKELETON_REPO = 'https://github.com/abeja-inc/platform-dx-template-samples.git'
+DX_TEMPLATE_SKELETON_REPO = 'https://github.com/abeja-inc/platform-dx-template-skeleton-v1.git'
+DX_TEMPLATE_THUMBNAIL_WIDTH_MAX = 800
+DX_TEMPLATE_THUMBNAIL_HEIGHT_MAX = 600
+DX_TEMPLATE_THUMBNAIL_SIZE_KB_MAX = 512
 
 logger = get_logger()
 
@@ -35,20 +38,13 @@ def dx_template(ctx):
 @dx_template.command(name='init', help='Prepare and create your own DX template definition files')
 @click.option('-n', '--name', 'name', prompt='Please enter your DX template name', type=str, required=False,
               help='DX template name')
-@click.option('-o', '--organization_id', '--organization-id', 'organization_id', type=str, required=False,
-              help='Organization ID, organization_id of current credential organization is used by default. '
-                   'This value is set as an environment variable named `ABEJA_ORGANIZATION_ID`. '
-                   '`ABEJA_ORGANIZATION_ID` from this arg takes priority over one in `--environment`.',
-              callback=__try_get_organization_id)
-@click.option('-s', '--skeleton_file', '--skeleton-file', 'skeleton_file', type=click.Choice(['Y', 'n']), default='Y',
-              prompt='want DX template definition skeleton files?',
-              help='get (or not get) skeleton files')
-def init(name, organization_id, skeleton_file):
+def init(name):
     """dx-template init コマンド
+    DX テンプレート開発者に開発環境を提供するコマンド。
+    git hub で管理しているDX テンプレート用のskeleton ファイルを元に各種定義ファイルを用意する。
+
     Args:
         name(str) : DX テンプレート名
-        organization_id(str) : オーガニゼーションID
-        skeleton_file(str) : skeleton ファイルの要否（Y or n）
     """
     click.echo('\n==== Your Settings ============================')
 
@@ -57,14 +53,11 @@ def init(name, organization_id, skeleton_file):
     click.echo(f'DX Template name: {name}')
 
     # DX テンプレートのサンプルファイル取得要否
-    if skeleton_file == 'Y':
-        click.echo(f'Download the skeleton file from {DX_TEMPLATE_SKELETON_REPO}.')
-    else:
-        click.echo('Skeleton files will not be downloaded.')
+    click.echo(f'Download the skeleton file from {DX_TEMPLATE_SKELETON_REPO}.')
 
     # Future Work: 公開/非公開設定
     click.echo('This DX template is used only inside your organization.')
-    publish_type = 'private'
+    template_scope = 'private'
 
     # Future Work: ABEJA only　設定
     click.echo('This DX template is used only inside ABEJA inc.')
@@ -78,12 +71,10 @@ def init(name, organization_id, skeleton_file):
         click.echo('Aborted!')
         sys.exit(ERROR_EXITCODE)
 
-    # skeleton ファイルの取得と保存
-    if skeleton_file == 'Y':
-        git_clone_skeleton_files(DX_TEMPLATE_SKELETON_REPO, name)
+    git_clone_skeleton_files(DX_TEMPLATE_SKELETON_REPO, name)
 
-    # template.yaml の作成
-    create_and_save_template_yaml(organization_id, name, publish_type, abeja_user_only)
+    # template.yaml の更新
+    update_template_yaml(name, template_scope, abeja_user_only)
 
     # 処理正常終了
     click.echo('✨✨✨✨ It\'s done!! Happy DX! ✨✨✨✨\n')
@@ -117,6 +108,26 @@ def push(directory_path):
         if not os.path.isfile(path):
             click.echo(f'A required file is missing: {path}')
             sys.exit(ERROR_EXITCODE)
+
+    # Thumbnail.jpg の解像度を確認する
+    thumbnail_img = Image.open(upload_files["thumbnail"])
+    if thumbnail_img.width > DX_TEMPLATE_THUMBNAIL_WIDTH_MAX or thumbnail_img.height > DX_TEMPLATE_THUMBNAIL_HEIGHT_MAX:
+        click.echo('Resolution of "{}" is {}x{}. Please fix thumbnail resolution under {}x{}.'.format(
+            upload_files["thumbnail"],
+            thumbnail_img.width, thumbnail_img.height,
+            DX_TEMPLATE_THUMBNAIL_WIDTH_MAX, DX_TEMPLATE_THUMBNAIL_HEIGHT_MAX
+        ))
+        sys.exit(ERROR_EXITCODE)
+
+    # Thumbnail.jpg のファイルサイズを確認する
+    thumbnail_size_kb = int(round(os.path.getsize(upload_files["thumbnail"]) / 1024, 0))
+    if thumbnail_size_kb > DX_TEMPLATE_THUMBNAIL_SIZE_KB_MAX:
+        click.echo('File size of "{}" is {}KB. Please fix thumbnail file size under {}KB.'.format(
+            upload_files["thumbnail"],
+            thumbnail_size_kb,
+            DX_TEMPLATE_THUMBNAIL_SIZE_KB_MAX
+        ))
+        sys.exit(ERROR_EXITCODE)
 
     # handler.py をrun ディレクトリごとzip で固める
     handler_dire_path = os.path.join(directory_path, 'src/abeja_platform/deployments/run')
@@ -166,36 +177,38 @@ def push(directory_path):
     sys.exit(SUCCESS_EXITCODE)
 
 
-def create_and_save_template_yaml(organization_id, name, publish_type, abeja_user_only):
-    """引数で渡された内容をもとにtemplate.yaml を作成して保存する
+def update_template_yaml(name, template_scope='private', abeja_user_only=True):
+    """引数で渡された内容をもとにtemplate.yaml を更新する
+    template.yaml は`./{name}/template.yaml` に配置されていることを想定している
+
     Args:
-        organization_id (str): オーガニゼーションID
         name (str): DX テンプレート名
-        publish_type (str): DX テンプレートの公開設定 'public' or 'private'
+        template_scope (str): DX テンプレートの公開設定 'public' or 'private'
         abeja_user_only (bool): ABEJA Only か否か
     """
 
-    # YAML 生成に使う辞書作成
-    yaml_data = {
-        'organization_id': organization_id,
-        'name': name,
-        'descripton': '',
-        'type': publish_type,
-        'abeja_user_only': abeja_user_only
-    }
+    template_yaml_path = f'./{name}/template.yaml'
 
-    # ディレクトリ作成しYAML ファイルを保存する（既に同名ディレクトリ、ファイルがある場合は上書き）
-    output_dir = f'./{name}'
-    os.makedirs(output_dir, exist_ok=True)
-    output_file = f'./{name}/template.yaml'
     try:
-        with open(output_file, 'w') as file:
-            yaml.dump(yaml_data, file)
-    except FileNotFoundError:
-        click.echo('failed to create the directory or yaml file. check DX template name you input.\n')
-        sys.exit(ERROR_EXITCODE)
+        # YAML ファイルを読み込み
+        with open(template_yaml_path, 'r') as file:
+            data = yaml.safe_load(file)
 
-    click.echo(f'YAML file saved as: {output_file}\n')
+        # 内容を編集
+        data['metadata']['templateName'] = name
+        data['metadata']['templateScope'] = template_scope
+        data['metadata']['abejaUserOnly'] = abeja_user_only
+
+        # 編集後の内容をYAMLファイルに書き込み
+        with open(template_yaml_path, 'w') as file:
+            yaml.dump(data, file)
+
+    except yaml.YAMLError as e:
+        click.echo(f"YAML Error: {str(e)}")
+        sys.exit(ERROR_EXITCODE)
+    except Exception as e:
+        click.echo(f"An unexpected error has occurred.: {str(e)}")
+        sys.exit(ERROR_EXITCODE)
 
 
 def git_clone_skeleton_files(repository_url, destination_path, git_branch='main'):
@@ -203,7 +216,7 @@ def git_clone_skeleton_files(repository_url, destination_path, git_branch='main'
     Args:
         repository_url (str): git hub リポジトリ のhttps のURL
         destination_path (str): git clone するローカルのパス
-        git_branch (str): 取得先のリポジトリのブランチ名（していなければmain）
+        git_branch (str): 取得先のリポジトリのブランチ名（指定がなければmain）
     """
     try:
         click.echo('================================')
