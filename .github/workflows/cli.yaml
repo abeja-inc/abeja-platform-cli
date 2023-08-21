@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.6', '3.7', '3.8', '3.9', '3.10']
+        python-version: ['3.7', '3.8', '3.9', '3.10']
       max-parallel: 4
 
     steps:
@@ -30,7 +30,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install --user poetry~=1.1.13
+          pip install --user poetry~=1.5.1
           poetry install
 
       - name: Setup variables for Dev environment
@@ -66,7 +66,7 @@ jobs:
           PLATFORM_USER_TOKEN_PROD: ${{ secrets.PLATFORM_USER_TOKEN_PROD }}
 
       - name: Unit test
-        run: | 
+        run: |
           make prepare_ci
           make test
           make integration_test

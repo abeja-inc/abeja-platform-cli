@@ -1,3 +1,7 @@
+# 2.2.0
+- update CI/CD setings to delete python 3.6
+- add dx-template commands(init, push)
+
 # 2.1.0
 - update ruamel.yaml version (#35)
 - add github actions workflow file (#36)
