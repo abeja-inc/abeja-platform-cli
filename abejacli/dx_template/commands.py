@@ -73,6 +73,9 @@ def init(name):
 
     git_clone_skeleton_files(DX_TEMPLATE_SKELETON_REPO, name)
 
+    # git 履歴初期化
+    init_git(name)
+
     # template.yaml の更新
     update_template_yaml(name, template_scope, abeja_user_only)
 
@@ -233,6 +236,14 @@ def git_clone_skeleton_files(repository_url, destination_path, git_branch='main'
     except Exception as e:
         click.echo(f'An error occurred: {e}\n')
         sys.exit(ERROR_EXITCODE)
+
+
+def init_git(name):
+    try:
+        subprocess.run(['rm', '-rf', f'{name}/.git'], check=True)
+        subprocess.run(['git', 'init', name], check=True)
+    except Exception as e:
+        click.echo(f'Failed to init git: {e}\n')
 
 
 def files_and_directorys_to_zip(directory_path, zip_path):
