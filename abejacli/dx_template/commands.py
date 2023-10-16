@@ -7,6 +7,7 @@ import zipfile
 
 import click
 import ruamel.yaml
+import yamale
 from PIL import Image
 
 from abejacli.config import (
@@ -112,6 +113,10 @@ def push(directory_path):
             click.echo(f'A required file is missing: {path}')
             sys.exit(ERROR_EXITCODE)
 
+    # template.yaml のフォーマットを確認する
+    template_schema = os.path.join(directory_path, 'template_schema.yaml')
+    verify_dxtemplate_yaml(upload_files["template_yaml"], template_schema)
+
     # Thumbnail.jpg の解像度を確認する
     thumbnail_img = Image.open(upload_files["thumbnail"])
     if thumbnail_img.width > DX_TEMPLATE_THUMBNAIL_WIDTH_MAX or thumbnail_img.height > DX_TEMPLATE_THUMBNAIL_HEIGHT_MAX:
@@ -165,7 +170,7 @@ def push(directory_path):
         click.echo(json.dumps(content, indent=4))
 
     except Exception as e:
-        click.echo('Error: Failed to upload {} to DX template repository (Reason: {})'.format(file_path, e))
+        click.echo('Error: Failed to upload files {} to DX template repository (Reason: {})'.format(upload_files, e))
         sys.exit(ERROR_EXITCODE)
     finally:
         # io.BufferedReader を全てclose する
@@ -263,3 +268,17 @@ def files_and_directorys_to_zip(directory_path, zip_path):
                 dir_path = os.path.join(root, d)
                 rel_path = os.path.relpath(dir_path, directory_path)
                 zipf.write(dir_path, rel_path)
+
+
+def verify_dxtemplate_yaml(template_yaml, template_schema):
+    try:
+        schema = yamale.make_schema(template_schema)
+        data = yamale.make_data(template_yaml)
+        yamale.validate(schema, data, strict=False)
+    except ValueError as e:
+        click.echo(f'Validation failed of template.yaml!: {e}\n')
+        sys.exit(ERROR_EXITCODE)
+    except Exception as e:
+        click.echo(f'Exception was occurred!: {e}\n')
+        sys.exit(ERROR_EXITCODE)
+    return
