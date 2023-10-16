@@ -269,6 +269,7 @@ def files_and_directorys_to_zip(directory_path, zip_path):
                 rel_path = os.path.relpath(dir_path, directory_path)
                 zipf.write(dir_path, rel_path)
 
+
 def verify_dxtemplate_yaml(template_yaml, template_schema):
     try:
         schema = yamale.make_schema(template_schema)
