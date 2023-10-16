@@ -864,7 +864,7 @@ six = ">=1.5"
 name = "pyyaml"
 version = "6.0"
 description = "YAML parser and emitter for Python"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6"
 files = [
@@ -1261,7 +1261,22 @@ files = [
     {file = "wrapt-1.15.0.tar.gz", hash = "sha256:d06730c6aed78cee4126234cf2d071e01b44b915e725a6cb439a879ec9754a3a"},
 ]
 
+[[package]]
+name = "yamale"
+version = "4.0.4"
+description = "A schema and validator for YAML."
+category = "main"
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "yamale-4.0.4-py3-none-any.whl", hash = "sha256:04f914c0886bda03ac20f8468272cfd9374a634a062549490eff2beedeb30497"},
+    {file = "yamale-4.0.4.tar.gz", hash = "sha256:e524caf71cbbbd15aa295e8bdda01688ac4b5edaf38dd60851ddff6baef383ba"},
+]
+
+[package.dependencies]
+pyyaml = "*"
+
 [metadata]
 lock-version = "2.0"
 python-versions = "~=3.9"
-content-hash = "3e0e1324d776040896f54b7ab05a40855fbe8f2423afbfc36bd41e922479d74b"
+content-hash = "3d2eff6722a14b9f4546788d74d1c4e1a9db8f99e374de6874e8197c29497132"
