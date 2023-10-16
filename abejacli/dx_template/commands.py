@@ -6,7 +6,7 @@ import sys
 import zipfile
 
 import click
-import yaml
+import ruamel.yaml
 from PIL import Image
 
 from abejacli.config import (
@@ -194,8 +194,9 @@ def update_template_yaml(name, template_scope='private', abeja_user_only=True):
 
     try:
         # YAML ファイルを読み込み
+        yaml = ruamel.yaml.YAML()
         with open(template_yaml_path, 'r') as file:
-            data = yaml.safe_load(file)
+            data = yaml.load(file)
 
         # 内容を編集
         data['metadata']['templateName'] = name
@@ -204,7 +205,7 @@ def update_template_yaml(name, template_scope='private', abeja_user_only=True):
 
         # 編集後の内容をYAMLファイルに書き込み
         with open(template_yaml_path, 'w') as file:
-            yaml.dump(data, file)
+            yaml.dump(data, stream=file)
 
     except yaml.YAMLError as e:
         click.echo(f"YAML Error: {str(e)}")
