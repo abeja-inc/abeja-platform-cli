@@ -6,7 +6,8 @@ import sys
 import zipfile
 
 import click
-import yaml
+import ruamel.yaml
+import yamale
 from PIL import Image
 
 from abejacli.config import (
@@ -73,6 +74,9 @@ def init(name):
 
     git_clone_skeleton_files(DX_TEMPLATE_SKELETON_REPO, name)
 
+    # git 履歴初期化
+    init_git(name)
+
     # template.yaml の更新
     update_template_yaml(name, template_scope, abeja_user_only)
 
@@ -108,6 +112,10 @@ def push(directory_path):
         if not os.path.isfile(path):
             click.echo(f'A required file is missing: {path}')
             sys.exit(ERROR_EXITCODE)
+
+    # template.yaml のフォーマットを確認する
+    template_schema = os.path.join(directory_path, 'template_schema.yaml')
+    verify_dxtemplate_yaml(upload_files["template_yaml"], template_schema)
 
     # Thumbnail.jpg の解像度を確認する
     thumbnail_img = Image.open(upload_files["thumbnail"])
@@ -162,7 +170,7 @@ def push(directory_path):
         click.echo(json.dumps(content, indent=4))
 
     except Exception as e:
-        click.echo('Error: Failed to upload {} to DX template repository (Reason: {})'.format(file_path, e))
+        click.echo('Error: Failed to upload files {} to DX template repository (Reason: {})'.format(upload_files, e))
         sys.exit(ERROR_EXITCODE)
     finally:
         # io.BufferedReader を全てclose する
@@ -191,8 +199,9 @@ def update_template_yaml(name, template_scope='private', abeja_user_only=True):
 
     try:
         # YAML ファイルを読み込み
+        yaml = ruamel.yaml.YAML()
         with open(template_yaml_path, 'r') as file:
-            data = yaml.safe_load(file)
+            data = yaml.load(file)
 
         # 内容を編集
         data['metadata']['templateName'] = name
@@ -201,7 +210,7 @@ def update_template_yaml(name, template_scope='private', abeja_user_only=True):
 
         # 編集後の内容をYAMLファイルに書き込み
         with open(template_yaml_path, 'w') as file:
-            yaml.dump(data, file)
+            yaml.dump(data, stream=file)
 
     except yaml.YAMLError as e:
         click.echo(f"YAML Error: {str(e)}")
@@ -235,6 +244,14 @@ def git_clone_skeleton_files(repository_url, destination_path, git_branch='main'
         sys.exit(ERROR_EXITCODE)
 
 
+def init_git(name):
+    try:
+        subprocess.run(['rm', '-rf', f'{name}/.git'], check=True)
+        subprocess.run(['git', 'init', name], check=True)
+    except Exception as e:
+        click.echo(f'Failed to init git: {e}\n')
+
+
 def files_and_directorys_to_zip(directory_path, zip_path):
     """引数で渡されたディレクトリパス配下のファイルを一つのzip ファイルに圧縮する
     Args:
@@ -251,3 +268,17 @@ def files_and_directorys_to_zip(directory_path, zip_path):
                 dir_path = os.path.join(root, d)
                 rel_path = os.path.relpath(dir_path, directory_path)
                 zipf.write(dir_path, rel_path)
+
+
+def verify_dxtemplate_yaml(template_yaml, template_schema):
+    try:
+        schema = yamale.make_schema(template_schema)
+        data = yamale.make_data(template_yaml)
+        yamale.validate(schema, data, strict=False)
+    except ValueError as e:
+        click.echo(f'Validation failed of template.yaml!: {e}\n')
+        sys.exit(ERROR_EXITCODE)
+    except Exception as e:
+        click.echo(f'Exception was occurred!: {e}\n')
+        sys.exit(ERROR_EXITCODE)
+    return
