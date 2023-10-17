@@ -1,3 +1,8 @@
+# 2.2.1
+- Verify template.yaml in dxtemplate push command (#56)
+- Keep yaml format in dxtemplate init command (#55)
+- Add git init in dx-template init command (#54)
+
 # 2.2.0
 - update CI/CD setings to delete python 3.6
 - add dx-template commands(init, push)
