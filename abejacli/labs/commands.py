@@ -1,8 +1,8 @@
+import json
 import os
 import re
 import subprocess
 import sys
-import zipfile
 
 import click
 import ruamel.yaml
@@ -16,6 +16,7 @@ from abejacli.config import (
 )
 from abejacli.configuration import __ensure_configuration_exists
 from abejacli.logger import get_logger
+from abejacli.session import generate_user_session
 
 LABS_APP_SKELETON_REPO = 'https://github.com/abeja-inc/platform-labs-app-skeleton-v1.git'
 LABS_APP_THUMBNAIL_WIDTH_MAX = 800
@@ -139,7 +140,7 @@ def push(directory_path):
     Args:
         directory_path(click.Path) : アップロードしたい Labs アプリ定義ファイルが格納されているディレクトリ
     """
-    '{}/labs'.format(ORGANIZATION_ENDPOINT)
+    url = f"{ORGANIZATION_ENDPOINT.replace('organizations', 'labs/organizations')}/apps"
 
     # 必要なファイルの存在を確認する
     upload_files = {
@@ -176,6 +177,39 @@ def push(directory_path):
             LABS_APP_THUMBNAIL_SIZE_KB_MAX
         ))
         sys.exit(ERROR_EXITCODE)
+
+    try:
+        # アップロード対象のファイルをリスト化してAPI に送信する
+        files = []
+        for file_name, file_path in upload_files.items():
+            file = open(file_path, 'rb')
+            if file_name == "setting_yaml":
+                files.append((file_name, (os.path.basename(file_path), file, 'application/yaml')))
+            elif file_name == "thumbnail":
+                files.append((file_name, (os.path.basename(file_path), file, 'image/jpeg')))
+            else:
+                files.append((file_name, (os.path.basename(file_path), file, 'text/markdown')))
+        with generate_user_session(False) as session:
+            response = session.post(url, files=files, timeout=None)
+
+        response.raise_for_status()
+        content = response.json()
+
+        content.pop('setting_yaml_base64', None)
+        content.pop('thumbnail_base64', None)
+        content.pop('how_to_use_base64', None)
+        content.pop('how_to_use_jp_base64', None)
+
+        click.echo('Upload succeeded')
+        click.echo(json.dumps(content, indent=4))
+
+    except Exception as e:
+        click.echo('Error: Failed to upload files {} to LabsApp repository (Reason: {})'.format(upload_files, e))
+        sys.exit(ERROR_EXITCODE)
+    finally:
+        # io.BufferedReader を全てclose する
+        for _, file in files:
+            file[1].close()
 
     # 処理正常終了
     click.echo('✨✨✨✨ It\'s done!! Happy Labs App! ✨✨✨✨\n')
@@ -250,24 +284,6 @@ def init_git(name):
         subprocess.run(['git', 'init', name], check=True)
     except Exception as e:
         click.echo(f'Failed to init git: {e}\n')
-
-
-def files_and_directorys_to_zip(directory_path, zip_path):
-    """引数で渡されたディレクトリパス配下のファイルを一つのzip ファイルに圧縮する
-    Args:
-        directory_path (str): 圧縮する対象のファイルが格納されているディレクトリのパス
-        zip_path (str): 圧縮後のzip ファイルパス
-    """
-    with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
-        for root, dirs, files in os.walk(directory_path):
-            for f in files:
-                file_path = os.path.join(root, f)
-                rel_path = os.path.relpath(file_path, directory_path)
-                zipf.write(file_path, rel_path)
-            for d in dirs:
-                dir_path = os.path.join(root, d)
-                rel_path = os.path.relpath(dir_path, directory_path)
-                zipf.write(dir_path, rel_path)
 
 
 def verify_setting_yaml(setting_yaml, setting_schema):
