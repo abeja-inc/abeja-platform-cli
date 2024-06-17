@@ -1,4 +1,3 @@
-import json
 import os
 import re
 import subprocess
@@ -17,7 +16,6 @@ from abejacli.config import (
 )
 from abejacli.configuration import __ensure_configuration_exists
 from abejacli.logger import get_logger
-from abejacli.session import generate_user_session
 
 LABS_APP_SKELETON_REPO = 'https://github.com/abeja-inc/platform-labs-app-skeleton-v1.git'
 LABS_APP_THUMBNAIL_WIDTH_MAX = 800
@@ -38,15 +36,49 @@ def labs(ctx):
 # ---------------------------------------------------
 @labs.command(name='init', help='Prepare and create your own Labs App definition files')
 @click.option('--name', 'name', prompt='Please enter your Labs App name', type=str, required=False, help='labs app name')
-@click.option('--app_type', 'app_type', prompt='Please enter your Labs App type', type=click.Choice(choices=['streamlit']), default='streamlit', required=False, help='labs app type')
+@click.option(
+    '--app_type', 'app_type',
+    prompt='Please enter your Labs App type',
+    type=click.Choice(choices=['streamlit']), default='streamlit',
+    required=False, help='labs app type'
+)
 # TODO: scope は現状 private のみ対応
-# @click.option('--scope', 'scope', prompt='Please enter your Labs App scope', type=click.Choice(choices=['private', 'public']), default='private', required=False, help='labs app scope')
-@click.option('--scope', 'scope', prompt='Please enter your Labs App scope', type=click.Choice(choices=['private']), default='private', required=False, help='labs app scope')
-@click.option('--abeja_user_only', 'abeja_user_only', prompt='Please enter your Labs App can only access abejainc user', type=click.Choice(['Y', 'n']), default='Y', required=False, help='labs app only access abejainc user')
+# @click.option(
+#     '--scope', 'scope',
+#     prompt='Please enter your Labs App scope',
+#     type=click.Choice(choices=['private', 'public']), default='private',
+#     required=False, help='labs app scope'
+# )
+@click.option(
+    '--scope', 'scope',
+    prompt='Please enter your Labs App scope',
+    type=click.Choice(choices=['private']), default='private',
+    required=False, help='labs app scope'
+)
+@click.option(
+    '--abeja_user_only', 'abeja_user_only',
+    prompt='Please enter your Labs App can only access abejainc user',
+    type=click.Choice(['Y', 'n']), default='Y',
+    required=False, help='labs app only access abejainc user'
+)
 # TODO: auth_type は現状 abeja のみ対応
-# @click.option('--auth_type', 'auth_type', prompt='Please enter your Labs App auth type', type=click.Choice(choices=['none', 'abeja']), default='abeja', required=False, help='labs app auth type')
-@click.option('--auth_type', 'auth_type', prompt='Please enter your Labs App auth type', type=click.Choice(choices=['abeja']), default='abeja', required=False, help='labs app auth type')
-@click.option('--author', 'author', prompt='Please enter your email', type=str, required=False, help='labs app auther email')
+# @click.option(
+#     '--auth_type', 'auth_type',
+#     prompt='Please enter your Labs App auth type',
+#     type=click.Choice(choices=['none', 'abeja']), default='abeja',
+#     required=False, help='labs app auth type'
+# )
+@click.option(
+    '--auth_type', 'auth_type',
+    prompt='Please enter your Labs App auth type',
+    type=click.Choice(choices=['abeja']), default='abeja',
+    required=False, help='labs app auth type'
+)
+@click.option(
+    '--author', 'author',
+    prompt='Please enter your email',
+    type=str, required=False, help='labs app auther email'
+)
 def init(name, app_type, scope, abeja_user_only, auth_type, author):
     """labs init コマンド
     Labs アプリ開発者に開発環境を提供するコマンド。
@@ -107,7 +139,7 @@ def push(directory_path):
     Args:
         directory_path(click.Path) : アップロードしたい Labs アプリ定義ファイルが格納されているディレクトリ
     """
-    url = '{}/labs'.format(ORGANIZATION_ENDPOINT)
+    '{}/labs'.format(ORGANIZATION_ENDPOINT)
 
     # 必要なファイルの存在を確認する
     upload_files = {
