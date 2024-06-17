@@ -66,6 +66,7 @@ from abejacli.dataset.commands import dataset
 from abejacli.docker.commands.run import ModelRunCommand
 from abejacli.docker.utils import check_docker_installation
 from abejacli.dx_template.commands import dx_template
+from abejacli.labs.commands import labs
 from abejacli.fs_utils import (
     InvalidPathException,
     UploadBucketFile,
@@ -1900,6 +1901,7 @@ main.add_command(registry)
 main.add_command(startapp)
 main.add_command(dataset)
 main.add_command(dx_template)
+main.add_command(labs)
 
 
 if __name__ == '__main__':
