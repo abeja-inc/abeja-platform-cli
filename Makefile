@@ -1,5 +1,6 @@
 NUM_TEST_PROCESS ?= auto
 FMT_TARGET ?= .
+TEST_IGNORE_TARGET ?= .
 
 .PHONY: build install clean dist uninstall test prepare_ci integration_test lint fmt release
 
@@ -14,7 +15,7 @@ dist: clean
 	poetry build -f wheel
 
 test: lint
-	poetry run pytest -v -n ${NUM_TEST_PROCESS} --cov=abejacli tests/unit
+	poetry run pytest -v -n ${NUM_TEST_PROCESS} --cov=abejacli tests/unit --ignore=${TEST_IGNORE_TARGET}
 
 prepare_ci:
 	mkdir -p ~/.abeja
