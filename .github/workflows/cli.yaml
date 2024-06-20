@@ -68,7 +68,7 @@ jobs:
       - name: Unit test
         run: |
           make prepare_ci
-          NUM_TEST_PROCESS=1 make test
+          make test
           make integration_test
         env:
           NUM_TEST_PROCESS: 1
