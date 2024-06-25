@@ -1,7 +1,7 @@
 [tool]
 [tool.poetry]
 name = "abejacli"
-version = "2.2.1"
+version = "2.2.2"
 description = "ABEJA Platform Command line tool"
 authors = ["ABEJA Inc. <platform-support@abejainc.com>"]
 classifiers = [
