@@ -68,7 +68,8 @@ jobs:
       - name: Unit test
         run: |
           make prepare_ci
-          make test
+          # NOTE: Ignore labs unit test, because git clone for private repo is not allowed in github actions. labs unit test is executed in git commit with pre-commit or make test in local.
+          TEST_IGNORE_TARGET="tests/unit/labs" make test
           make integration_test
         env:
           NUM_TEST_PROCESS: 1

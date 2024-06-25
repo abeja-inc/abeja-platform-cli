@@ -1,3 +1,6 @@
+# 2.2.2
+- Add ABEJA Platform Labs commands (#57)
+
 # 2.2.1
 - Verify template.yaml in dxtemplate push command (#56)
 - Keep yaml format in dxtemplate init command (#55)
