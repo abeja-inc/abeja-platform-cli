@@ -74,6 +74,7 @@ from abejacli.fs_utils import (
     generate_upload_file_iter,
     get_compressed_file
 )
+from abejacli.labs.commands import labs
 from abejacli.logger import get_logger
 from abejacli.model.docker_handler import (
     LOCAL_MODEL_TYPE_KEY,
@@ -1900,6 +1901,7 @@ main.add_command(registry)
 main.add_command(startapp)
 main.add_command(dataset)
 main.add_command(dx_template)
+main.add_command(labs)
 
 
 if __name__ == '__main__':
