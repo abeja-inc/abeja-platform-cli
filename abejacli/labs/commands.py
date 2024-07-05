@@ -228,19 +228,24 @@ def update_setting_yaml(name, scope='private', abeja_user_only=True, auth_type='
 
     setting_yaml_path = f'./{name}/setting.yaml'
 
+
     try:
         # YAML ファイルを読み込み
         yaml = ruamel.yaml.YAML()
         with open(setting_yaml_path, 'r') as file:
             data = yaml.load(file)
 
-        # 内容を編集
+        # 内容を編集（必須項目）
         data['metadata']['name'] = name
         data['metadata']['scope'] = scope
         data['metadata']['abejaUserOnly'] = abeja_user_only
         data['metadata']['authType'] = auth_type
         data['metadata']['author'] = author
         data['spec']['image'] = f'{name}:latest'
+
+        # 内容を編集（オプション項目）
+        if 'githubURL' in data['metadata']:
+            data['metadata']['githubURL'] = f'https://github.com/abeja-inc/{name}'
 
         # 編集後の内容をYAMLファイルに書き込み
         with open(setting_yaml_path, 'w') as file:
