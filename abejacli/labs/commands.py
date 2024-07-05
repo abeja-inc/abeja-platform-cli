@@ -228,7 +228,6 @@ def update_setting_yaml(name, scope='private', abeja_user_only=True, auth_type='
 
     setting_yaml_path = f'./{name}/setting.yaml'
 
-
     try:
         # YAML ファイルを読み込み
         yaml = ruamel.yaml.YAML()
