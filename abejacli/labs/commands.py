@@ -133,14 +133,22 @@ def init(name, app_type, scope, abeja_user_only, auth_type, author):
               help='Directory path where your own Labs App definition file is located. '
               f'The directory structure should be the same as {LABS_APP_SKELETON_REPO}',
               default=None, required=True)
-def push(directory_path):
+@click.option('-s', '--stop_after', 'stop_after', type=int, default=0, required=False,
+              help='Labs App stop automatically after the specified number of hours')
+def push(directory_path, stop_after):
     """labs push コマンド
     ローカルで作成した Labs アプリ定義ファイルを ABEJA Platform にアップロードする
 
     Args:
         directory_path(click.Path) : アップロードしたい Labs アプリ定義ファイルが格納されているディレクトリ
+        stop_after(int) : Labs アプリの自動停止時間 [hours]
     """
     url = f"{ORGANIZATION_ENDPOINT.replace('organizations', 'labs/organizations')}/apps"
+
+    # stop_after の値を確認
+    if stop_after < 0:
+        click.echo('"--stop_after" must be greater than or equal to 0.')
+        sys.exit(ERROR_EXITCODE)
 
     # 必要なファイルの存在を確認する
     upload_files = {
@@ -189,8 +197,12 @@ def push(directory_path):
                 files.append((file_name, (os.path.basename(file_path), file, 'image/jpeg')))
             else:
                 files.append((file_name, (os.path.basename(file_path), file, 'text/markdown')))
+
+        json_data = json.dumps({
+            'stop_after': stop_after
+        })
         with generate_user_session(False) as session:
-            response = session.post(url, files=files, timeout=None)
+            response = session.post(url, files=files, data=json_data, timeout=None)
 
         response.raise_for_status()
         content = response.json()
