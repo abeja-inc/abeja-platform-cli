@@ -143,8 +143,6 @@ def push(directory_path, stop_after):
         directory_path(click.Path) : アップロードしたい Labs アプリ定義ファイルが格納されているディレクトリ
         stop_after(int) : Labs アプリの自動停止時間 [hours]
     """
-    url = f"{ORGANIZATION_ENDPOINT.replace('organizations', 'labs/organizations')}/apps"
-
     # stop_after の値を確認
     if stop_after < 0:
         click.echo('"--stop_after" must be greater than or equal to 0.')
@@ -198,11 +196,9 @@ def push(directory_path, stop_after):
             else:
                 files.append((file_name, (os.path.basename(file_path), file, 'text/markdown')))
 
-        json_data = json.dumps({
-            'stop_after': stop_after
-        })
+        url = f"{ORGANIZATION_ENDPOINT.replace('organizations', 'labs/organizations')}/apps?stop_after={stop_after}"
         with generate_user_session(False) as session:
-            response = session.post(url, files=files, data=json_data, timeout=None)
+            response = session.post(url, files=files, timeout=None)
 
         response.raise_for_status()
         content = response.json()
