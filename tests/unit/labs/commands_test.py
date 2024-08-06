@@ -27,6 +27,7 @@ LABS_APP_SCOPE = 'private'
 LABS_APP_ABEJA_USER_ONLY = True
 LABS_APP_AUTH_TYPE = 'abeja'
 LABS_APP_AUTHOR = 'test@abejainc.com'
+LABS_APP_GITHUB_URL = 'https://github.com/abeja-inc/platform-labs-app-skeleton-v1'
 
 MOCK_LABS_APP_RESPONSE = {
     "labs_app_id": "1111111111111",
@@ -39,6 +40,7 @@ MOCK_LABS_APP_RESPONSE = {
     "abeja_user_only": LABS_APP_ABEJA_USER_ONLY,
     "author": LABS_APP_AUTHOR,
     "auth_type": LABS_APP_AUTH_TYPE,
+    "github_url": LABS_APP_GITHUB_URL,
     "image": f"custom/1111111111111/${LABS_APP_NAME_PUSH}:latest",
     "instance_type": "cpu-0.25",
     "command": "python3 -m http.server 8501 -d /app/src",
