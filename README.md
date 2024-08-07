@@ -50,8 +50,11 @@ $ git flow release start X.X.X
 $ vim CHANGELOG.md
 # update to new version
 $ poetry version X.X.X
+# If you want to set rc2, rc3, ... versions, you need to edit add_rc_version.
+$ vim tools/add_rc_version.py
 $ git add pyproject.toml
 $ git add CHANGELOG.md
+$ git add tools/add_rc_version.py
 $ git commit -m "bump version"
 $ git flow release publish X.X.X
 ```

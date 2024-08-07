@@ -1,3 +1,7 @@
+# 2.2.3
+- [ABEJA Platform Labs] Add stop_after args in labs-push command #59
+- [ABEJA Platform Labs] Add github URL in labs init command #58
+
 # 2.2.2
 - Add ABEJA Platform Labs commands (#57)
 
