@@ -40,7 +40,7 @@ def labs(ctx):
 @click.option(
     '--app_type', 'app_type',
     prompt='Please enter your Labs App type',
-    type=click.Choice(choices=['streamlit']), default='streamlit',
+    type=click.Choice(choices=['streamlit', 'react']), default='streamlit',
     required=False, help='labs app type'
 )
 # TODO: scope は現状 private のみ対応
