@@ -37,7 +37,7 @@ def dx_template(ctx):
 # dx_template command
 # ---------------------------------------------------
 @dx_template.command(name='init', help='Prepare and create your own DX template definition files')
-@click.option('-n', '--name', 'name', prompt='Please enter your DX template name', type=str, required=False,
+@click.option('-n', '--name', 'name', prompt='Please enter your DX Template name', type=str, required=False,
               help='DX template name')
 @click.option(
     '--scope', 'scope',
@@ -47,7 +47,7 @@ def dx_template(ctx):
 )
 @click.option(
     '--abeja_user_only', 'abeja_user_only',
-    prompt='Please enter your DX Tem can only access abejainc user',
+    prompt='Please enter your DX Template can only access abejainc user',
     type=click.Choice(['Y', 'n']), default='Y',
     required=False, help='dx-template only access abejainc user'
 )
