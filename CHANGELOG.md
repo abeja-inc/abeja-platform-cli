@@ -1,3 +1,6 @@
+# 2.2.5
+- [ABEJA Platform Insightify] Fix UI/UX in dx-template init command #61
+
 # 2.2.4
 - [ABEJA Platform Labs] Add react in app_type args of labs-init command #60
 
