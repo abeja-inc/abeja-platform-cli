@@ -37,9 +37,26 @@ def dx_template(ctx):
 # dx_template command
 # ---------------------------------------------------
 @dx_template.command(name='init', help='Prepare and create your own DX template definition files')
-@click.option('-n', '--name', 'name', prompt='Please enter your DX template name', type=str, required=False,
+@click.option('-n', '--name', 'name', prompt='Please enter your DX Template name', type=str, required=False,
               help='DX template name')
-def init(name):
+@click.option(
+    '--scope', 'scope',
+    prompt='Please enter your DX Template scope',
+    type=click.Choice(choices=['private']), default='private',
+    required=False, help='dx-template scope'
+)
+@click.option(
+    '--abeja_user_only', 'abeja_user_only',
+    prompt='Please enter your DX Template can only access abejainc user',
+    type=click.Choice(['Y', 'n']), default='Y',
+    required=False, help='dx-template only access abejainc user'
+)
+@click.option(
+    '--author', 'author',
+    prompt='Please enter your email',
+    type=str, required=False, help='dx-template auther email'
+)
+def init(name, scope, abeja_user_only, author):
     """dx-template init コマンド
     DX テンプレート開発者に開発環境を提供するコマンド。
     git hub で管理しているDX テンプレート用のskeleton ファイルを元に各種定義ファイルを用意する。
@@ -47,27 +64,21 @@ def init(name):
     Args:
         name(str) : DX テンプレート名
     """
-    click.echo('\n==== Your Settings ============================')
-
-    # 入力されたDX テンプレート名でファイルやフォルダ名に入れない方が良い文字は削除する
     name = re.sub(r'[\\/:*?"<>|\.]+', '', name)
-    click.echo(f'DX Template name: {name}')
 
-    # DX テンプレートのサンプルファイル取得要否
+    click.echo('\n==== Your Settings ============================')
     click.echo(f'Download the skeleton file from {DX_TEMPLATE_SKELETON_REPO}.')
-
-    # Future Work: 公開/非公開設定
-    click.echo('This DX template is used only inside your organization.')
-    template_scope = 'private'
-
-    # Future Work: ABEJA only　設定
-    click.echo('This DX template is used only inside ABEJA inc.')
-    abeja_user_only = True
-
+    click.echo(f'DX Template name: {name}')
+    click.echo(f'DX Template scope: {scope}')
+    if(abeja_user_only == 'Y'):
+        abeja_user_only = True
+    else:
+        abeja_user_only = False
+    click.echo(f'DX Template abejaUserOnly: {abeja_user_only}')
     click.echo('================================')
 
     # ファイルの自動作成前にユーザに確認する
-    answer = click.prompt('Are you sure you want to create the above?', type=click.Choice(['Y', 'n']))
+    answer = click.prompt('Are you sure you want to create the above?', type=click.Choice(['Y', 'n']), default='Y')
     if answer == 'n':
         click.echo('Aborted!')
         sys.exit(ERROR_EXITCODE)
@@ -78,7 +89,7 @@ def init(name):
     init_git(name)
 
     # template.yaml の更新
-    update_template_yaml(name, template_scope, abeja_user_only)
+    update_template_yaml(name, scope, abeja_user_only, author)
 
     # 処理正常終了
     click.echo('✨✨✨✨ It\'s done!! Happy DX! ✨✨✨✨\n')
@@ -185,7 +196,7 @@ def push(directory_path):
     sys.exit(SUCCESS_EXITCODE)
 
 
-def update_template_yaml(name, template_scope='private', abeja_user_only=True):
+def update_template_yaml(name, template_scope='private', abeja_user_only=True, author=''):
     """引数で渡された内容をもとにtemplate.yaml を更新する
     template.yaml は`./{name}/template.yaml` に配置されていることを想定している
 
@@ -207,6 +218,12 @@ def update_template_yaml(name, template_scope='private', abeja_user_only=True):
         data['metadata']['templateName'] = name
         data['metadata']['templateScope'] = template_scope
         data['metadata']['abejaUserOnly'] = abeja_user_only
+        data['metadata']['author'] = author
+        data['pipelineDefinitions']['customRepository']['repositoryName'] = name
+
+        # 内容を編集（オプション項目）
+        if 'githubURL' in data['metadata']:
+            data['metadata']['githubURL'] = f'https://github.com/abeja-inc/{name}'
 
         # 編集後の内容をYAMLファイルに書き込み
         with open(template_yaml_path, 'w') as file:
