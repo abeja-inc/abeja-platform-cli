@@ -135,7 +135,9 @@ def init(name, app_type, scope, abeja_user_only, auth_type, author):
               default=None, required=True)
 @click.option('-s', '--stop_after', 'stop_after', type=int, default=0, required=False,
               help='Labs App stop automatically after the specified number of hours')
-def push(directory_path, stop_after):
+@click.option('-y', '--yes', 'yes', type=bool, default=False, required=False,
+              help='Skip the confirmation prompt and overwrite the existing Labs App')
+def push(directory_path, stop_after, yes):
     """labs push コマンド
     ローカルで作成した Labs アプリ定義ファイルを ABEJA Platform にアップロードする
 
@@ -184,6 +186,37 @@ def push(directory_path, stop_after):
         ))
         sys.exit(ERROR_EXITCODE)
 
+    # 同じ名前の LabsApp が存在するか確認する
+    overwrite = False
+    if not yes:
+        same_name_apps = []
+        try:
+            with generate_user_session(False) as session:
+                response = session.get(f"{ORGANIZATION_ENDPOINT.replace('organizations', 'labs/organizations')}/apps")
+                response.raise_for_status()
+                content = response.json()
+                for app in content['entries']:
+                    if app['name'] == os.path.basename(directory_path):
+                        same_name_apps.append(app)
+        except Exception as e:
+            click.echo('Error: Failed to get LabsApp list (Reason: {})'.format(e))
+            sys.exit(ERROR_EXITCODE)
+
+        if len(same_name_apps) > 0:
+            click.echo(f'The same name LabsApps are found. Select LabsApp to overwrite.')
+            click.echo('0: Do not overwrite')
+            for i, app in enumerate(same_name_apps):
+                click.echo(f'{i+1}: id:{app["labs_app_id"]}, name:{app["name"]}, version:{app["version"]}, author:{app["author"]}, created_at:{app["created_at"]}')
+            answer = click.prompt('Please enter the number you want to overwrite LabsApp.', type=int, default=0)
+            if answer == 0:
+                overwrite = False
+            elif 0 < answer <= len(same_name_apps):
+                overwrite = True
+            else:
+                click.echo('Invalid number. Aborted.')
+                sys.exit(ERROR_EXITCODE)
+
+    # Labs アプリを作成する
     try:
         # アップロード対象のファイルをリスト化してAPI に送信する
         files = []
@@ -196,9 +229,17 @@ def push(directory_path, stop_after):
             else:
                 files.append((file_name, (os.path.basename(file_path), file, 'text/markdown')))
 
-        url = f"{ORGANIZATION_ENDPOINT.replace('organizations', 'labs/organizations')}/apps?stop_after={stop_after}"
-        with generate_user_session(False) as session:
-            response = session.post(url, files=files, timeout=None)
+        # 上書きの場合は、Labs アプリ再登録 API を呼び出す
+        if not yes and overwrite:
+            # TODO: change URL and method
+            url = f"{ORGANIZATION_ENDPOINT.replace('organizations', 'labs/organizations')}/apps?stop_after={stop_after}"
+            with generate_user_session(False) as session:
+                response = session.post(url, files=files, timeout=None)
+        # 上書きでない場合は、Labs アプリ登録 API を呼び出す
+        else:
+            url = f"{ORGANIZATION_ENDPOINT.replace('organizations', 'labs/organizations')}/apps?stop_after={stop_after}"
+            with generate_user_session(False) as session:
+                response = session.post(url, files=files, timeout=None)
 
         response.raise_for_status()
         content = response.json()
