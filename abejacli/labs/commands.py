@@ -187,7 +187,7 @@ def push(directory_path, stop_after, yes):
         sys.exit(ERROR_EXITCODE)
 
     # 同じ名前の LabsApp が存在するか確認する
-    overwrite = False
+    overwrite_app = None
     if not yes:
         same_name_apps = []
         try:
@@ -215,9 +215,9 @@ def push(directory_path, stop_after, yes):
                 )
             answer = click.prompt('Please enter the number you want to overwrite LabsApp.', type=int, default=0)
             if answer == 0:
-                overwrite = False
+                overwrite_app = None
             elif 0 < answer <= len(same_name_apps):
-                overwrite = True
+                overwrite_app = same_name_apps[answer - 1]
             else:
                 click.echo('Invalid number. Aborted.')
                 sys.exit(ERROR_EXITCODE)
@@ -235,13 +235,12 @@ def push(directory_path, stop_after, yes):
             else:
                 files.append((file_name, (os.path.basename(file_path), file, 'text/markdown')))
 
-        # 上書きの場合は、Labs アプリ再登録 API を呼び出す
-        if not yes and overwrite:
-            # TODO: change URL and method
-            url = f"{ORGANIZATION_ENDPOINT.replace('organizations', 'labs/organizations')}/apps?stop_after={stop_after}"
+        # 上書きの場合は、Labs アプリ更新 API を呼び出す
+        if not yes and overwrite_app is not None:
+            url = f"{ORGANIZATION_ENDPOINT.replace('organizations', 'labs/organizations')}/apps/{overwrite_app["labs_app_id"]}?stop_after={stop_after}"
             with generate_user_session(False) as session:
-                response = session.post(url, files=files, timeout=None)
-        # 上書きでない場合は、Labs アプリ登録 API を呼び出す
+                response = session.put(url, files=files, timeout=None)
+        # 上書きでない場合は、Labs アプリ作成 API を呼び出す
         else:
             url = f"{ORGANIZATION_ENDPOINT.replace('organizations', 'labs/organizations')}/apps?stop_after={stop_after}"
             with generate_user_session(False) as session:
