@@ -203,10 +203,16 @@ def push(directory_path, stop_after, yes):
             sys.exit(ERROR_EXITCODE)
 
         if len(same_name_apps) > 0:
-            click.echo(f'The same name LabsApps are found. Select LabsApp to overwrite.')
+            click.echo('The same name LabsApps are found. Select LabsApp to overwrite.')
             click.echo('0: Do not overwrite')
             for i, app in enumerate(same_name_apps):
-                click.echo(f'{i+1}: id:{app["labs_app_id"]}, name:{app["name"]}, version:{app["version"]}, author:{app["author"]}, created_at:{app["created_at"]}')
+                click.echo(
+                    f'{i+1}: id:{app["labs_app_id"]}, '
+                    f'name:{app["name"]}, '
+                    f'version:{app["version"]}, '
+                    f'author:{app["author"]}, '
+                    f'created_at:{app["created_at"]}'
+                )
             answer = click.prompt('Please enter the number you want to overwrite LabsApp.', type=int, default=0)
             if answer == 0:
                 overwrite = False
