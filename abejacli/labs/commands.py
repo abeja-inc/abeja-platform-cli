@@ -237,7 +237,7 @@ def push(directory_path, stop_after, yes):
 
         # 上書きの場合は、Labs アプリ更新 API を呼び出す
         if not yes and overwrite_app is not None:
-            url = f"{ORGANIZATION_ENDPOINT.replace('organizations', 'labs/organizations')}/apps/{overwrite_app["labs_app_id"]}?stop_after={stop_after}"
+            url = f"{ORGANIZATION_ENDPOINT.replace('organizations', 'labs/organizations')}/apps/{overwrite_app['labs_app_id']}?stop_after={stop_after}"
             with generate_user_session(False) as session:
                 response = session.put(url, files=files, timeout=None)
         # 上書きでない場合は、Labs アプリ作成 API を呼び出す
