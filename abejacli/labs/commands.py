@@ -270,6 +270,56 @@ def push(directory_path, stop_after, yes):
     sys.exit(SUCCESS_EXITCODE)
 
 
+@labs.command(name='delete', help='Delete Labs App')
+@click.option('-i', '--labs_app_id', 'labs_app_id', type=str, required=True, help='LabsApp ID')
+@click.option('-y', '--yes', 'yes', is_flag=True, default=False, help='Skip the confirmation prompt')
+def delete(labs_app_id, yes):
+    labs_app = None
+    try:
+        with generate_user_session(False) as session:
+            response = session.get(f"{ORGANIZATION_ENDPOINT.replace('organizations', 'labs/organizations')}/apps/{labs_app_id}")
+            response.raise_for_status()
+            labs_app = response.json()
+    except Exception as e:
+        click.echo(f'Error: LabsApp (id:{labs_app_id}) not found (Reason: {e})')
+        sys.exit(ERROR_EXITCODE)
+
+    if not yes:
+        message = (
+            f'Are you sure you want to delete this LabsApp?\n'
+            f'  - id: {labs_app["labs_app_id"]}\n'
+            f'  - name: {labs_app["name"]}\n'
+            f'  - description: {labs_app["description"]}\n'
+            f'  - version: {labs_app["version"]}\n'
+            f'  - author: {labs_app["author"]}\n'
+            f'  - created_at: {labs_app["created_at"]}'
+        )
+        answer = click.prompt(
+            message,
+            type=click.Choice(['Y', 'n']),
+            default='Y'
+        )
+        if answer == 'n':
+            click.echo('Aborted!')
+            sys.exit(SUCCESS_EXITCODE)
+    else:
+        click.echo(
+            f'Deleting LabsApp (id:{labs_app["labs_app_id"]}, name:{labs_app["name"]})'
+        )
+
+    try:
+        with generate_user_session(False) as session:
+            response = session.delete(f"{ORGANIZATION_ENDPOINT.replace('organizations', 'labs/organizations')}/apps/{labs_app_id}")
+            response.raise_for_status()
+    except Exception as e:
+        click.echo('Error: Failed to delete LabsApp (Reason: {})'.format(e))
+        sys.exit(ERROR_EXITCODE)
+    
+    # 処理正常終了
+    click.echo(f'Delete succeeded')
+    sys.exit(SUCCESS_EXITCODE)
+
+
 def update_setting_yaml(name, scope='private', abeja_user_only=True, auth_type='abeja', author=''):
     """引数で渡された内容をもとにsetting.yaml を更新する
     setting.yaml は`./{name}/setting.yaml` に配置されていることを想定している
