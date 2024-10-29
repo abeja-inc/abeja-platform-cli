@@ -127,7 +127,6 @@ def init(name, app_type, scope, abeja_user_only, auth_type, author):
     sys.exit(SUCCESS_EXITCODE)
 
 
-# type 引数で渡しているclick.Path指定されたパスが実際に存在するかどうかを検証する
 @labs.command(name='push', help='Upload your own Labs App definition files')
 @click.option('-d', '--directory_path', 'directory_path', type=click.Path(exists=True, file_okay=False),
               help='Directory path where your own Labs App definition file is located. '
@@ -135,8 +134,7 @@ def init(name, app_type, scope, abeja_user_only, auth_type, author):
               default=None, required=True)
 @click.option('-s', '--stop_after', 'stop_after', type=int, default=0, required=False,
               help='Labs App stop automatically after the specified number of hours')
-@click.option('-y', '--yes', 'yes', type=bool, default=False, required=False,
-              help='Skip the confirmation prompt and overwrite the existing Labs App')
+@click.option('-y', '--yes', 'yes', is_flag=True, default=False, help='Skip the confirmation prompt')
 def push(directory_path, stop_after, yes):
     """labs push コマンド
     ローカルで作成した Labs アプリ定義ファイルを ABEJA Platform にアップロードする
@@ -203,17 +201,23 @@ def push(directory_path, stop_after, yes):
             sys.exit(ERROR_EXITCODE)
 
         if len(same_name_apps) > 0:
-            click.echo('The same name LabsApps are found. Select LabsApp to overwrite.')
-            click.echo('0: Do not overwrite')
+            click.echo('\nThe same name LabsApps are found. Select LabsApp to overwrite.\n')
+            click.echo('  0: Do not overwrite. Create new LabApp\n')
             for i, app in enumerate(same_name_apps):
                 click.echo(
-                    f'{i+1}: id:{app["labs_app_id"]}, '
-                    f'name:{app["name"]}, '
-                    f'version:{app["version"]}, '
-                    f'author:{app["author"]}, '
-                    f'created_at:{app["created_at"]}'
+                    f'  {i+1}: LabsApp Details\n'
+                    f'    - id: {app["labs_app_id"]}\n'
+                    f'    - name: {app["name"]}\n'
+                    f'    - description: {app["description"]}\n'
+                    f'    - version: {app["version"]}\n'
+                    f'    - author: {app["author"]}\n'
+                    f'    - created at: {app["created_at"]}\n'
                 )
-            answer = click.prompt('Please enter the number you want to overwrite LabsApp.', type=int, default=0)
+            answer = click.prompt(
+                '\nPlease enter the number you want to overwrite LabsApp',
+                type=int,
+                default=0
+            )
             if answer == 0:
                 overwrite_app = None
             elif 0 < answer <= len(same_name_apps):
