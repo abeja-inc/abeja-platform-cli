@@ -212,6 +212,7 @@ def push(directory_path, stop_after, yes):
                     f'    - version: {app["version"]}\n'
                     f'    - author: {app["author"]}\n'
                     f'    - created at: {app["created_at"]}\n'
+                    f'    - modified at: {app["modified_at"]}\n'
                 )
             answer = click.prompt(
                 '\nPlease enter the number you want to overwrite LabsApp',
@@ -241,6 +242,7 @@ def push(directory_path, stop_after, yes):
 
         # 上書きの場合は、Labs アプリ更新 API を呼び出す
         if not yes and overwrite_app is not None:
+            click.echo(f'Overwriting LabsApp. Please wait for a while...')
             url = f"{ORGANIZATION_ENDPOINT.replace('organizations', 'labs/organizations')}/apps/{overwrite_app['labs_app_id']}?stop_after={stop_after}"
             with generate_user_session(False) as session:
                 response = session.put(url, files=files, timeout=None)
@@ -296,7 +298,8 @@ def delete(labs_app_id, yes):
             f'  - description: {labs_app["description"]}\n'
             f'  - version: {labs_app["version"]}\n'
             f'  - author: {labs_app["author"]}\n'
-            f'  - created_at: {labs_app["created_at"]}'
+            f'  - created_at: {labs_app["created_at"]} \n'
+            f'  - modified_at: {labs_app["modified_at"]}'
         )
         answer = click.prompt(
             message,
