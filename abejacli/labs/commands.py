@@ -318,7 +318,7 @@ def delete(labs_app_id, yes):
     except Exception as e:
         click.echo('Error: Failed to delete LabsApp (Reason: {})'.format(e))
         sys.exit(ERROR_EXITCODE)
-    
+
     # 処理正常終了
     click.echo(f'Delete succeeded')
     sys.exit(SUCCESS_EXITCODE)
