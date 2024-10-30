@@ -320,7 +320,7 @@ def delete(labs_app_id, yes):
         sys.exit(ERROR_EXITCODE)
 
     # 処理正常終了
-    click.echo(f'Delete succeeded')
+    click.echo('Delete succeeded')
     sys.exit(SUCCESS_EXITCODE)
 
 
