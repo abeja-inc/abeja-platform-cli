@@ -127,7 +127,6 @@ def init(name, app_type, scope, abeja_user_only, auth_type, author):
     sys.exit(SUCCESS_EXITCODE)
 
 
-# type 引数で渡しているclick.Path指定されたパスが実際に存在するかどうかを検証する
 @labs.command(name='push', help='Upload your own Labs App definition files')
 @click.option('-d', '--directory_path', 'directory_path', type=click.Path(exists=True, file_okay=False),
               help='Directory path where your own Labs App definition file is located. '
@@ -135,7 +134,8 @@ def init(name, app_type, scope, abeja_user_only, auth_type, author):
               default=None, required=True)
 @click.option('-s', '--stop_after', 'stop_after', type=int, default=0, required=False,
               help='Labs App stop automatically after the specified number of hours')
-def push(directory_path, stop_after):
+@click.option('-y', '--yes', 'yes', is_flag=True, default=False, help='Skip the confirmation prompt')
+def push(directory_path, stop_after, yes):
     """labs push コマンド
     ローカルで作成した Labs アプリ定義ファイルを ABEJA Platform にアップロードする
 
@@ -184,6 +184,50 @@ def push(directory_path, stop_after):
         ))
         sys.exit(ERROR_EXITCODE)
 
+    # 同じ名前の LabsApp が存在するか確認する
+    overwrite_app = None
+    if not yes:
+        same_name_apps = []
+        try:
+            with generate_user_session(False) as session:
+                response = session.get(f"{ORGANIZATION_ENDPOINT.replace('organizations', 'labs/organizations')}/apps")
+                response.raise_for_status()
+                content = response.json()
+                for app in content['entries']:
+                    if app['name'] == os.path.basename(directory_path):
+                        same_name_apps.append(app)
+        except Exception as e:
+            click.echo('Error: Failed to get LabsApp list (Reason: {})'.format(e))
+            sys.exit(ERROR_EXITCODE)
+
+        if len(same_name_apps) > 0:
+            click.echo('\nThe same name LabsApps are found. Select LabsApp to overwrite.\n')
+            click.echo('  0: Do not overwrite. Create new LabApp\n')
+            for i, app in enumerate(same_name_apps):
+                click.echo(
+                    f'  {i+1}: LabsApp Details\n'
+                    f'    - id: {app["labs_app_id"]}\n'
+                    f'    - name: {app["name"]}\n'
+                    f'    - description: {app["description"]}\n'
+                    f'    - version: {app["version"]}\n'
+                    f'    - author: {app["author"]}\n'
+                    f'    - created at: {app["created_at"]}\n'
+                    f'    - modified at: {app["modified_at"]}\n'
+                )
+            answer = click.prompt(
+                '\nPlease enter the number you want to overwrite LabsApp',
+                type=int,
+                default=0
+            )
+            if answer == 0:
+                overwrite_app = None
+            elif 0 < answer <= len(same_name_apps):
+                overwrite_app = same_name_apps[answer - 1]
+            else:
+                click.echo('Invalid number. Aborted.')
+                sys.exit(ERROR_EXITCODE)
+
+    # Labs アプリを作成する
     try:
         # アップロード対象のファイルをリスト化してAPI に送信する
         files = []
@@ -196,9 +240,17 @@ def push(directory_path, stop_after):
             else:
                 files.append((file_name, (os.path.basename(file_path), file, 'text/markdown')))
 
-        url = f"{ORGANIZATION_ENDPOINT.replace('organizations', 'labs/organizations')}/apps?stop_after={stop_after}"
-        with generate_user_session(False) as session:
-            response = session.post(url, files=files, timeout=None)
+        # 上書きの場合は、Labs アプリ更新 API を呼び出す
+        if not yes and overwrite_app is not None:
+            click.echo('Overwriting LabsApp. Please wait for a while...')
+            url = f"{ORGANIZATION_ENDPOINT.replace('organizations', 'labs/organizations')}/apps/{overwrite_app['labs_app_id']}?stop_after={stop_after}"
+            with generate_user_session(False) as session:
+                response = session.put(url, files=files, timeout=None)
+        # 上書きでない場合は、Labs アプリ作成 API を呼び出す
+        else:
+            url = f"{ORGANIZATION_ENDPOINT.replace('organizations', 'labs/organizations')}/apps?stop_after={stop_after}"
+            with generate_user_session(False) as session:
+                response = session.post(url, files=files, timeout=None)
 
         response.raise_for_status()
         content = response.json()
@@ -221,6 +273,185 @@ def push(directory_path, stop_after):
 
     # 処理正常終了
     click.echo('✨✨✨✨ It\'s done!! Happy Labs App! ✨✨✨✨\n')
+    sys.exit(SUCCESS_EXITCODE)
+
+
+@labs.command(name='update', help='Overwrite your own Labs App definition files')
+@click.option('-d', '--directory_path', 'directory_path', type=click.Path(exists=True, file_okay=False),
+              help='Directory path where your own Labs App definition file is located. '
+              f'The directory structure should be the same as {LABS_APP_SKELETON_REPO}',
+              default=None, required=True)
+@click.option('-i', '--labs_app_id', 'labs_app_id', type=str, required=True, help='LabsApp ID')
+@click.option('-s', '--stop_after', 'stop_after', type=int, default=0, required=False,
+              help='Labs App stop automatically after the specified number of hours')
+@click.option('-y', '--yes', 'yes', is_flag=True, default=False, help='Skip the confirmation prompt')
+def update(directory_path, labs_app_id, stop_after, yes):
+    # stop_after の値を確認
+    if stop_after < 0:
+        click.echo('"--stop_after" must be greater than or equal to 0.')
+        sys.exit(ERROR_EXITCODE)
+
+    # 必要なファイルの存在を確認する
+    upload_files = {
+        'setting_yaml': os.path.join(directory_path, 'setting.yaml'),
+        'thumbnail': os.path.join(directory_path, 'Thumbnail.jpg'),
+        'how_to_use': os.path.join(directory_path, 'HowToUse.md'),
+        'how_to_use_jp': os.path.join(directory_path, 'HowToUse_JP.md'),
+    }
+    for path in upload_files.values():
+        if not os.path.isfile(path):
+            click.echo(f'A required file is missing: {path}')
+            sys.exit(ERROR_EXITCODE)
+
+    # setting.yaml のフォーマットを確認する
+    setting_schema = os.path.join(directory_path, 'setting_schema.yaml')
+    verify_setting_yaml(upload_files["setting_yaml"], setting_schema)
+
+    # Thumbnail.jpg の解像度を確認する
+    thumbnail_img = Image.open(upload_files["thumbnail"])
+    if thumbnail_img.width > LABS_APP_THUMBNAIL_WIDTH_MAX or thumbnail_img.height > LABS_APP_THUMBNAIL_HEIGHT_MAX:
+        click.echo('Resolution of "{}" is {}x{}. Please fix thumbnail resolution under {}x{}.'.format(
+            upload_files["thumbnail"],
+            thumbnail_img.width, thumbnail_img.height,
+            LABS_APP_THUMBNAIL_WIDTH_MAX, LABS_APP_THUMBNAIL_HEIGHT_MAX
+        ))
+        sys.exit(ERROR_EXITCODE)
+
+    # Thumbnail.jpg のファイルサイズを確認する
+    thumbnail_size_kb = int(round(os.path.getsize(upload_files["thumbnail"]) / 1024, 0))
+    if thumbnail_size_kb > LABS_APP_THUMBNAIL_SIZE_KB_MAX:
+        click.echo('File size of "{}" is {}KB. Please fix thumbnail file size under {}KB.'.format(
+            upload_files["thumbnail"],
+            thumbnail_size_kb,
+            LABS_APP_THUMBNAIL_SIZE_KB_MAX
+        ))
+        sys.exit(ERROR_EXITCODE)
+
+    # LabsApp の存在を確認する
+    overwrite_app = None
+    try:
+        with generate_user_session(False) as session:
+            response = session.get(f"{ORGANIZATION_ENDPOINT.replace('organizations', 'labs/organizations')}/apps/{labs_app_id}")
+            response.raise_for_status()
+            overwrite_app = response.json()
+    except Exception as e:
+        click.echo(f'Error: LabsApp (id:{labs_app_id}) not found (Reason: {e})')
+        sys.exit(ERROR_EXITCODE)
+
+    if not yes:
+        message = (
+            f'Are you sure you want to overwrite this LabsApp?\n'
+            f'  - id: {overwrite_app["labs_app_id"]}\n'
+            f'  - name: {overwrite_app["name"]}\n'
+            f'  - description: {overwrite_app["description"]}\n'
+            f'  - version: {overwrite_app["version"]}\n'
+            f'  - author: {overwrite_app["author"]}\n'
+            f'  - created_at: {overwrite_app["created_at"]} \n'
+            f'  - modified_at: {overwrite_app["modified_at"]}'
+        )
+        answer = click.prompt(
+            message,
+            type=click.Choice(['Y', 'n']),
+            default='Y'
+        )
+        if answer == 'n':
+            click.echo('Aborted!')
+            sys.exit(SUCCESS_EXITCODE)
+    else:
+        click.echo(
+            f'Overwriting LabsApp (id:{overwrite_app["labs_app_id"]}, name:{overwrite_app["name"]})'
+        )
+
+    # Labs アプリを作成する
+    try:
+        # アップロード対象のファイルをリスト化してAPI に送信する
+        files = []
+        for file_name, file_path in upload_files.items():
+            file = open(file_path, 'rb')
+            if file_name == "setting_yaml":
+                files.append((file_name, (os.path.basename(file_path), file, 'application/yaml')))
+            elif file_name == "thumbnail":
+                files.append((file_name, (os.path.basename(file_path), file, 'image/jpeg')))
+            else:
+                files.append((file_name, (os.path.basename(file_path), file, 'text/markdown')))
+
+        click.echo('Overwriting LabsApp. Please wait for a while...')
+        url = f"{ORGANIZATION_ENDPOINT.replace('organizations', 'labs/organizations')}/apps/{overwrite_app['labs_app_id']}?stop_after={stop_after}"
+        with generate_user_session(False) as session:
+            response = session.put(url, files=files, timeout=None)
+
+        response.raise_for_status()
+        content = response.json()
+
+        content.pop('setting_yaml_base64', None)
+        content.pop('thumbnail_base64', None)
+        content.pop('how_to_use_base64', None)
+        content.pop('how_to_use_jp_base64', None)
+
+        click.echo('Upload succeeded')
+        click.echo(json.dumps(content, indent=4))
+
+    except Exception as e:
+        click.echo('Error: Failed to upload files {} to LabsApp repository (Reason: {})'.format(upload_files, e))
+        sys.exit(ERROR_EXITCODE)
+    finally:
+        # io.BufferedReader を全てclose する
+        for _, file in files:
+            file[1].close()
+
+    # 処理正常終了
+    click.echo('✨✨✨✨ It\'s done!! Happy Labs App! ✨✨✨✨\n')
+    sys.exit(SUCCESS_EXITCODE)
+
+
+@labs.command(name='delete', help='Delete Labs App')
+@click.option('-i', '--labs_app_id', 'labs_app_id', type=str, required=True, help='LabsApp ID')
+@click.option('-y', '--yes', 'yes', is_flag=True, default=False, help='Skip the confirmation prompt')
+def delete(labs_app_id, yes):
+    labs_app = None
+    try:
+        with generate_user_session(False) as session:
+            response = session.get(f"{ORGANIZATION_ENDPOINT.replace('organizations', 'labs/organizations')}/apps/{labs_app_id}")
+            response.raise_for_status()
+            labs_app = response.json()
+    except Exception as e:
+        click.echo(f'Error: LabsApp (id:{labs_app_id}) not found (Reason: {e})')
+        sys.exit(ERROR_EXITCODE)
+
+    if not yes:
+        message = (
+            f'Are you sure you want to delete this LabsApp?\n'
+            f'  - id: {labs_app["labs_app_id"]}\n'
+            f'  - name: {labs_app["name"]}\n'
+            f'  - description: {labs_app["description"]}\n'
+            f'  - version: {labs_app["version"]}\n'
+            f'  - author: {labs_app["author"]}\n'
+            f'  - created_at: {labs_app["created_at"]} \n'
+            f'  - modified_at: {labs_app["modified_at"]}'
+        )
+        answer = click.prompt(
+            message,
+            type=click.Choice(['Y', 'n']),
+            default='Y'
+        )
+        if answer == 'n':
+            click.echo('Aborted!')
+            sys.exit(SUCCESS_EXITCODE)
+    else:
+        click.echo(
+            f'Deleting LabsApp (id:{labs_app["labs_app_id"]}, name:{labs_app["name"]})'
+        )
+
+    try:
+        with generate_user_session(False) as session:
+            response = session.delete(f"{ORGANIZATION_ENDPOINT.replace('organizations', 'labs/organizations')}/apps/{labs_app_id}")
+            response.raise_for_status()
+    except Exception as e:
+        click.echo('Error: Failed to delete LabsApp (Reason: {})'.format(e))
+        sys.exit(ERROR_EXITCODE)
+
+    # 処理正常終了
+    click.echo('Delete succeeded')
     sys.exit(SUCCESS_EXITCODE)
 
 
