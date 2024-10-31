@@ -1,3 +1,6 @@
+# 2.2.6
+- [Labs] Add labs commands to overwrite app #62
+
 # 2.2.5
 - [ABEJA Platform Insightify] Fix UI/UX in dx-template init command #61
 
