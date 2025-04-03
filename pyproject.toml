@@ -6,7 +6,10 @@ description = "ABEJA Platform Command line tool"
 authors = ["ABEJA Inc. <platform-support@abejainc.com>"]
 classifiers = [
     "Development Status :: 3 - Alpha",
+    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
     "Intended Audience :: Developers",
     "Topic :: Internet :: WWW/HTTP",
     "Operating System :: OS Independent"
