@@ -1,3 +1,6 @@
+# 2.2.7
+- Update python & python packages version #63
+
 # 2.2.6
 - [Labs] Add labs commands to overwrite app #62
 
