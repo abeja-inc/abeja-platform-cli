@@ -241,7 +241,7 @@ def test_create_secret_version(req_mock, runner):
 
     def match_request_data(request):
         body = json.loads(request.text)
-        assert body['value'] == MOCK_SECRET_VALUE
+        assert body['value'] == MOCK_SECRET_ENCODED_VALUE
         return True
 
     req_mock.register_uri(

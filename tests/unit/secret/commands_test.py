@@ -27,7 +27,7 @@ TEST_CONFIG = {
 
 # モックレスポンスデータ
 MOCK_SECRET_ID = 'sec-1111111111111'
-MOCK_SECRET_NAME = 'test-secret'
+MOCK_SECRET_NAME = 'test-secret-name'
 MOCK_SECRET_DESCRIPTION = 'テスト用シークレット'
 MOCK_SECRET_VALUE = 'secret-value-123'
 MOCK_SECRET_ENCODED_VALUE = base64.b64encode(MOCK_SECRET_VALUE.encode('utf-8')).decode('utf-8')

@@ -1,5 +1,6 @@
 import base64
 import json
+import re
 import sys
 from typing import Optional
 
@@ -132,7 +133,9 @@ def get_secret(secret_id: str, organization_id: Optional[str] = None):
 
 @secret.command(name='create', help='Create a new secret')
 @click.option('-n', '--name', 'name', type=str,
-              help='Secret name', required=True)
+              help='Secret name The secret name can contain ASCII letters, numbers, and the following characters: `_-` '
+                   'Do not end your secret name with a hyphen followed by six characters. '
+                   'The secret name must be unique within the same organization.', required=True)
 @click.option('-v', '--value', 'value', type=str,
               help='Secret value', required=True)
 @click.option('-d', '--description', 'description', type=str,
@@ -146,7 +149,7 @@ def create_secret(name: str, value: str, description: Optional[str] = None,
     """新しいシークレットを作成するコマンド
 
     Args:
-        name (str): シークレット名 ASCII文字、数字、および /_+=.@- の文字を含めることができます
+        name (str): シークレット名 ASCII文字、数字、および _- の文字を含めることができます
             シークレット名の最後にハイフンを入れ、その後に6文字を続けないこと
             シークレット名は同じ組織内で一意でなければなりません
         value (str): シークレット値
@@ -162,6 +165,14 @@ def create_secret(name: str, value: str, description: Optional[str] = None,
 
         if not name:
             click.echo("シークレット名が指定されていません。")
+            sys.exit(ERROR_EXITCODE)
+
+        if not re.match(r'^[a-zA-Z0-9_-]+$', name):
+            click.echo('"name" must contain only ASCII letters, numbers, and the following characters: _-')
+            sys.exit(ERROR_EXITCODE)
+
+        if re.match(r'.*-......$', name):
+            click.echo('"name" must not end with a hyphen followed by six characters')
             sys.exit(ERROR_EXITCODE)
 
         if value is None or value == '':

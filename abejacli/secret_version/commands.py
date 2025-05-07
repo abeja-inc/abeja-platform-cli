@@ -173,9 +173,11 @@ def create_secret_version(secret_id: str, value: str, organization_id: Optional[
             click.echo("シークレット値が指定されていません。")
             sys.exit(ERROR_EXITCODE)
 
+        encoded_value = base64.b64encode(value.encode('utf-8')).decode('utf-8')
+
         # リクエストペイロードの構築
         payload = {
-            'value': value,
+            'value': encoded_value,
         }
 
         # JSON形式に変換
@@ -185,6 +187,13 @@ def create_secret_version(secret_id: str, value: str, organization_id: Optional[
         url = "{}/secret-manager/organizations/{}/secrets/{}/versions".format(
             ABEJA_API_URL, org_id, secret_id)
         result = api_post(url, json_data)
+
+        # シークレット値のデコード処理
+        if 'value' in result and result['value']:
+            try:
+                result['value'] = base64.b64decode(result['value']).decode('utf-8')
+            except Exception:
+                pass
 
         click.echo(json_output_formatter(result))
         sys.exit(SUCCESS_EXITCODE)
