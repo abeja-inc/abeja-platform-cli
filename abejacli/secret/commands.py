@@ -10,8 +10,8 @@ from abejacli.common import get_organization_id, json_output_formatter
 from abejacli.config import ABEJA_API_URL, ERROR_EXITCODE, SUCCESS_EXITCODE
 from abejacli.configuration import __ensure_configuration_exists
 from abejacli.logger import get_logger
-from abejacli.session import api_delete, api_get_data, api_patch, api_post
 from abejacli.secret.integration_service_type import IntegrationServiceType
+from abejacli.session import api_delete, api_get_data, api_patch, api_post
 
 logger = get_logger()
 
