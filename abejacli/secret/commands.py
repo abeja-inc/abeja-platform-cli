@@ -11,6 +11,7 @@ from abejacli.config import ABEJA_API_URL, ERROR_EXITCODE, SUCCESS_EXITCODE
 from abejacli.configuration import __ensure_configuration_exists
 from abejacli.logger import get_logger
 from abejacli.session import api_delete, api_get_data, api_patch, api_post
+from abejacli.secret.integration_service_type import IntegrationServiceType
 
 logger = get_logger()
 
@@ -132,6 +133,10 @@ def get_secret(secret_id: str, organization_id: Optional[str] = None):
 
 
 @secret.command(name='create', help='Create a new secret')
+@click.option('--integration_service_ids', 'integration_service_ids', type=str,
+              help='Integration service IDs', required=False)
+@click.option('--integration_service_type', 'integration_service_type', type=str,
+              help='Integration service type', required=False)
 @click.option('-n', '--name', 'name', type=str,
               help='Secret name The secret name can contain ASCII letters, numbers, and the following characters: `_-` '
                    'Do not end your secret name with a hyphen followed by six characters. '
@@ -156,6 +161,8 @@ def create_secret(name: str, value: str, description: Optional[str] = None,
         description (str, optional): シークレットの説明
         expired_at (str, optional): 有効期限（ISO 8601形式）
         organization_id (str, optional): 組織ID（指定しない場合は現在の組織IDを使用）
+        integration_service_ids (str, optional): 連携サービスIDリスト
+        integration_service_type (str, optional): 連携サービスタイプ
     """
     try:
         org_id = organization_id or get_organization_id()
@@ -179,6 +186,13 @@ def create_secret(name: str, value: str, description: Optional[str] = None,
             click.echo("シークレット値が指定されていません。")
             sys.exit(ERROR_EXITCODE)
 
+        if integration_service_type:
+            if not IntegrationServiceType.has_value(integration_service_type):
+                click.echo('"integration_service_type" must be one of the following: {}'.format(
+                    ', '.join(IntegrationServiceType._value2member_map_.keys())
+                ))
+                sys.exit(ERROR_EXITCODE)
+
         # Base64エンコードされた値を作成
         encoded_value = base64.b64encode(value.encode('utf-8')).decode('utf-8')
 
@@ -193,6 +207,12 @@ def create_secret(name: str, value: str, description: Optional[str] = None,
 
         if description:
             payload['description'] = description
+
+        if integration_service_type:
+            payload['integration_service_type'] = integration_service_type
+
+        if integration_service_ids:
+            payload['integration_service_ids'] = integration_service_ids
 
         # JSON形式に変換
         json_data = json.dumps(payload)
@@ -211,6 +231,10 @@ def create_secret(name: str, value: str, description: Optional[str] = None,
 
 
 @secret.command(name='update', help='Update an existing secret')
+@click.option('--integration_service_ids', 'integration_service_ids', type=str,
+              help='Integration service IDs', required=False)
+@click.option('--integration_service_type', 'integration_service_type', type=str,
+              help='Integration service type', required=False)
 @click.option('-s', '--secret_id', '--secret-id', 'secret_id', type=str,
               help='Secret ID', required=True)
 @click.option('-d', '--description', 'description', type=str,
@@ -228,6 +252,8 @@ def update_secret(secret_id: str, description: Optional[str] = None,
         description (str, optional): シークレットの説明
         expired_at (str, optional): 有効期限（ISO 8601形式）
         organization_id (str, optional): 組織ID（指定しない場合は現在の組織IDを使用）
+        integration_service_ids (str, optional): 連携サービスIDリスト
+        integration_service_type (str, optional): 連携サービスタイプ
     """
     try:
         org_id = organization_id or get_organization_id()
@@ -239,6 +265,13 @@ def update_secret(secret_id: str, description: Optional[str] = None,
             click.echo("Secret IDが指定されていません。")
             sys.exit(ERROR_EXITCODE)
 
+        if integration_service_type:
+            if not IntegrationServiceType.has_value(integration_service_type):
+                click.echo('"integration_service_type" must be one of the following: {}'.format(
+                    ', '.join(IntegrationServiceType._value2member_map_.keys())
+                ))
+                sys.exit(ERROR_EXITCODE)
+
         # リクエストペイロードの構築
         payload = {}
 
@@ -247,6 +280,12 @@ def update_secret(secret_id: str, description: Optional[str] = None,
 
         if expired_at:
             payload['expired_at'] = expired_at
+
+        if integration_service_ids:
+            payload['integration_service_ids'] = integration_service_ids
+
+        if integration_service_type:
+            payload['integration_service_type'] = integration_service_type
 
         # JSON形式に変換
         json_data = json.dumps(payload)

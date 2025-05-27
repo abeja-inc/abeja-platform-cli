@@ -31,6 +31,8 @@ MOCK_SECRET_NAME = 'test-secret-name'
 MOCK_SECRET_DESCRIPTION = 'テスト用シークレット'
 MOCK_SECRET_VALUE = 'secret-value-123'
 MOCK_SECRET_ENCODED_VALUE = base64.b64encode(MOCK_SECRET_VALUE.encode('utf-8')).decode('utf-8')
+MOCK_SECRET_INTEGRATION_SERVICE_TYPE = 'abeja-platform-labs'
+MOCK_SECRET_INTEGRATION_SERVICE_IDS = '1111111111111,2222222222222'
 MOCK_SECRET_CREATED_AT = '2025-01-01T00:00:00Z'
 MOCK_SECRET_UPDATED_AT = '2025-01-02T00:00:00Z'
 MOCK_SECRET_EXPIRED_AT = '2026-01-01T00:00:00Z'
@@ -42,6 +44,8 @@ MOCK_SECRET_RESPONSE = {
     'created_at': MOCK_SECRET_CREATED_AT,
     'updated_at': MOCK_SECRET_UPDATED_AT,
     'expired_at': MOCK_SECRET_EXPIRED_AT,
+    'integration_service_type': MOCK_SECRET_INTEGRATION_SERVICE_TYPE,
+    'integration_service_ids': MOCK_SECRET_INTEGRATION_SERVICE_IDS,
     'versions': [
         {
             'id': 'ver-1111111111111',
@@ -68,7 +72,9 @@ MOCK_SECRET_CREATE_RESPONSE = {
     'description': MOCK_SECRET_DESCRIPTION,
     'created_at': MOCK_SECRET_CREATED_AT,
     'updated_at': MOCK_SECRET_UPDATED_AT,
-    'expired_at': MOCK_SECRET_EXPIRED_AT
+    'expired_at': MOCK_SECRET_EXPIRED_AT,
+    'integration_service_type': MOCK_SECRET_INTEGRATION_SERVICE_TYPE,
+    'integration_service_ids': MOCK_SECRET_INTEGRATION_SERVICE_IDS
 }
 
 MOCK_SECRET_UPDATE_RESPONSE = {
@@ -77,7 +83,9 @@ MOCK_SECRET_UPDATE_RESPONSE = {
     'description': 'Updated description',
     'created_at': MOCK_SECRET_CREATED_AT,
     'updated_at': MOCK_SECRET_UPDATED_AT,
-    'expired_at': '2027-01-01T00:00:00Z'
+    'expired_at': '2027-01-01T00:00:00Z',
+    'integration_service_type': MOCK_SECRET_INTEGRATION_SERVICE_TYPE,
+    'integration_service_ids': MOCK_SECRET_INTEGRATION_SERVICE_IDS
 }
 
 MOCK_SECRET_DELETE_RESPONSE = {
