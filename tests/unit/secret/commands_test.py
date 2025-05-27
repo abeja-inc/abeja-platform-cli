@@ -223,6 +223,8 @@ def test_create_secret(req_mock, runner):
         assert body['value'] == MOCK_SECRET_ENCODED_VALUE
         assert body['description'] == MOCK_SECRET_DESCRIPTION
         assert body['expired_at'] == MOCK_SECRET_EXPIRED_AT
+        assert body['integration_service_type'] == MOCK_SECRET_INTEGRATION_SERVICE_TYPE
+        assert body['integration_service_ids'] == MOCK_SECRET_INTEGRATION_SERVICE_IDS
         return True
 
     req_mock.register_uri(
@@ -235,7 +237,9 @@ def test_create_secret(req_mock, runner):
         '--name', MOCK_SECRET_NAME,
         '--value', MOCK_SECRET_VALUE,
         '--description', MOCK_SECRET_DESCRIPTION,
-        '--expired-at', MOCK_SECRET_EXPIRED_AT
+        '--expired-at', MOCK_SECRET_EXPIRED_AT,
+        '--integration-service-type', MOCK_SECRET_INTEGRATION_SERVICE_TYPE,
+        '--integration-service-ids', MOCK_SECRET_INTEGRATION_SERVICE_IDS
     ]
     r = runner.invoke(create_secret, cmd)
     assert not r.exception
@@ -276,6 +280,8 @@ def test_update_secret(req_mock, runner):
         body = json.loads(request.text)
         assert body['description'] == updated_description
         assert body['expired_at'] == updated_expired_at
+        assert body['integration_service_type'] == MOCK_SECRET_INTEGRATION_SERVICE_TYPE
+        assert body['integration_service_ids'] == MOCK_SECRET_INTEGRATION_SERVICE_IDS
         return True
 
     req_mock.register_uri(
@@ -287,7 +293,9 @@ def test_update_secret(req_mock, runner):
         '--organization_id', TEST_CONFIG_ORG_ID,
         '--secret_id', MOCK_SECRET_ID,
         '--description', updated_description,
-        '--expired-at', updated_expired_at
+        '--expired-at', updated_expired_at,
+        '--integration-service-type', MOCK_SECRET_INTEGRATION_SERVICE_TYPE,
+        '--integration-service-ids', MOCK_SECRET_INTEGRATION_SERVICE_IDS
     ]
     r = runner.invoke(update_secret, cmd)
     assert not r.exception

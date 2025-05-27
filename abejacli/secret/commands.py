@@ -133,9 +133,9 @@ def get_secret(secret_id: str, organization_id: Optional[str] = None):
 
 
 @secret.command(name='create', help='Create a new secret')
-@click.option('--integration_service_ids', 'integration_service_ids', type=str,
+@click.option('--integration_service_ids', '--integration-service-ids', 'integration_service_ids', type=str,
               help='Integration service IDs', required=False)
-@click.option('--integration_service_type', 'integration_service_type', type=str,
+@click.option('--integration_service_type', '--integration-service-type', 'integration_service_type', type=str,
               help='Integration service type', required=False)
 @click.option('-n', '--name', 'name', type=str,
               help='Secret name The secret name can contain ASCII letters, numbers, and the following characters: `_-` '
@@ -150,7 +150,8 @@ def get_secret(secret_id: str, organization_id: Optional[str] = None):
 @click.option('--organization_id', '--organization-id', 'organization_id', type=str,
               help='Organization ID. If not specified, the current organization ID is used.', required=False)
 def create_secret(name: str, value: str, description: Optional[str] = None,
-                  expired_at: Optional[str] = None, organization_id: Optional[str] = None):
+                  expired_at: Optional[str] = None, organization_id: Optional[str] = None,
+                  integration_service_ids: Optional[str] = None, integration_service_type: Optional[str] = None):
     """新しいシークレットを作成するコマンド
 
     Args:
@@ -231,9 +232,9 @@ def create_secret(name: str, value: str, description: Optional[str] = None,
 
 
 @secret.command(name='update', help='Update an existing secret')
-@click.option('--integration_service_ids', 'integration_service_ids', type=str,
+@click.option('--integration_service_ids', '--integration-service-ids', 'integration_service_ids', type=str,
               help='Integration service IDs', required=False)
-@click.option('--integration_service_type', 'integration_service_type', type=str,
+@click.option('--integration_service_type', '--integration-service-type', 'integration_service_type', type=str,
               help='Integration service type', required=False)
 @click.option('-s', '--secret_id', '--secret-id', 'secret_id', type=str,
               help='Secret ID', required=True)
@@ -244,7 +245,8 @@ def create_secret(name: str, value: str, description: Optional[str] = None,
 @click.option('--organization_id', '--organization-id', 'organization_id', type=str,
               help='Organization ID. If not specified, the current organization ID is used.', required=False)
 def update_secret(secret_id: str, description: Optional[str] = None,
-                  expired_at: Optional[str] = None, organization_id: Optional[str] = None):
+                  expired_at: Optional[str] = None, organization_id: Optional[str] = None,
+                  integration_service_ids: Optional[str] = None, integration_service_type: Optional[str] = None):
     """既存のシークレットを更新するコマンド
 
     Args:
