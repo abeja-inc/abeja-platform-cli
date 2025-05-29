@@ -31,6 +31,8 @@ MOCK_SECRET_NAME = 'test-secret-name'
 MOCK_SECRET_DESCRIPTION = 'テスト用シークレット'
 MOCK_SECRET_VALUE = 'secret-value-123'
 MOCK_SECRET_ENCODED_VALUE = base64.b64encode(MOCK_SECRET_VALUE.encode('utf-8')).decode('utf-8')
+MOCK_SECRET_INTEGRATION_SERVICE_TYPE = 'abeja-platform-labs'
+MOCK_SECRET_INTEGRATION_SERVICE_IDS = '1111111111111,2222222222222'
 MOCK_SECRET_CREATED_AT = '2025-01-01T00:00:00Z'
 MOCK_SECRET_UPDATED_AT = '2025-01-02T00:00:00Z'
 MOCK_SECRET_EXPIRED_AT = '2026-01-01T00:00:00Z'
@@ -42,6 +44,8 @@ MOCK_SECRET_RESPONSE = {
     'created_at': MOCK_SECRET_CREATED_AT,
     'updated_at': MOCK_SECRET_UPDATED_AT,
     'expired_at': MOCK_SECRET_EXPIRED_AT,
+    'integration_service_type': MOCK_SECRET_INTEGRATION_SERVICE_TYPE,
+    'integration_service_ids': MOCK_SECRET_INTEGRATION_SERVICE_IDS.split(','),
     'versions': [
         {
             'id': 'ver-1111111111111',
@@ -68,7 +72,9 @@ MOCK_SECRET_CREATE_RESPONSE = {
     'description': MOCK_SECRET_DESCRIPTION,
     'created_at': MOCK_SECRET_CREATED_AT,
     'updated_at': MOCK_SECRET_UPDATED_AT,
-    'expired_at': MOCK_SECRET_EXPIRED_AT
+    'expired_at': MOCK_SECRET_EXPIRED_AT,
+    'integration_service_type': MOCK_SECRET_INTEGRATION_SERVICE_TYPE,
+    'integration_service_ids': MOCK_SECRET_INTEGRATION_SERVICE_IDS.split(','),
 }
 
 MOCK_SECRET_UPDATE_RESPONSE = {
@@ -77,7 +83,9 @@ MOCK_SECRET_UPDATE_RESPONSE = {
     'description': 'Updated description',
     'created_at': MOCK_SECRET_CREATED_AT,
     'updated_at': MOCK_SECRET_UPDATED_AT,
-    'expired_at': '2027-01-01T00:00:00Z'
+    'expired_at': '2027-01-01T00:00:00Z',
+    'integration_service_type': MOCK_SECRET_INTEGRATION_SERVICE_TYPE,
+    'integration_service_ids': MOCK_SECRET_INTEGRATION_SERVICE_IDS.split(','),
 }
 
 MOCK_SECRET_DELETE_RESPONSE = {
@@ -215,6 +223,8 @@ def test_create_secret(req_mock, runner):
         assert body['value'] == MOCK_SECRET_ENCODED_VALUE
         assert body['description'] == MOCK_SECRET_DESCRIPTION
         assert body['expired_at'] == MOCK_SECRET_EXPIRED_AT
+        assert body['integration_service_type'] == MOCK_SECRET_INTEGRATION_SERVICE_TYPE
+        assert body['integration_service_ids'] == MOCK_SECRET_INTEGRATION_SERVICE_IDS.split(',')
         return True
 
     req_mock.register_uri(
@@ -227,7 +237,9 @@ def test_create_secret(req_mock, runner):
         '--name', MOCK_SECRET_NAME,
         '--value', MOCK_SECRET_VALUE,
         '--description', MOCK_SECRET_DESCRIPTION,
-        '--expired-at', MOCK_SECRET_EXPIRED_AT
+        '--expired-at', MOCK_SECRET_EXPIRED_AT,
+        '--integration-service-type', MOCK_SECRET_INTEGRATION_SERVICE_TYPE,
+        '--integration-service-ids', MOCK_SECRET_INTEGRATION_SERVICE_IDS
     ]
     r = runner.invoke(create_secret, cmd)
     assert not r.exception
@@ -268,6 +280,8 @@ def test_update_secret(req_mock, runner):
         body = json.loads(request.text)
         assert body['description'] == updated_description
         assert body['expired_at'] == updated_expired_at
+        assert body['integration_service_type'] == MOCK_SECRET_INTEGRATION_SERVICE_TYPE
+        assert body['integration_service_ids'] == MOCK_SECRET_INTEGRATION_SERVICE_IDS
         return True
 
     req_mock.register_uri(
@@ -279,7 +293,9 @@ def test_update_secret(req_mock, runner):
         '--organization_id', TEST_CONFIG_ORG_ID,
         '--secret_id', MOCK_SECRET_ID,
         '--description', updated_description,
-        '--expired-at', updated_expired_at
+        '--expired-at', updated_expired_at,
+        '--integration-service-type', MOCK_SECRET_INTEGRATION_SERVICE_TYPE,
+        '--integration-service-ids', MOCK_SECRET_INTEGRATION_SERVICE_IDS
     ]
     r = runner.invoke(update_secret, cmd)
     assert not r.exception
