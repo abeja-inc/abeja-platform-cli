@@ -45,7 +45,7 @@ MOCK_SECRET_RESPONSE = {
     'updated_at': MOCK_SECRET_UPDATED_AT,
     'expired_at': MOCK_SECRET_EXPIRED_AT,
     'integration_service_type': MOCK_SECRET_INTEGRATION_SERVICE_TYPE,
-    'integration_service_ids': MOCK_SECRET_INTEGRATION_SERVICE_IDS,
+    'integration_service_ids': MOCK_SECRET_INTEGRATION_SERVICE_IDS.split(','),
     'versions': [
         {
             'id': 'ver-1111111111111',
@@ -74,7 +74,7 @@ MOCK_SECRET_CREATE_RESPONSE = {
     'updated_at': MOCK_SECRET_UPDATED_AT,
     'expired_at': MOCK_SECRET_EXPIRED_AT,
     'integration_service_type': MOCK_SECRET_INTEGRATION_SERVICE_TYPE,
-    'integration_service_ids': MOCK_SECRET_INTEGRATION_SERVICE_IDS
+    'integration_service_ids': MOCK_SECRET_INTEGRATION_SERVICE_IDS.split(','),
 }
 
 MOCK_SECRET_UPDATE_RESPONSE = {
@@ -85,7 +85,7 @@ MOCK_SECRET_UPDATE_RESPONSE = {
     'updated_at': MOCK_SECRET_UPDATED_AT,
     'expired_at': '2027-01-01T00:00:00Z',
     'integration_service_type': MOCK_SECRET_INTEGRATION_SERVICE_TYPE,
-    'integration_service_ids': MOCK_SECRET_INTEGRATION_SERVICE_IDS
+    'integration_service_ids': MOCK_SECRET_INTEGRATION_SERVICE_IDS.split(','),
 }
 
 MOCK_SECRET_DELETE_RESPONSE = {
@@ -224,7 +224,7 @@ def test_create_secret(req_mock, runner):
         assert body['description'] == MOCK_SECRET_DESCRIPTION
         assert body['expired_at'] == MOCK_SECRET_EXPIRED_AT
         assert body['integration_service_type'] == MOCK_SECRET_INTEGRATION_SERVICE_TYPE
-        assert body['integration_service_ids'] == MOCK_SECRET_INTEGRATION_SERVICE_IDS
+        assert body['integration_service_ids'] == MOCK_SECRET_INTEGRATION_SERVICE_IDS.split(',')
         return True
 
     req_mock.register_uri(
