@@ -213,7 +213,9 @@ def create_secret(name: str, value: str, description: Optional[str] = None,
             payload['integration_service_type'] = integration_service_type
 
         if integration_service_ids:
-            payload['integration_service_ids'] = integration_service_ids
+            integration_service_ids = integration_service_ids.split(',')
+            if len(integration_service_ids) > 0:
+                payload['integration_service_ids'] = integration_service_ids
 
         # JSON形式に変換
         json_data = json.dumps(payload)
