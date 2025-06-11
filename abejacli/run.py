@@ -86,6 +86,8 @@ from abejacli.model.runtime_utils import (
     get_runtime_command
 )
 from abejacli.registry.commands import registry
+from abejacli.secret.commands import secret
+from abejacli.secret_version.commands import secret_version
 from abejacli.session import (
     api_delete,
     api_get,
@@ -1902,6 +1904,8 @@ main.add_command(startapp)
 main.add_command(dataset)
 main.add_command(dx_template)
 main.add_command(labs)
+main.add_command(secret)
+main.add_command(secret_version)
 
 
 if __name__ == '__main__':

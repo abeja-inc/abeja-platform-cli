@@ -46,11 +46,26 @@ def generate_user_session(json_content_type=True):
             'Content-Type': 'application/json'
         })
 
-    retries = Retry(total=5,
-                    backoff_factor=1,
-                    method_whitelist=('GET', 'POST', 'PUT', 'DELETE', 'PATCH'),
-                    status_forcelist=(500, 502, 503, 504),
-                    raise_on_status=False)
+    # If we update requests version , urllib3 version will updated automatically.
+    # In urllib3 version 1.26.0 or later, method_whitelist was deprecated. so, we need to use allowed_methods.
+    # https://github.com/urllib3/urllib3/blob/main/CHANGES.rst#1260-2020-11-10
+    try:
+        retries = Retry(
+            total=5,
+            backoff_factor=1,
+            allowed_methods=('GET', 'POST', 'PUT', 'DELETE', 'PATCH'),
+            status_forcelist=(500, 502, 503, 504),
+            raise_on_status=False
+        )
+    except TypeError:
+        retries = Retry(
+            total=5,
+            backoff_factor=1,
+            method_whitelist=('GET', 'POST', 'PUT', 'DELETE', 'PATCH'),
+            status_forcelist=(500, 502, 503, 504),
+            raise_on_status=False
+        )
+
     session.mount('https://', HTTPAdapter(max_retries=retries))
     return session
 
