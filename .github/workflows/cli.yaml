@@ -8,7 +8,7 @@ on:
   push:
     branches:
       - master
-      - release/*
+      - staging
 
 jobs:
   ci:
@@ -76,7 +76,7 @@ jobs:
 
   cd:
     runs-on: ubuntu-latest
-    if: ${{ startsWith(github.ref_name, 'release/') || github.ref_name == 'master' }}
+    if: ${{ github.ref_name == 'staging' || github.ref_name == 'master' }}
     needs:
       - ci
 
@@ -96,9 +96,9 @@ jobs:
           poetry install
 
       - name: Deploy_RC
-        if: ${{ startsWith(github.ref_name, 'release/') }}
+        if: ${{ github.ref_name == 'staging' }}
         run: |
-          poetry version $(PYTHONPATH=./ poetry run python tools/add_rc_version.py)
+          poetry version $(PYTHONPATH=./ poetry run python tools/get_next_rc_version.py)
           make release
         env:
           TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}

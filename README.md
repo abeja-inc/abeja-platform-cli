@@ -16,9 +16,6 @@ $ poetry install
 # configure pre-commit
 $ poetry run pre-commit install
 
-# install git-flow
-$ brew install git-flow-avh # for macOS
-$ apt-get install git-flow # for Linux
 ```
 
 ## Run command locally
@@ -34,42 +31,28 @@ $ make test
 ```
 
 ## Release
-Synchronize master and develop branch.
 
-```bash
-$ git checkout master
-$ git pull
-$ git checkout develop
-$ git pull
-```
+### Deploy to Development Environment
 
-Create release branch and prepare for release.
+When creating a PR from `feature/xxx` to `develop` branch, include version updates in the PR:
+- Update `CHANGELOG.md`: Add your changes to the latest version section (do not create a new version section if the current version hasn't been released to staging yet)
+- Update `pyproject.toml` version (e.g., `2.2.7` → `2.2.8`)
 
-```bash
-$ git flow release start X.X.X
-$ vim CHANGELOG.md
-# update to new version
-$ poetry version X.X.X
-# If you want to set rc2, rc3, ... versions, you need to edit add_rc_version.
-$ vim tools/add_rc_version.py
-$ git add pyproject.toml
-$ git add CHANGELOG.md
-$ git add tools/add_rc_version.py
-$ git commit -m "bump version"
-$ git flow release publish X.X.X
-```
+> **Note**: If the current version in `pyproject.toml` has never been released to staging, you don't need to create a new version section in `CHANGELOG.md` or update `pyproject.toml`. Instead, add your changes to the existing latest version section in `CHANGELOG.md`. Only create a new version section and update `pyproject.toml` when the previous version has been released to staging. Alternatively, update the version only when creating a PR to `staging` to avoid version gaps in PyPI releases.
 
-After pushing to relase branch, RC package is published to packagecloud.
+Then create a PR and merge from `feature/xxx` to `develop` branch.
 
-Check CircleCI result.
-If the build succeeded then execute:
+### Deploy to Staging Environment
 
-```bash
-$ git flow release finish X.X.X
-$ git push origin develop
-$ git push origin master
-$ git push origin X.X.X
-```
+Create a PR and merge from `develop` to `staging` branch.
+
+After pushing to staging branch, RC package is automatically published to PyPI with the next available RC version (e.g., `2.2.8rc1`, `2.2.8rc2`, ...). The RC version number is automatically determined by querying PyPI for existing RC versions.
+
+### Deploy to Production Environment
+
+Create a PR and merge from `staging` to `master` branch.
+
+After pushing to master branch, the final package (e.g., `2.2.8`) is published to PyPI.
 
 ## Environment Vars
 
