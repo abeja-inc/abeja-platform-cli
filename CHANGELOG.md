@@ -1,5 +1,6 @@
 # 2.2.8
 - Change release strategy from git-flow to PR-based workflow
+- Enable Dependabot and auto-merge for High/Critical security updates
 
 # 2.2.7
 - [APF SecretManager] Add integration service in labs cli #65

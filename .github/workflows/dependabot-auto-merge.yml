@@ -1,0 +1,211 @@
+name: Enable auto-merge for Dependabot PRs
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+env:
+  DEPENDABOT_AUTO_MERGE: ${{ vars.DEPENDABOT_AUTO_MERGE || 'false' }}
+
+jobs:
+  auto-merge:
+    if: github.actor == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Fetch Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@v2
+
+      - name: Check Dependabot alerts severity
+        id: severity
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = context.issue.number;
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            // Get PR details to check for security labels
+            const { data: pr } = await github.rest.pulls.get({
+              owner,
+              repo,
+              pull_number: prNumber
+            });
+
+            // Check if this is a security update by looking at labels, title, or metadata
+            const isSecurityUpdate = pr.labels.some(label => 
+              label.name.toLowerCase().includes('security')
+            ) || pr.title.toLowerCase().includes('security') ||
+              '${{ steps.metadata.outputs.update-type }}'.includes('security');
+
+            console.log(`Is security update: ${isSecurityUpdate}`);
+
+            if (!isSecurityUpdate) {
+              console.log('Not a security update - skipping severity check');
+              return { severity: 'none', isHighOrCritical: false };
+            }
+
+            // For security updates, check vulnerability alerts
+            try {
+              const { data: alerts } = await github.rest.dependabot.listAlertsForRepo({
+                owner,
+                repo,
+                state: 'open'
+              });
+
+              console.log(`Found ${alerts.length} open vulnerability alerts`);
+
+              // Check if this is a grouped PR
+              const isGroupPR = pr.title.toLowerCase().includes('group');
+
+              if (isGroupPR) {
+                // For grouped PRs, use the highest severity across all alerts
+                console.log('Grouped PR detected - checking all open alerts');
+
+                if (alerts.length > 0) {
+                  const severities = alerts.map(a => a.security_advisory.severity);
+                  const highestSeverity = severities.includes('critical') ? 'critical' :
+                                         severities.includes('high') ? 'high' :
+                                         severities.includes('medium') ? 'medium' : 'low';
+
+                  const isHighOrCritical = ['high', 'critical'].includes(highestSeverity);
+
+                  console.log(`Highest severity in group: ${highestSeverity}`);
+                  console.log(`Is High or Critical: ${isHighOrCritical}`);
+
+                  return { severity: highestSeverity, isHighOrCritical, isGroup: true };
+                }
+              } else {
+                // For individual PRs, match by package name
+                const packageMatch = pr.title.match(/bump\s+(.+?)\s+from/i);
+                const packageName = packageMatch ? packageMatch[1] : null;
+
+                if (packageName) {
+                  console.log(`Package name: ${packageName}`);
+
+                  const relevantAlerts = alerts.filter(alert => 
+                    alert.security_advisory.package.name === packageName
+                  );
+
+                  if (relevantAlerts.length > 0) {
+                    const severities = relevantAlerts.map(a => a.security_advisory.severity);
+                    const highestSeverity = severities.includes('critical') ? 'critical' :
+                                           severities.includes('high') ? 'high' :
+                                           severities.includes('medium') ? 'medium' : 'low';
+
+                    const isHighOrCritical = ['high', 'critical'].includes(highestSeverity);
+
+                    console.log(`Package: ${packageName}`);
+                    console.log(`Severity: ${highestSeverity}`);
+                    console.log(`Is High or Critical: ${isHighOrCritical}`);
+
+                    return { severity: highestSeverity, isHighOrCritical, isGroup: false };
+                  }
+                }
+              }
+            } catch (error) {
+              console.log(`Could not fetch vulnerability alerts: ${error.message}`);
+              // If we can't fetch alerts, require manual review for safety
+              return { severity: 'unknown', isHighOrCritical: false };
+            }
+
+            // If no matching alerts found, require manual review
+            console.log('No matching vulnerability alerts found - requiring manual review');
+            return { severity: 'unknown', isHighOrCritical: false };
+
+      - name: Check auto-merge configuration
+        id: check
+        run: |
+          echo "Auto-merge enabled: ${{ env.DEPENDABOT_AUTO_MERGE }}"
+          echo "Dependency type: ${{ steps.metadata.outputs.dependency-type }}"
+          echo "Update type: ${{ steps.metadata.outputs.update-type }}"
+          echo "Severity: ${{ fromJSON(steps.severity.outputs.result).severity }}"
+          echo "Is High/Critical: ${{ fromJSON(steps.severity.outputs.result).isHighOrCritical }}"
+
+          # Auto-merge conditions:
+          # 1. DEPENDABOT_AUTO_MERGE is enabled
+          # 2. Security update with High or Critical severity
+          if [[ "${{ env.DEPENDABOT_AUTO_MERGE }}" == "true" ]] && \
+             [[ "${{ fromJSON(steps.severity.outputs.result).isHighOrCritical }}" == "true" ]]; then
+            echo "should_merge=true" >> $GITHUB_OUTPUT
+            echo "✅ Auto-merge conditions met (High/Critical security update)"
+          else
+            echo "should_merge=false" >> $GITHUB_OUTPUT
+            echo "⏸️ Auto-merge disabled or conditions not met"
+          fi
+
+      - name: Enable auto-merge
+        if: steps.check.outputs.should_merge == 'true'
+        continue-on-error: true
+        id: merge
+        run: gh pr merge --auto --squash "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Comment on PR (success)
+        if: steps.check.outputs.should_merge == 'true' && steps.merge.outcome == 'success'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const severity = '${{ fromJSON(steps.severity.outputs.result).severity }}';
+            const isGroup = '${{ fromJSON(steps.severity.outputs.result).isGroup }}' === 'true';
+
+            const prType = isGroup ? 'Grouped Security Update' : 'Security Update';
+
+            const severityUpper = severity.toUpperCase();
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: '🤖 Auto-merge has been enabled for this PR.\n\n' +
+                    '**' + prType + ' Detected:**\n' +
+                    '- Severity: **' + severityUpper + '**\n' +
+                    '- Auto-merge policy: High/Critical severity only\n\n' +
+                    '**Merge Conditions:**\n' +
+                    '- All CI checks pass ✅\n' +
+                    '- No conflicts ✅\n' +
+                    '- Branch protection rules satisfied ✅\n\n' +
+                    '✅ Will be merged automatically once all checks complete.'
+            });
+
+      - name: Comment on PR (skipped - low severity)
+        if: steps.check.outputs.should_merge == 'false' && fromJSON(steps.severity.outputs.result).severity != 'none' && fromJSON(steps.severity.outputs.result).severity != 'unknown'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const severity = '${{ fromJSON(steps.severity.outputs.result).severity }}';
+            const isGroup = '${{ fromJSON(steps.severity.outputs.result).isGroup }}' === 'true';
+
+            const prType = isGroup ? 'Grouped Security Update' : 'Security Update';
+            const severityUpper = severity.toUpperCase();
+            const reason = severity === 'unknown' 
+              ? 'Could not determine vulnerability severity' 
+              : 'Severity: **' + severityUpper + '**';
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: '⏸️ Auto-merge skipped for this PR.\n\n' +
+                    '**' + prType + ':**\n' +
+                    '- ' + reason + '\n' +
+                    '- Auto-merge policy: High/Critical severity only\n\n' +
+                    'This update requires manual review and approval.'
+            });
+
+      - name: Comment on PR (failure)
+        if: steps.check.outputs.should_merge == 'true' && steps.merge.outcome == 'failure'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: '⚠️ Failed to enable auto-merge.\n\n**Possible reasons:**\n- "Allow auto-merge" is not enabled in repository settings\n- Branch protection rules are not properly configured\n- Insufficient permissions\n\nPlease check Settings > General > Pull Requests > Allow auto-merge.'
+            });
+
