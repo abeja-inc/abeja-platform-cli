@@ -115,7 +115,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install --user poetry
+          pip install --user poetry~=1.5.1
           poetry install
 
       - name: Deploy_RC
