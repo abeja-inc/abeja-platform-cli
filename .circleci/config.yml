@@ -75,7 +75,8 @@ jobs:
       - run:
           name: Deploy_RC
           command: |
-            poetry version $(PYTHONPATH=./ poetry run python tools/get_next_rc_version.py)
+            NEXT_RC_VERSION=$(PYTHONPATH=./ poetry run python tools/get_next_rc_version.py)
+            poetry version "$NEXT_RC_VERSION"
             make release
 workflows:
   version: 2

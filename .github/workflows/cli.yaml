@@ -100,6 +100,8 @@ jobs:
   cd:
     runs-on: ubuntu-latest
     if: ${{ github.ref_name == 'staging' || github.ref_name == 'master' }}
+    env:
+      POETRY_PUBLISH_OPTIONS: ${{ github.run_attempt > 1 && '--skip-existing' || '' }}
     permissions:
       contents: write
     needs:
@@ -125,7 +127,8 @@ jobs:
       - name: Deploy_RC
         if: ${{ github.ref_name == 'staging' }}
         run: |
-          poetry version $(PYTHONPATH=./ poetry run python tools/get_next_rc_version.py)
+          NEXT_RC_VERSION=$(PYTHONPATH=./ poetry run python tools/get_next_rc_version.py)
+          poetry version "$NEXT_RC_VERSION"
           make release
         env:
           TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
@@ -152,6 +155,11 @@ jobs:
         id: check_tag
         run: |
           if git rev-parse "refs/tags/${{ steps.get_version.outputs.version }}" >/dev/null 2>&1; then
+            TAG_COMMIT=$(git rev-list -n 1 "${{ steps.get_version.outputs.version }}")
+            if [ "$TAG_COMMIT" != "$GITHUB_SHA" ]; then
+              echo "Tag ${{ steps.get_version.outputs.version }} points to $TAG_COMMIT instead of $GITHUB_SHA"
+              exit 1
+            fi
             echo "exists=true" >> "$GITHUB_OUTPUT"
             echo "Tag ${{ steps.get_version.outputs.version }} already exists"
           else

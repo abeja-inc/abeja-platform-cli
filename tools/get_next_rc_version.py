@@ -15,7 +15,6 @@ import sys
 import urllib.request
 from pathlib import Path
 
-
 PROJECT_ROOT = Path(__file__).parent.parent
 
 
@@ -25,7 +24,7 @@ def get_version_from_poetry():
         ["poetry", "version", "--short"],
         cwd=PROJECT_ROOT,
         check=True,
-        capture_output=True,
+        stdout=subprocess.PIPE,
         text=True,
     )
     version = result.stdout.strip()
@@ -40,7 +39,10 @@ def get_pypi_versions(package_name="abejacli"):
     try:
         with urllib.request.urlopen(url, timeout=10) as response:
             data = json.loads(response.read())
-            return list(data.get("releases", {}).keys())
+            releases = data.get("releases") if isinstance(data, dict) else None
+            if not isinstance(releases, dict):
+                raise ValueError("PyPI response does not contain a releases object")
+            return list(releases.keys())
     except Exception as e:
         raise RuntimeError(f"Could not fetch versions from PyPI: {e}") from e
 
