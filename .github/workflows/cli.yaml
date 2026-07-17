@@ -139,11 +139,11 @@ jobs:
           TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
           TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
 
-      - name: Get version from pyproject.toml
+      - name: Get version from Poetry
         if: ${{ github.ref_name == 'master' }}
         id: get_version
         run: |
-          VERSION=$(grep '^version = ' pyproject.toml | cut -d'"' -f2)
+          VERSION=$(poetry version --short)
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Version: $VERSION"
 

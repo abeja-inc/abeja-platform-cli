@@ -20,8 +20,26 @@ def test_get_pypi_versions_raises_on_request_error(monkeypatch):
         get_next_rc_version.get_pypi_versions()
 
 
+def test_get_version_from_poetry(monkeypatch):
+    command = ["poetry", "version", "--short"]
+
+    def return_version(*args, **kwargs):
+        assert args == (command,)
+        assert kwargs == {
+            "cwd": get_next_rc_version.PROJECT_ROOT,
+            "check": True,
+            "capture_output": True,
+            "text": True,
+        }
+        return get_next_rc_version.subprocess.CompletedProcess(command, 0, stdout="2.2.8\n")
+
+    monkeypatch.setattr(get_next_rc_version.subprocess, "run", return_version)
+
+    assert get_next_rc_version.get_version_from_poetry() == "2.2.8"
+
+
 def test_main_fails_without_printing_rc_version(monkeypatch, capsys):
-    monkeypatch.setattr(get_next_rc_version, "get_version_from_pyproject", lambda: "2.2.8")
+    monkeypatch.setattr(get_next_rc_version, "get_version_from_poetry", lambda: "2.2.8")
 
     def raise_lookup_error():
         raise RuntimeError("Could not fetch versions from PyPI: offline")
