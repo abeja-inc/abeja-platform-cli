@@ -37,4 +37,4 @@ check-fmt:
 	poetry run isort -m 3 --check-only .
 
 release: dist
-	poetry publish -u ${TWINE_USERNAME} -p ${TWINE_PASSWORD}
+	poetry publish --skip-existing -u ${TWINE_USERNAME} -p ${TWINE_PASSWORD}

@@ -158,13 +158,11 @@ jobs:
       - name: Create and push tag
         if: ${{ github.ref_name == 'master' && steps.check_tag.outputs.exists == 'false' }}
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
           git tag "${{ steps.get_version.outputs.version }}"
           git push origin "${{ steps.get_version.outputs.version }}"
 
-      - name: Create GitHub Release
-        if: ${{ github.ref_name == 'master' && steps.check_tag.outputs.exists == 'false' }}
+      - name: Create or update GitHub Release
+        if: ${{ github.ref_name == 'master' }}
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.get_version.outputs.version }}
