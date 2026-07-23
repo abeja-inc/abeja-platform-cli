@@ -2,7 +2,7 @@
 
 This package provides a unified command line interface to ABEJA Platform.
 
-[![CircleCI](https://circleci.com/gh/abeja-inc/abeja-platform-cli/tree/master.svg?style=svg)](https://circleci.com/gh/abeja-inc/abeja-platform-cli/tree/master)
+[![GitHub Actions](https://github.com/abeja-inc/abeja-platform-cli/actions/workflows/cli.yaml/badge.svg?branch=master)](https://github.com/abeja-inc/abeja-platform-cli/actions/workflows/cli.yaml?query=branch%3Amaster)
 
 [![python3.9](https://img.shields.io/badge/python-3.9-blue.svg?style=flat-square)]()
 
