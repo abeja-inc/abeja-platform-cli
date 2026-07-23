@@ -1,6 +1,7 @@
 NUM_TEST_PROCESS ?= auto
 FMT_TARGET ?= .
 TEST_IGNORE_TARGET ?= .
+POETRY_PUBLISH_OPTIONS ?=
 
 .PHONY: build install clean dist uninstall test prepare_ci integration_test lint fmt release
 
@@ -37,4 +38,4 @@ check-fmt:
 	poetry run isort -m 3 --check-only .
 
 release: dist
-	poetry publish -u ${TWINE_USERNAME} -p ${TWINE_PASSWORD}
+	poetry publish ${POETRY_PUBLISH_OPTIONS} -u ${TWINE_USERNAME} -p ${TWINE_PASSWORD}

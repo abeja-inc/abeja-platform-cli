@@ -121,4 +121,10 @@ These run automatically on git commit if configured with `poetry run pre-commit 
 
 ## Release Process
 
-Uses git-flow for release management. See README.md for detailed release instructions including version bumping and CircleCI deployment.
+Uses PR-based branch promotion with GitHub Actions handling CI and package releases:
+
+1. Merge feature branches into `develop`, including `CHANGELOG.md` and `pyproject.toml` version updates when needed.
+2. Merge `develop` into `staging` to publish the next RC package to PyPI.
+3. Merge `staging` into `master` to publish the final package and create the Git tag and GitHub Release.
+
+Do not use the legacy git-flow or CircleCI release procedure. See README.md for the detailed release instructions.

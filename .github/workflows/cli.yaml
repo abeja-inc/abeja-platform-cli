@@ -11,6 +11,11 @@ on:
       - master
       - staging
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+  queue: max
+
 permissions:
   contents: read
 
@@ -96,6 +101,8 @@ jobs:
   cd:
     runs-on: ubuntu-latest
     if: ${{ github.ref_name == 'staging' || github.ref_name == 'master' }}
+    env:
+      POETRY_PUBLISH_OPTIONS: ${{ github.run_attempt > 1 && '--skip-existing' || '' }}
     permissions:
       contents: write
     needs:
@@ -118,10 +125,36 @@ jobs:
           pip install --user poetry~=1.5.1
           poetry install
 
+      - name: Get version from Poetry
+        if: ${{ github.ref_name == 'master' }}
+        id: get_version
+        run: |
+          VERSION=$(poetry version --short)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Version: $VERSION"
+
+      - name: Check if tag already exists
+        if: ${{ github.ref_name == 'master' }}
+        id: check_tag
+        run: |
+          if git rev-parse "refs/tags/${{ steps.get_version.outputs.version }}" >/dev/null 2>&1; then
+            TAG_COMMIT=$(git rev-list -n 1 "${{ steps.get_version.outputs.version }}")
+            if [ "$TAG_COMMIT" != "$GITHUB_SHA" ]; then
+              echo "Tag ${{ steps.get_version.outputs.version }} points to $TAG_COMMIT instead of $GITHUB_SHA"
+              exit 1
+            fi
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "Tag ${{ steps.get_version.outputs.version }} already exists"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "Tag ${{ steps.get_version.outputs.version }} does not exist"
+          fi
+
       - name: Deploy_RC
         if: ${{ github.ref_name == 'staging' }}
         run: |
-          poetry version $(PYTHONPATH=./ poetry run python tools/get_next_rc_version.py)
+          NEXT_RC_VERSION=$(PYTHONPATH=./ poetry run python tools/get_next_rc_version.py)
+          poetry version "$NEXT_RC_VERSION"
           make release
         env:
           TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
@@ -135,36 +168,14 @@ jobs:
           TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
           TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
 
-      - name: Get version from pyproject.toml
-        if: ${{ github.ref_name == 'master' }}
-        id: get_version
-        run: |
-          VERSION=$(grep '^version = ' pyproject.toml | cut -d'"' -f2)
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "Version: $VERSION"
-
-      - name: Check if tag already exists
-        if: ${{ github.ref_name == 'master' }}
-        id: check_tag
-        run: |
-          if git rev-parse "refs/tags/${{ steps.get_version.outputs.version }}" >/dev/null 2>&1; then
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-            echo "Tag ${{ steps.get_version.outputs.version }} already exists"
-          else
-            echo "exists=false" >> "$GITHUB_OUTPUT"
-            echo "Tag ${{ steps.get_version.outputs.version }} does not exist"
-          fi
-
       - name: Create and push tag
         if: ${{ github.ref_name == 'master' && steps.check_tag.outputs.exists == 'false' }}
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
           git tag "${{ steps.get_version.outputs.version }}"
           git push origin "${{ steps.get_version.outputs.version }}"
 
-      - name: Create GitHub Release
-        if: ${{ github.ref_name == 'master' && steps.check_tag.outputs.exists == 'false' }}
+      - name: Create or update GitHub Release
+        if: ${{ github.ref_name == 'master' }}
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.get_version.outputs.version }}
