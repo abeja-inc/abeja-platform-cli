@@ -125,24 +125,6 @@ jobs:
           pip install --user poetry~=1.5.1
           poetry install
 
-      - name: Deploy_RC
-        if: ${{ github.ref_name == 'staging' }}
-        run: |
-          NEXT_RC_VERSION=$(PYTHONPATH=./ poetry run python tools/get_next_rc_version.py)
-          poetry version "$NEXT_RC_VERSION"
-          make release
-        env:
-          TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
-          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
-
-      - name: Deploy
-        if: ${{ github.ref_name== 'master' }}
-        run: |
-          make release
-        env:
-          TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
-          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
-
       - name: Get version from Poetry
         if: ${{ github.ref_name == 'master' }}
         id: get_version
@@ -167,6 +149,24 @@ jobs:
             echo "exists=false" >> "$GITHUB_OUTPUT"
             echo "Tag ${{ steps.get_version.outputs.version }} does not exist"
           fi
+
+      - name: Deploy_RC
+        if: ${{ github.ref_name == 'staging' }}
+        run: |
+          NEXT_RC_VERSION=$(PYTHONPATH=./ poetry run python tools/get_next_rc_version.py)
+          poetry version "$NEXT_RC_VERSION"
+          make release
+        env:
+          TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
+
+      - name: Deploy
+        if: ${{ github.ref_name== 'master' }}
+        run: |
+          make release
+        env:
+          TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
 
       - name: Create and push tag
         if: ${{ github.ref_name == 'master' && steps.check_tag.outputs.exists == 'false' }}

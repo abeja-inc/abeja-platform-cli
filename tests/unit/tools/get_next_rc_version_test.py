@@ -40,8 +40,24 @@ def test_get_pypi_versions_raises_on_request_error(monkeypatch):
         get_next_rc_version.get_pypi_versions()
 
 
-def test_get_pypi_versions_raises_when_releases_are_missing(monkeypatch):
-    response = PyPIResponse(b'{"info":{}}')
+def test_get_pypi_versions_raises_on_malformed_json(monkeypatch):
+    response = PyPIResponse(b'{"releases":')
+    monkeypatch.setattr(get_next_rc_version.urllib.request, "urlopen", lambda *args, **kwargs: response)
+
+    with pytest.raises(RuntimeError, match="Could not fetch versions from PyPI:"):
+        get_next_rc_version.get_pypi_versions()
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        b'{"info":{}}',
+        b'{"releases":[]}',
+        b'{"releases":null}',
+    ],
+)
+def test_get_pypi_versions_raises_when_releases_are_not_an_object(monkeypatch, body):
+    response = PyPIResponse(body)
     monkeypatch.setattr(get_next_rc_version.urllib.request, "urlopen", lambda *args, **kwargs: response)
 
     with pytest.raises(RuntimeError, match="PyPI response does not contain a releases object"):
