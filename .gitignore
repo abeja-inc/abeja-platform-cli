@@ -213,3 +213,6 @@ ENV/
 .debug
 
 # End of https://www.gitignore.io/api/macos,python,pycharm
+
+# Claude Code local settings may contain sensitive command arguments.
+**/.claude/settings.local.json
